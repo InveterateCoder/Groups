@@ -9,6 +9,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,11 +34,11 @@ namespace Chat.Web.Controllers
                 "<name usage='/api/reg'>reg</name>" +
                 "<description>registration request</description>" +
                 "<accepts type='json' method='post'>" +
-                "<request>" +
-                "<name type='string' min='3' max='256'/>" +
+                "<object>" +
+                "<name type='string' min='5' max='64'/>" +
                 "<email type='string' min='6' max='256'/>" +
-                "<password type='string' min='8' max='32'/>" +
-                "</request>" +
+                "<password type='string' min='6' max='32'/>" +
+                "</object>" +
                 "</accepts>" +
                 "<returns>" +
                 "<success type='text/plain'>\"pending_{email}\"</success>" +
@@ -53,6 +54,20 @@ namespace Chat.Web.Controllers
                 "<returns>" +
                 "<success type='text/plain'>\"added_{email}\"</success>" +
                 "<failure type='text/plain'>\"server_failed\", \"email_is_taken\", \"name_is_taken\", \"invalid_confirmation_id\", \"register_request_required\", \"{exception}\"</failure>" +
+                "</returns>" +
+                "</option>" +
+                "<option>" +
+                "<name usage='/api/sign'>sign</name>" +
+                $"<description>accumulates security token and sets response cookie [{StaticData.AuthenticationCookieName}] = \"token\"</description>" +
+                "<accepts type='json' method='post'>" +
+                "<object>" +
+                "<email type='string' min='6' max='256'/>" +
+                "<password type='string' min='6' max='32'/>" +
+                "</object>" +
+                "</accepts>" +
+                "<returns>" +
+                "<success type='text/plain'>OK</success>" +
+                "<failure type='text/plain'>\"server_failed\", \"user_not_found\", \"password_incorrect\", \"{exception}\"</failure>" +
                 "</returns>" +
                 "</option>" +
                 "</api>", "application/xml", Encoding.UTF8);
@@ -101,7 +116,7 @@ namespace Chat.Web.Controllers
                     ret = "pending_" + request.Email;
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 ret = e.Message;
             }
@@ -129,20 +144,20 @@ namespace Chat.Web.Controllers
                 {
                     throw new InvalidOperationException("register_request_required");
                 }
-                if(files.Length <= 0)
+                if (files.Length <= 0)
                 {
                     ret = "register_request_required";
                 }
                 else
                 {
-                    foreach(var file in files)
+                    foreach (var file in files)
                     {
                         string[] fileName = Path.GetFileNameWithoutExtension(file).Split('_');
                         if (DateTime.UtcNow.Ticks - long.Parse(fileName[0]) > TimeSpan.FromHours(1).Ticks)
                             System.IO.File.Delete(file);
                         else
                         {
-                            if(fileName[1] == fileId)
+                            if (fileName[1] == fileId)
                             {
                                 using (StreamReader reader = new StreamReader(file))
                                 {
@@ -175,7 +190,7 @@ namespace Chat.Web.Controllers
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 ret = e.Message;
             }
@@ -183,9 +198,38 @@ namespace Chat.Web.Controllers
         }
         [HttpPost("sign")]
         [Produces("text/plain")]
-        public string SignIn()
+        public async Task<ContentResult> SignIn([FromBody]SignRequest request)
         {
-            return "hello";
+            string ret = "server_failed";
+            try
+            {
+                var user = chatterersDb.Chatterers.Where(c => c.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                if (user == null)
+                    ret = "user_not_found";
+                else
+                {
+                    if (user.Password != request.Password)
+                        ret = "password_incorrect";
+                    else
+                    {
+                        SHA256 sha256 = SHA256.Create();
+                        byte[] bytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(
+                            $"{DateTime.UtcNow.ToString()}-{user.Name}-{user.Email}-{user.Password}-{Guid.NewGuid().ToString()}"));
+                        user.Token = Convert.ToBase64String(bytes);
+                        user.LastActive = DateTime.UtcNow.Ticks;
+                        sha256.Dispose();
+                        bytes = null;
+                        await chatterersDb.SaveChangesAsync();
+                        HttpContext.Response.Cookies.Append(StaticData.AuthenticationCookieName, user.Token);
+                        ret = "OK";
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                ret = e.Message;
+            }
+            return Content(ret, "text/plain");
         }
         private async Task<string> SendMail(string to, string name, string code)
         {

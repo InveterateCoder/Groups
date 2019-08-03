@@ -35,15 +35,15 @@ namespace Chat.Web.Infrastructure
                             await dbContext.SaveChangesAsync();
                         }
                     }
-                    UserInit(user, chatterer.Name, chatterer.Group, chatterer.InGroup ?? "", token);
+                    UserInit(user, chatterer.Name, chatterer.Group, chatterer.InGroup, token);
                 }
             }
-            if (context.Request.Path.Equals(PathString.FromUriComponent("/hub"), StringComparison.OrdinalIgnoreCase) && user.Name == string.Empty)
+            if (context.Request.Path.Equals(PathString.FromUriComponent("/hub"), StringComparison.OrdinalIgnoreCase) && user.Name == null)
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             else
                 await _next(context);
         }
-        public void UserInit(User user, string name = "", string group = "", string inGroup = "", string token = "")
+        public void UserInit(User user, string name = null, string group = null, string inGroup = null, string token = null)
         {
             user.Name = name;
             user.Group = group;
