@@ -1,4 +1,5 @@
 ﻿using Chat.Web.Hubs;
+using Chat.Web.Infrastructure;
 using Chat.Web.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,7 +13,6 @@ namespace Chat.Web
 {
     public class Startup
     {
-        public static string RootPath { get; set; }
         private IConfiguration Configuration;
         public Startup(IConfiguration configuration)
         {
@@ -20,7 +20,7 @@ namespace Chat.Web
         }
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ChatterersDbContext>(opts =>
+            services.AddDbContext<ChatterersDb>(opts =>
             {
                 opts.UseSqlServer(Configuration.GetConnectionString("Users"));
             });
@@ -40,7 +40,7 @@ namespace Chat.Web
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, User user)
         {
-            RootPath = env.ContentRootPath;
+            StaticData.RootPath = env.ContentRootPath;
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -53,6 +53,7 @@ namespace Chat.Web
             app.UseCors("_allowAll");
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseMiddleware<CustomAuthenticationMiddleware>();
             app.UseSignalR(routes =>
             {
                 routes.MapHub<ChatHub>("/hub");

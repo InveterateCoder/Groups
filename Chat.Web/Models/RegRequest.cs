@@ -4,7 +4,7 @@ namespace Chat.Web.Models
 {
     public class RegRequest
     {
-        [Required, StringLength(256, MinimumLength = 3)]
+        [Required, StringLength(64, MinimumLength = 3)]
         public string Name { get; set; }
         [Required, StringLength(256, MinimumLength = 6), EmailAddress]
         public string Email { get; set; }

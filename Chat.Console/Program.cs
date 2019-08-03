@@ -16,12 +16,10 @@ namespace Chat.Console
     {
         static void Main(string[] args)
         {
-            CookieContainer container = new CookieContainer();
-            HttpClientHandler handler = new HttpClientHandler() { CookieContainer = container };
-            using (HttpClient client = new HttpClient(handler, true))
-            {
-                
-            }
+            SHA256 sha256 = SHA256.Create();
+            byte[] arr = sha256.ComputeHash(Encoding.ASCII.GetBytes("What is it?"));
+            string str = Convert.ToBase64String(arr);
+            console.WriteLine(str.Length);
         }
     }
 }

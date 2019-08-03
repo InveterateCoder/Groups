@@ -18,8 +18,8 @@ namespace Chat.Web.Controllers
     [ApiController]
     public class ChatApiController : ControllerBase
     {
-        private ChatterersDbContext chatterersDb;
-        public ChatApiController(ChatterersDbContext chaDb)
+        private ChatterersDb chatterersDb;
+        public ChatApiController(ChatterersDb chaDb)
         {
             chatterersDb = chaDb;
         }
@@ -71,7 +71,7 @@ namespace Chat.Web.Controllers
                 else
                 {
                     Random rand = new Random();
-                    string path = Path.Join(Startup.RootPath, "RegFiles");
+                    string path = Path.Join(StaticData.RootPath, "RegFiles");
                     string[] files;
                     try
                     {
@@ -119,7 +119,7 @@ namespace Chat.Web.Controllers
                     throw new InvalidDataException("invalid_confirmation_id");
                 string fileId = id.ToString();
                 RegRequest request = null;
-                string path = Path.Join(Startup.RootPath, "RegFiles");
+                string path = Path.Join(StaticData.RootPath, "RegFiles");
                 string[] files;
                 try
                 {
@@ -162,7 +162,7 @@ namespace Chat.Web.Controllers
                             ret = "name_is_taken";
                         else
                         {
-                            await chatterersDb.Chatterers.AddAsync(new ChatterersDbContext.Chatterer
+                            await chatterersDb.Chatterers.AddAsync(new ChatterersDb.Chatterer
                             {
                                 Name = request.Name,
                                 Email = request.Email,
@@ -181,17 +181,16 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpGet("sign")] // NO GET (not encrypted)
-        //[Produces("text/plain")]
-        public string Html()
+        [HttpPost("sign")]
+        [Produces("text/plain")]
+        public string SignIn()
         {
-            //implement signing in
-            return "simple";
+            return "hello";
         }
         private async Task<string> SendMail(string to, string name, string code)
         {
             string mailContent, ret;
-            using(StreamReader reader = new StreamReader(Startup.RootPath + "/Assets/mailconfirm.html"))
+            using(StreamReader reader = new StreamReader(StaticData.RootPath + "/Assets/mailconfirm.html"))
             {
                 mailContent = await reader.ReadToEndAsync();
             }
