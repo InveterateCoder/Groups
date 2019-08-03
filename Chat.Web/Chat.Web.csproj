@@ -6,10 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\api_list.xml" />
     <None Remove="Assets\mailconfirm.html" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Assets\api_list.xml" />
     <Content Include="Assets\mailconfirm.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
