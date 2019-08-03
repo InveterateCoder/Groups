@@ -1,83 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
 <api>
-  <option>
-    <name usage="/api/account/reg">reg</name>
-    <description>registration request</description>
-    <accepts type="json" method="post">
-      <object>
-        <name type="string" min="5" max="64" />
-        <email type="string" min="6" max="256" />
-        <password type="string" min="6" max="32" />
-      </object>
-    </accepts>
-    <returns>
-      <success type="text/plain">
-        <string>pending_{email}</string>
-      </success>
-      <failure type="text/plain">
-        <string>server_failed</string>
-        <string>email_is_taken</string>
-        <string>name_is_taken</string>
-        <string>{exception}</string>
-      </failure>
-    </returns>
-  </option>
-  <option>
-    <name usage="/api/account/val">val</name>
-    <description>email address validation and registration completion</description>
-    <accepts type="json" method="post">
-      <code type="Int64" />
-    </accepts>
-    <returns>
-      <success type="text/plain">
-        <string>added_{email}</string>
-      </success>
-      <failure type="text/plain">
-        <string>server_failed</string>
-        <string>email_is_taken</string>
-        <string>name_is_taken</string>
-        <string>invalid_confirmation_id</string>
-        <string>register_request_required</string>
-        <string>{exception}</string>
-      </failure>
-    </returns>
-  </option>
-  <option>
-    <name usage="/api/account/sign">sign</name>
-    <description>accumulates security token and sets response cookie [Chat_Authentication_Token] = token</description>
-    <accepts type="json" method="post">
-      <object>
-        <email type="string" min="6" max="256" />
-        <password type="string" min="6" max="32" />
-      </object>
-    </accepts>
-    <returns>
-      <success type="text/plain">
-        <string>OK</string>
-      </success>
-      <failure type="text/plain">
-        <string>server_failed</string>
-        <string>already_signed</string>
-        <string>user_not_found</string>
-        <string>password_incorrect</string>
-        <string>{exception}</string>
-      </failure>
-    </returns>
-  </option>
-  <option>
-    <name usage="/api/account/sign/out">sign/out</name>
-    <description>deletes security token and clears response cookie [Chat_Authentication_Token] = token</description>
-    <accepts method="post">none</accepts>
-    <returns>
-      <success type="text/plain">
-        <string>OK</string>
-      </success>
-      <failure type="text/plain">
-        <string>server_failed</string>
-        <string>not_signed</string>
-        <string>token_not_found</string>
-        <string>{exception}</string>
-      </failure>
-    </returns>
-  </option>
+  <account path="/api/account/" authorization="not required">
+    <option>
+      <name usage="/api/account/reg">reg</name>
+      <description>registration request</description>
+      <accepts type="json" method="post">
+        <object>
+          <name type="string" min="5" max="64" />
+          <email type="string" min="6" max="256" />
+          <password type="string" min="6" max="32" />
+        </object>
+      </accepts>
+      <returns>
+        <success type="text/plain">
+          <string>pending_{email}</string>
+        </success>
+        <failure type="text/plain">
+          <string>server_failed</string>
+          <string>email_is_taken</string>
+          <string>name_is_taken</string>
+          <string>{exception}</string>
+        </failure>
+      </returns>
+    </option>
+    <option>
+      <name usage="/api/account/val">val</name>
+      <description>email address validation and registration completion</description>
+      <accepts type="json" method="post">
+        <code type="int64, string" />
+      </accepts>
+      <returns>
+        <success type="text/plain">
+          <string>added_{email}</string>
+        </success>
+        <failure type="text/plain">
+          <string>server_failed</string>
+          <string>email_is_taken</string>
+          <string>name_is_taken</string>
+          <string>invalid_confirmation_id</string>
+          <string>register_request_required</string>
+          <string>{exception}</string>
+        </failure>
+      </returns>
+    </option>
+    <option>
+      <name usage="/api/account/sign">sign</name>
+      <description>accumulates security token and sets response cookie [Chat_Authentication_Token] = token</description>
+      <accepts type="json" method="post">
+        <object>
+          <email type="string" min="6" max="256" />
+          <password type="string" min="6" max="32" />
+        </object>
+      </accepts>
+      <returns>
+        <success type="text/plain">
+          <string>OK</string>
+        </success>
+        <failure type="text/plain">
+          <string>server_failed</string>
+          <string>already_signed</string>
+          <string>user_not_found</string>
+          <string>password_incorrect</string>
+          <string>{exception}</string>
+        </failure>
+      </returns>
+    </option>
+    <option>
+      <name usage="/api/account/sign/out">sign/out</name>
+      <description>deletes security token and clears response cookie [Chat_Authentication_Token] = token</description>
+      <accepts method="post">none</accepts>
+      <returns>
+        <success type="text/plain">
+          <string>OK</string>
+        </success>
+        <failure type="text/plain">
+          <string>server_failed</string>
+          <string>not_signed</string>
+          <string>token_not_found</string>
+          <string>{exception}</string>
+        </failure>
+      </returns>
+    </option>
+    <option>
+      <name usage="/api/account/del">del</name>
+      <description>deletes account from database</description>
+      <accepts method="post">
+        <object>
+          <email type="string" min="6" max="256" />
+          <password type="string" min="6" max="32" />
+        </object>
+      </accepts>
+      <returns>
+        <success type="text/plain">
+          <string>OK</string>
+        </success>
+        <failure type="text/plain">
+          <string>server_failed</string>
+          <string>not_found</string>
+          <string>password_incorrect</string>
+          <string>{exception}</string>
+        </failure>
+      </returns>
+    </option>
+  </account>
 </api>

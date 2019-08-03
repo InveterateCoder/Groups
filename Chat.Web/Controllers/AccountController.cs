@@ -1,10 +1,7 @@
 ﻿using Chat.Web.Models;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
@@ -15,16 +12,16 @@ using System.Threading.Tasks;
 
 namespace Chat.Web.Controllers
 {
-    [Route("api")]
+    [Route("api/[controller]")]
     [ApiController]
-    public class ChatApiController : ControllerBase
+    public class AccountController : ControllerBase
     {
         private ChatterersDb chatterersDb;
-        public ChatApiController(ChatterersDb chaDb)
+        public AccountController(ChatterersDb chaDb)
         {
             chatterersDb = chaDb;
         }
-        [HttpGet]
+        [HttpGet("~/api")]
         [Produces("application/xml")]
         public ContentResult ApiList()
         {
@@ -35,7 +32,7 @@ namespace Chat.Web.Controllers
             }
             return Content(content, "application/xml", Encoding.UTF8);
         }
-        [HttpPost("account/reg")]
+        [HttpPost("reg")]
         [Produces("text/plain")]
         public async Task<ContentResult> RequestRegister([FromBody]RegRequest request)
         {
@@ -85,14 +82,19 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("account/val")]
+        [HttpPost("val")]
         [Produces("text/plain")]
-        public async Task<ContentResult> Validate([FromBody]object _id)
+        public async Task<ContentResult> Validate([Required, FromBody]object _id)
         {
             string ret = "server_failed";
             try
             {
-                long id = (long)_id;
+                long id;
+                string ids = _id as string;
+                if (ids != null)
+                    id = long.Parse(ids);
+                else
+                    id = (long)_id;
                 if (id < 1234 || id > 9876)
                     throw new InvalidDataException("invalid_confirmation_id");
                 string fileId = id.ToString();
@@ -159,7 +161,7 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("account/sign")]
+        [HttpPost("sign")]
         [Produces("text/plain")]
         public async Task<ContentResult> SignIn([FromBody]SignRequest request)
         {
@@ -199,7 +201,7 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("account/sign/out")]
+        [HttpPost("sign/out")]
         [Produces("text/plain")]
         public async Task<ContentResult> SignOut()
         {
@@ -232,7 +234,7 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("account/del")]
+        [HttpPost("del")]
         [Produces("text/plain")]
         public async Task<ContentResult> Delete([FromBody]SignRequest request)
         {
