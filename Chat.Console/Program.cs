@@ -9,6 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Chat.Console
 {
@@ -16,10 +18,9 @@ namespace Chat.Console
     {
         static void Main(string[] args)
         {
-            SHA256 sha256 = SHA256.Create();
-            byte[] arr = sha256.ComputeHash(Encoding.ASCII.GetBytes("What is it?"));
-            string str = Convert.ToBase64String(arr);
-            console.WriteLine(str.Length);
+            List<string> arr = new List<string>() { "hello", "boom", "looomia", "moon", "gorrial", "af", "bf", "ac", "язык", "повар", "повариха", "Я", "я", "кукла", "куколка"};
+            var some = arr.OrderBy(o => o, StringComparer.OrdinalIgnoreCase).Take(35);
+            console.WriteLine(string.Join(',', some));
         }
     }
 }

@@ -22,7 +22,6 @@ namespace Chat.Web.Controllers
             chatterersDb = chaDb;
         }
         [HttpGet("~/api")]
-        [Produces("application/xml")]
         public ContentResult ApiList()
         {
             string content;
@@ -33,10 +32,9 @@ namespace Chat.Web.Controllers
             return Content(content, "application/xml", Encoding.UTF8);
         }
         [HttpPost("reg")]
-        [Produces("text/plain")]
         public async Task<ContentResult> RequestRegister([FromBody]RegRequest request)
         {
-            string ret = "server_failed";
+            string ret;
             try
             {
                 if (chatterersDb.Chatterers.Any(c => c.Email == request.Email))
@@ -83,10 +81,9 @@ namespace Chat.Web.Controllers
             return Content(ret, "text/plain");
         }
         [HttpPost("val")]
-        [Produces("text/plain")]
         public async Task<ContentResult> Validate([Required, FromBody]object _id)
         {
-            string ret = "server_failed";
+            string ret;
             try
             {
                 long id;
@@ -162,10 +159,9 @@ namespace Chat.Web.Controllers
             return Content(ret, "text/plain");
         }
         [HttpPost("sign")]
-        [Produces("text/plain")]
         public async Task<ContentResult> SignIn([FromBody]SignRequest request)
         {
-            string ret = "server_failed";
+            string ret;
             try
             {
                 if (Request.Cookies[StaticData.AuthenticationCookieName] != null)
@@ -202,10 +198,9 @@ namespace Chat.Web.Controllers
             return Content(ret, "text/plain");
         }
         [HttpPost("sign/out")]
-        [Produces("text/plain")]
         public async Task<ContentResult> SignOut()
         {
-            string ret = "server_failed";
+            string ret;
             try
             {
                 string token = HttpContext.Request.Cookies[StaticData.AuthenticationCookieName];
@@ -235,10 +230,9 @@ namespace Chat.Web.Controllers
             return Content(ret, "text/plain");
         }
         [HttpPost("del")]
-        [Produces("text/plain")]
         public async Task<ContentResult> Delete([FromBody]SignRequest request)
         {
-            string ret = "server_failed";
+            string ret;
             try
             {
                 Response.Cookies.Delete(StaticData.AuthenticationCookieName);

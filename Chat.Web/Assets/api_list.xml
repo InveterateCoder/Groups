@@ -16,7 +16,6 @@
           <string>pending_{email}</string>
         </success>
         <failure type="text/plain">
-          <string>server_failed</string>
           <string>email_is_taken</string>
           <string>name_is_taken</string>
           <string>{exception}</string>
@@ -34,7 +33,6 @@
           <string>added_{email}</string>
         </success>
         <failure type="text/plain">
-          <string>server_failed</string>
           <string>email_is_taken</string>
           <string>name_is_taken</string>
           <string>invalid_confirmation_id</string>
@@ -57,7 +55,6 @@
           <string>OK</string>
         </success>
         <failure type="text/plain">
-          <string>server_failed</string>
           <string>already_signed</string>
           <string>user_not_found</string>
           <string>password_incorrect</string>
@@ -74,7 +71,6 @@
           <string>OK</string>
         </success>
         <failure type="text/plain">
-          <string>server_failed</string>
           <string>not_signed</string>
           <string>token_not_found</string>
           <string>{exception}</string>
@@ -95,7 +91,6 @@
           <string>OK</string>
         </success>
         <failure type="text/plain">
-          <string>server_failed</string>
           <string>not_found</string>
           <string>password_incorrect</string>
           <string>{exception}</string>

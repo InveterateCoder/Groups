@@ -38,7 +38,9 @@ namespace Chat.Web.Infrastructure
                     UserInit(user, chatterer.Name, chatterer.Group, chatterer.InGroup, token);
                 }
             }
-            if (context.Request.Path.Equals(PathString.FromUriComponent("/hub"), StringComparison.OrdinalIgnoreCase) && user.Name == null)
+            if (((context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/hub"), StringComparison.OrdinalIgnoreCase)
+                || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/dummy"), StringComparison.OrdinalIgnoreCase))) //include /api/group
+                && user.Name == null)
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             else
                 await _next(context);
