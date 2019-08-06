@@ -11,46 +11,42 @@ namespace Chat.Web.Infrastructure
     {
         private readonly RequestDelegate _next;
         public CustomAuthenticationMiddleware(RequestDelegate next) => _next = next;
-        public async Task InvokeAsync(HttpContext context, User user, ChatterersDb dbContext)
+        public async Task InvokeAsync(HttpContext context, User user, ChatterersDb dbContext, ActiveUsers activeUsers)
         {
             string token = context.Request.Cookies[StaticData.AuthenticationCookieName];
-            if (string.IsNullOrEmpty(token))
-                UserInit(user);
-            else
+            if (token != null)
             {
-                var chatterer = dbContext.Chatterers.Where(c => c.Token == token).FirstOrDefault();
+                var chatterer = dbContext.Chatterers.Where(c => c.Token == token).SingleOrDefault();
                 if(chatterer == null)
-                {
-                    UserInit(user);
                     context.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                }
                 else
                 {
-                    if (!string.IsNullOrEmpty(chatterer.InGroup))
+                    if(activeUsers.Users.Any(u=>u.Name == chatterer.Name))
                     {
-                        if (!(chatterer.InGroupPassword == dbContext.Chatterers.Where(c => c.Group == chatterer.InGroup).FirstOrDefault()?.GroupPassword))
+                        context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                        return;
+                    }
+                    if (chatterer.InGroup != null)
+                    {
+                        if (!(chatterer.InGroupPassword == dbContext.Chatterers.Where(c => c.Group == chatterer.InGroup).SingleOrDefault()?.GroupPassword))
                         {
                             chatterer.InGroup = null;
                             chatterer.InGroupPassword = null;
                             await dbContext.SaveChangesAsync();
                         }
                     }
-                    UserInit(user, chatterer.Name, chatterer.Group, chatterer.InGroup, token);
+                    user.Name = chatterer.Name;
+                    user.Group = chatterer.Group;
+                    user.InGroup = chatterer.InGroup;
+                    user.Token = token;
                 }
             }
             if (((context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/hub"), StringComparison.OrdinalIgnoreCase)
-                || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/dummy"), StringComparison.OrdinalIgnoreCase))) //include /api/group
+                || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/group"), StringComparison.OrdinalIgnoreCase)))
                 && user.Name == null)
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             else
                 await _next(context);
-        }
-        public void UserInit(User user, string name = null, string group = null, string inGroup = null, string token = null)
-        {
-            user.Name = name;
-            user.Group = group;
-            user.InGroup = inGroup;
-            user.Token = token;
         }
     }
 }

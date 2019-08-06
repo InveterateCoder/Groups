@@ -24,6 +24,7 @@ namespace Chat.Web
             {
                 opts.UseSqlServer(Configuration.GetConnectionString("Users"));
             });
+            services.AddSingleton<ActiveUsers>();
             services.AddScoped<User>();
             services.AddCors(opts =>
             {

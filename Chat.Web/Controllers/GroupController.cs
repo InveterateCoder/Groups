@@ -31,12 +31,9 @@ namespace Chat.Web.Controllers
                     return new JsonResult(0);
                 if (quantity == 0)
                     return new JsonResult(groupsCount - start);
-                else
-                {
-                    if (start + quantity > groupsCount)
-                        quantity = groupsCount - start;
-                    return new JsonResult(groups.OrderBy(o => o, StringComparer.OrdinalIgnoreCase).TakeLast(groupsCount - start).Take(quantity));
-                }
+                if (start + quantity > groupsCount)
+                    quantity = groupsCount - start;
+                return new JsonResult(groups.OrderBy(o => o, StringComparer.OrdinalIgnoreCase).TakeLast(groupsCount - start).Take(quantity));
             }
             catch(Exception e)
             {
@@ -50,6 +47,68 @@ namespace Chat.Web.Controllers
             {
                 return new JsonResult(_dbContext.Chatterers.Select(c => c.Group).Where(g => g.StartsWith(query,
                     StringComparison.OrdinalIgnoreCase)).OrderBy(s => s, StringComparer.OrdinalIgnoreCase).Take(max));
+            }
+            catch(Exception e)
+            {
+                return new JsonResult(e.Message);
+            }
+        }
+        [HttpGet("members/{start:int:min(0)}/{quantity:int:range(1,100)?}")]
+        public JsonResult GroupMembers(int start, int quantity)
+        {
+            try
+            {
+                var members = _dbContext.Chatterers.Where(c => c.InGroup == _user.InGroup).Select(c => c.Name);
+                var membersCount = members.Count();
+                if (membersCount <= start)
+                    return new JsonResult(0);
+                if (quantity == 0)
+                    return new JsonResult(membersCount - start);
+                if (start + quantity > membersCount)
+                    quantity = membersCount - start;
+                return new JsonResult(members.OrderBy(o => o, StringComparer.OrdinalIgnoreCase).TakeLast(membersCount - start).Take(quantity));
+            }
+            catch(Exception e)
+            {
+                return new JsonResult(e.Message);
+            }
+        }
+        [HttpGet("msgs/before/{jsdate:long:min(0)}/{max:int:range(1,100)}")]
+        public JsonResult MessagesBefore(long jsdate, int max)
+        {
+            try
+            {
+                long ticks = StaticData.JsMsToTicks(jsdate);
+                long ticksLimit = DateTime.UtcNow.Date.Ticks - TimeSpan.FromDays(30).Ticks;
+                if (ticks < ticksLimit)
+                    return new JsonResult(-1);
+                var messages = _dbContext.Chatterers.Where(c => c.Group == _user.InGroup).SingleOrDefault()?.GroupMessages?.Where(m => m.Date >= ticksLimit && m.Date < ticks).OrderByDescending(m => m.Date);
+                if (messages == null)
+                    return new JsonResult(0);
+                if (messages.Count() <= max)
+                    return new JsonResult(messages);
+                return new JsonResult(messages.Take(max));
+            }
+            catch(Exception e)
+            {
+                return new JsonResult(e.Message);
+            }
+        }
+        [HttpGet("msgs/after/{jsdate:long:min(0)}/{max:int:range(1,100)}")]
+        public JsonResult MessagesAfter(long jsdate, int max)
+        {
+            try
+            {
+                long ticks = StaticData.JsMsToTicks(jsdate);
+                long ticksLimit = DateTime.UtcNow.Date.Ticks - TimeSpan.FromDays(30).Ticks;
+                if (ticks < ticksLimit)
+                    return new JsonResult(-1);
+                var messages = _dbContext.Chatterers.Where(c => c.Group == _user.InGroup).SingleOrDefault()?.GroupMessages?.Where(m => m.Date > ticks).OrderBy(m => m.Date);
+                if (messages == null)
+                    return new JsonResult(0);
+                if (messages.Count() <= max)
+                    return new JsonResult(messages);
+                return new JsonResult(messages.Take(max));
             }
             catch(Exception e)
             {

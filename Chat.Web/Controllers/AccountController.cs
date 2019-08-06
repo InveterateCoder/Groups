@@ -16,67 +16,64 @@ namespace Chat.Web.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private ChatterersDb chatterersDb;
-        public AccountController(ChatterersDb chaDb)
+        private ChatterersDb _dbContext;
+        private User _user;
+        public AccountController(ChatterersDb chaDb, User user)
         {
-            chatterersDb = chaDb;
-        }
-        [HttpGet("~/api")]
-        public ContentResult ApiList()
-        {
-            string content;
-            using(StreamReader reader = new StreamReader($"{StaticData.RootPath}{Path.DirectorySeparatorChar}Assets{Path.DirectorySeparatorChar}api_list.xml"))
-            {
-                content = reader.ReadToEnd();
-            }
-            return Content(content, "application/xml", Encoding.UTF8);
+            _dbContext = chaDb;
+            _user = user;
         }
         [HttpPost("reg")]
         public async Task<ContentResult> RequestRegister([FromBody]RegRequest request)
         {
             string ret;
-            try
+            if (_user.Name != null)
+                ret = "registered";
+            else
             {
-                if (chatterersDb.Chatterers.Any(c => c.Email == request.Email))
-                    ret = "email_is_taken";
-                else if (chatterersDb.Chatterers.Any(c => c.Name == request.Name))
-                    ret = "name_is_taken";
-                else
+                try
                 {
-                    Random rand = new Random();
-                    string path = Path.Join(StaticData.RootPath, "RegFiles");
-                    string[] files;
-                    try
+                    if (_dbContext.Chatterers.Any(c => c.Email == request.Email))
+                        ret = "email_is_taken";
+                    else if (_dbContext.Chatterers.Any(c => c.Name == request.Name))
+                        ret = "name_is_taken";
+                    else
                     {
-                        files = Directory.GetFiles(path);
-                    }
-                    catch (DirectoryNotFoundException)
-                    {
-                        Directory.CreateDirectory(path);
-                        files = Directory.GetFiles(path);
-                    }
-                    string fileName = rand.Next(1234, 9876).ToString();
-                    if (files.Length > 0)
-                    {
-                        for (int i = 0; i < files.Length; i++)
+                        Random rand = new Random();
+                        string path = Path.Join(StaticData.RootPath, "RegFiles");
+                        string[] files;
+                        try
                         {
-                            string iName = Path.GetFileNameWithoutExtension(files[i]);
-                            if (iName.Substring(iName.Length - 4) == fileName)
+                            files = Directory.GetFiles(path);
+                        }
+                        catch (DirectoryNotFoundException)
+                        {
+                            Directory.CreateDirectory(path);
+                            files = Directory.GetFiles(path);
+                        }
+                        string fileName = rand.Next(1234, 9876).ToString();
+                        if (files.Length > 0)
+                        {
+                            for (int i = 0; i < files.Length; i++)
                             {
-                                fileName = rand.Next(1234, 9876).ToString();
-                                i = -1;
+                                string iName = Path.GetFileNameWithoutExtension(files[i]);
+                                if (iName.Substring(iName.Length - 4) == fileName)
+                                {
+                                    fileName = rand.Next(1234, 9876).ToString();
+                                    i = -1;
+                                }
                             }
                         }
+                        using (StreamWriter writer = new StreamWriter($"{path}{Path.DirectorySeparatorChar}{DateTime.UtcNow.Ticks}_{fileName}.json"))
+                            writer.Write(JsonConvert.SerializeObject(request));
+                        await SendMail(request.Email, request.Name, fileName);
+                        ret = "pending_" + request.Email;
                     }
-                    using (StreamWriter writer = new StreamWriter($"{path}{Path.DirectorySeparatorChar}{DateTime.UtcNow.Ticks}_{fileName}.json"))
-                        writer.Write(JsonConvert.SerializeObject(request));
-                    await SendMail(request.Email, request.Name, fileName);
-                    ret = "pending_" + request.Email;
                 }
-            }
-            catch (Exception e)
-            {
-                ret = e.Message;
+                catch (Exception e)
+                {
+                    ret = e.Message;
+                }
             }
             return Content(ret, "text/plain");
         }
@@ -84,91 +81,96 @@ namespace Chat.Web.Controllers
         public async Task<ContentResult> Validate([Required, FromBody]object _id)
         {
             string ret;
-            try
+            if (_user.Name != null)
+                ret = "registered";
+            else
             {
-                long id;
-                string ids = _id as string;
-                if (ids != null)
-                    id = long.Parse(ids);
-                else
-                    id = (long)_id;
-                if (id < 1234 || id > 9876)
-                    throw new InvalidDataException("invalid_confirmation_id");
-                string fileId = id.ToString();
-                RegRequest request = null;
-                string path = Path.Join(StaticData.RootPath, "RegFiles");
-                string[] files;
                 try
                 {
-                    files = Directory.GetFiles(path);
-                }
-                catch
-                {
-                    throw new InvalidOperationException("register_request_required");
-                }
-                if (files.Length <= 0)
-                {
-                    ret = "register_request_required";
-                }
-                else
-                {
-                    foreach (var file in files)
+                    long id;
+                    string ids = _id as string;
+                    if (ids != null)
+                        id = long.Parse(ids);
+                    else
+                        id = (long)_id;
+                    if (id < 1234 || id > 9876)
+                        throw new InvalidDataException("invalid_confirmation_id");
+                    string fileId = id.ToString();
+                    RegRequest request = null;
+                    string path = Path.Join(StaticData.RootPath, "RegFiles");
+                    string[] files;
+                    try
                     {
-                        string[] fileName = Path.GetFileNameWithoutExtension(file).Split('_');
-                        if (DateTime.UtcNow.Ticks - long.Parse(fileName[0]) > TimeSpan.FromHours(1).Ticks)
-                            System.IO.File.Delete(file);
+                        files = Directory.GetFiles(path);
+                    }
+                    catch
+                    {
+                        throw new InvalidOperationException("register_request_required");
+                    }
+                    if (files.Length <= 0)
+                    {
+                        ret = "register_request_required";
+                    }
+                    else
+                    {
+                        foreach (var file in files)
+                        {
+                            string[] fileName = Path.GetFileNameWithoutExtension(file).Split('_');
+                            if (DateTime.UtcNow.Ticks - long.Parse(fileName[0]) > TimeSpan.FromHours(1).Ticks)
+                                System.IO.File.Delete(file);
+                            else
+                            {
+                                if (fileName[1] == fileId)
+                                {
+                                    using (StreamReader reader = new StreamReader(file))
+                                    {
+                                        request = JsonConvert.DeserializeObject<RegRequest>(reader.ReadToEnd());
+                                    }
+                                    System.IO.File.Delete(file);
+                                }
+                            }
+                        }
+                        if (request == null)
+                            ret = "register_request_required";
                         else
                         {
-                            if (fileName[1] == fileId)
+                            if (_dbContext.Chatterers.Any(c => c.Email == request.Email))
+                                ret = "email_is_taken";
+                            else if (_dbContext.Chatterers.Any(c => c.Name == request.Name))
+                                ret = "name_is_taken";
+                            else
                             {
-                                using (StreamReader reader = new StreamReader(file))
+                                await _dbContext.Chatterers.AddAsync(new ChatterersDb.Chatterer
                                 {
-                                    request = JsonConvert.DeserializeObject<RegRequest>(reader.ReadToEnd());
-                                }
-                                System.IO.File.Delete(file);
+                                    Name = request.Name,
+                                    Email = request.Email,
+                                    Password = request.Password,
+                                    LastActive = DateTime.UtcNow.Ticks
+                                });
+                                await _dbContext.SaveChangesAsync();
+                                ret = "added_" + request.Email;
                             }
                         }
                     }
-                    if (request == null)
-                        ret = "register_request_required";
-                    else
-                    {
-                        if (chatterersDb.Chatterers.Any(c => c.Email == request.Email))
-                            ret = "email_is_taken";
-                        else if (chatterersDb.Chatterers.Any(c => c.Name == request.Name))
-                            ret = "name_is_taken";
-                        else
-                        {
-                            await chatterersDb.Chatterers.AddAsync(new ChatterersDb.Chatterer
-                            {
-                                Name = request.Name,
-                                Email = request.Email,
-                                Password = request.Password,
-                                LastActive = DateTime.UtcNow.Ticks
-                            });
-                            await chatterersDb.SaveChangesAsync();
-                            ret = "added_" + request.Email;
-                        }
-                    }
                 }
-            }
-            catch (Exception e)
-            {
-                ret = e.Message;
+                catch (Exception e)
+                {
+                    ret = e.Message;
+                }
             }
             return Content(ret, "text/plain");
         }
         [HttpPost("sign")]
-        public async Task<ContentResult> SignIn([FromBody]SignRequest request)
+        public async Task<ContentResult> SignIn([FromBody]SignRequest request, [FromServices]ActiveUsers activeUsers)
         {
             string ret;
             try
             {
-                if (Request.Cookies[StaticData.AuthenticationCookieName] != null)
+                if (_user.Name != null)
                     ret = "already_signed";
                 else
                 {
-                    var user = chatterersDb.Chatterers.Where(c => c.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                    var user = _dbContext.Chatterers.Where(c => c.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase)).SingleOrDefault();
                     if (user == null)
                         ret = "user_not_found";
                     else
@@ -177,16 +179,21 @@ namespace Chat.Web.Controllers
                             ret = "password_incorrect";
                         else
                         {
-                            SHA256 sha256 = SHA256.Create();
-                            byte[] bytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(
-                                $"{DateTime.UtcNow.ToString()}-{user.Name}-{user.Email}-{user.Password}-{Guid.NewGuid().ToString()}"));
-                            user.Token = Convert.ToBase64String(bytes);
-                            user.LastActive = DateTime.UtcNow.Ticks;
-                            sha256.Dispose();
-                            bytes = null;
-                            await chatterersDb.SaveChangesAsync();
-                            HttpContext.Response.Cookies.Append(StaticData.AuthenticationCookieName, user.Token);
-                            ret = "OK";
+                            if (activeUsers.Users.Any(u => u.Name == user.Name))
+                                ret = "multiple_signins_forbidden";
+                            else
+                            {
+                                SHA256 sha256 = SHA256.Create();
+                                byte[] bytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(
+                                    $"{DateTime.UtcNow.ToString()}-{user.Name}-{user.Email}-{user.Password}-{Guid.NewGuid().ToString()}"));
+                                user.Token = Convert.ToBase64String(bytes);
+                                user.LastActive = DateTime.UtcNow.Ticks;
+                                sha256.Dispose();
+                                bytes = null;
+                                await _dbContext.SaveChangesAsync();
+                                HttpContext.Response.Cookies.Append(StaticData.AuthenticationCookieName, user.Token);
+                                ret = "OK";
+                            }
                         }
                     }
                 }
@@ -203,12 +210,11 @@ namespace Chat.Web.Controllers
             string ret;
             try
             {
-                string token = HttpContext.Request.Cookies[StaticData.AuthenticationCookieName];
-                if (token == null)
+                if (_user.Token == null)
                     ret = "not_signed";
                 else
                 {
-                    var chatterer = chatterersDb.Chatterers.Where(c => c.Token == token).FirstOrDefault();
+                    var chatterer = _dbContext.Chatterers.Where(c => c.Token == _user.Token).SingleOrDefault();
                     if (chatterer == null)
                     {
                         ret = "token_not_found";
@@ -217,7 +223,7 @@ namespace Chat.Web.Controllers
                     else
                     {
                         chatterer.Token = null;
-                        await chatterersDb.SaveChangesAsync();
+                        await _dbContext.SaveChangesAsync();
                         HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
                         ret = "OK";
                     }
@@ -235,25 +241,106 @@ namespace Chat.Web.Controllers
             string ret;
             try
             {
-                Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                var chatterer = chatterersDb.Chatterers.Where(c => c.Email == request.Email).FirstOrDefault();
-                if (chatterer == null)
-                    ret = "not_found";
+                if (_user.Name == null)
+                    ret = "not_signed";
                 else
                 {
-                    if (chatterer.Password != request.Password)
-                        ret = "password_incorrect";
+                    var chatterer = _dbContext.Chatterers.Where(c => c.Email == request.Email).SingleOrDefault();
+                    if (chatterer == null)
+                        ret = "not_found";
                     else
                     {
-                        chatterersDb.Chatterers.Remove(chatterer);
-                        await chatterersDb.SaveChangesAsync();
-                        ret = "OK";
+                        if (chatterer.Password != request.Password)
+                            ret = "password_incorrect";
+                        else
+                        {
+                            Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                            _dbContext.Chatterers.Remove(chatterer);
+                            await _dbContext.SaveChangesAsync();
+                            ret = "OK";
+                        }
                     }
                 }
             }
             catch(Exception e)
             {
                 ret = e.Message;
+            }
+            return Content(ret, "text/plain");
+        }
+        [HttpPost("change/pass")]
+        public async Task<ContentResult> ChangePassword([FromBody]ChangePasswordRequest request)
+        {
+            string ret;
+            if (_user.Name == null)
+                ret = "not_signed";
+            else
+            {
+                try
+                {
+                    var chatterer = _dbContext.Chatterers.Where(c => c.Email == request.SignInInfo.Email).SingleOrDefault();
+                    if (chatterer == null)
+                        ret = "wrong_email";
+                    else
+                    {
+                        if (chatterer.Name != _user.Name)
+                            ret = "wrong_email";
+                        else
+                        {
+                            if (chatterer.Password != request.SignInInfo.Password)
+                                ret = "wrong_password";
+                            else
+                            {
+                                chatterer.Password = request.NewPassword;
+                                await _dbContext.SaveChangesAsync();
+                                Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                                ret = "OK";
+                            }
+                        }
+                    }
+                }
+                catch(Exception e)
+                {
+                    ret = e.Message;
+                }
+            }
+            return Content(ret, "text/plain");
+        }
+        [HttpPost("change/name")]
+        public async Task<ContentResult> ChangeName([FromBody]ChangeNameRequest request)
+        {
+            string ret;
+            if (_user.Name == null)
+                ret = "not_signed";
+            else
+            {
+                try
+                {
+                    var chatterer = _dbContext.Chatterers.Where(c => c.Email == request.SignInInfo.Email).SingleOrDefault();
+                    if (chatterer == null)
+                        ret = "wrong_email";
+                    else
+                    {
+                        if (chatterer.Name != _user.Name)
+                            ret = "wrong_email";
+                        else
+                        {
+                            if (chatterer.Password != request.SignInInfo.Password)
+                                ret = "wrong_password";
+                            else
+                            {
+                                chatterer.Name = request.NewName;
+                                await _dbContext.SaveChangesAsync();
+                                Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                                ret = "OK";
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    ret = e.Message;
+                }
             }
             return Content(ret, "text/plain");
         }
