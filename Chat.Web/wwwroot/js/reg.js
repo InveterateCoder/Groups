@@ -5,3 +5,6 @@
         reg_panel.style.marginTop = (window.innerHeight - reg_panel.offsetHeight) / 2 + 'px';
     });
 });
+function register() {
+
+}

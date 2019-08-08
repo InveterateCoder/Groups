@@ -36,6 +36,7 @@
     font-size:30px;
     width: 100%;
     max-width: 200px;
+    padding: 10px;
 }
 #reg_panel_menu > div:hover{
     color:white;
@@ -48,4 +49,56 @@
 #reg_panel_menu > div:hover:active{
     background-color: white;
     color: black;
+}
+#reg_registration {
+    margin: 0 20px;
+    font-size: 19px;
+    display: flex;
+    flex-flow: column;
+    height:75%;
+    justify-content: space-between;
+}
+#reg_registration input{
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid black;
+    font-size:17px;
+    width: 67%;
+}
+#reg_registration input:focus{
+    outline: none;
+}
+.btn_back > img {
+    width: 35px;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+.btn_back > img:hover{
+    cursor: pointer;
+    transform: scale(1.2, 1.2);
+}
+.btn_back > img:hover:active{
+    transform: scale(0.8,0.8);
+}
+.btn_back > span {
+    vertical-align: middle;
+}
+.title{
+    float: left;
+    width: 100px;
+}
+#clear_reg{
+    display: flex;
+    justify-content: space-evenly;
+    padding-bottom: 10px;
+}
+#clear_reg > img{
+    width:40px;
+    cursor: pointer;
+}
+#clear_reg > img:hover{
+    transform: scale(1.2, 1.2);
+}
+#clear_reg > img:hover:active{
+    transform: scale(0.8, 0.8);
 }
