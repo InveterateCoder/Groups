@@ -23,7 +23,6 @@
 
   <ItemGroup>
     <Folder Include="RegFiles\" />
-    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>
