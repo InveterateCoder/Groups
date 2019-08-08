@@ -1,15 +1,16 @@
 ﻿#reg {
     background-color: #000338;
     background-image: url("/images/concrete-wall-2.png");
-    position:absolute;
-    top:0;
-    left:0;
-    right:0;
-    bottom:0;
-    padding:10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px;
+    font-family: 'Concert One';
 }
 #reg_panel {
-    background-color: rgba(234,234,234,0.7);
+    background-color: rgba(234,234,234,0.65);
     top: 50%;
     width: 100%;
     height: 350px;
@@ -17,4 +18,34 @@
     border-radius: 15px;
     box-shadow: 0 0 10px black;
     margin: auto;
+}
+#reg_panel > div[class=header] {
+    font-size: 60px;
+    text-align: center;
+    padding-top: 12px;
+    text-shadow: 0 0 3px white;
+}
+#reg_panel_menu{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height:75%;
+}
+#reg_panel_menu > div {
+    text-align:center;
+    font-size:30px;
+    width: 100%;
+    max-width: 200px;
+}
+#reg_panel_menu > div:hover{
+    color:white;
+    background-color: #000338;
+    background-image: url("/images/concrete-wall-2.png");
+    border-radius:30px;
+    border:2px solid white;
+    cursor: pointer;
+}
+#reg_panel_menu > div:hover:active{
+    background-color: white;
+    color: black;
 }
