@@ -11,42 +11,65 @@
     <script asp-src-include="~/js/*"></script>
 </head>
 <body>
-    <div id="reg" class="disable-select">
-        <div id="reg_panel">
-            <div class="header">Groups</div>
-            <div id="reg_panel_menu">
-                <div>
-                    <img src="~/images/register.svg" style="width:80%" draggable="false" />
-                    <div>Register</div>
-                </div>
-                <div>
-                    <img src="~/images/signin.svg" style="width:80%" draggable="false" />
-                    <div>Sign In</div>
-                </div>
+    <div id="reg_panel" class="disable-select">
+        <div class="header">Groups</div>
+        <div id="reg_panel_menu">
+            <div>
+                <img src="~/images/register.svg" style="width:80%" draggable="false" />
+                <div>Register</div>
             </div>
-            <div id="reg_registration" style="display:none;">
-                <div class="btn_back">
-                    <img src="~/images/back.png" title="go back" />
-                    <span>Registration</span>
-                </div>
-                <div>
-                    <span class="title">Name:</span>
-                    <input type="text" spellcheck="false" />
-                </div>
-                <div>
-                    <span class="title">Email:</span>
-                    <input type="email" spellcheck="false"/>
-                </div>
-                <div>
-                    <span class="title">Password:</span>
-                    <input type="password"  maxlength="32"/>
-                </div>
-                <div id="clear_reg">
-                    <img src="~/images/clear.svg" draggable="false" title="clear" />
-                    <img src="~/images/unlock.svg" draggable="false" title="enter code" />
-                    <img src="~/images/register.svg" draggable="false" title="register" />
-                </div>
+            <div>
+                <img src="~/images/signin.svg" style="width:80%" draggable="false" />
+                <div>Sign In</div>
             </div>
+        </div>
+        <div class="reg_form" style="display:none;">
+            <div class="btn_back">
+                <img src="~/images/back.png" title="go back" class="reg_btn" />
+                <span>Registration</span>
+            </div>
+            <div>
+                <span class="title">Name:</span>
+                <input type="text" spellcheck="false" />
+            </div>
+            <div>
+                <span class="title">Email:</span>
+                <input type="email" spellcheck="false" />
+            </div>
+            <div>
+                <span class="title">Password:</span>
+                <input type="password" maxlength="32" />
+            </div>
+            <div class="action_panel">
+                <img src="~/images/clear.svg" draggable="false" title="clear" class="reg_btn" />
+                <img src="~/images/unlock.svg" draggable="false" title="enter code" class="reg_btn" />
+                <img src="~/images/register.svg" draggable="false" title="register" class="reg_btn" />
+            </div>
+        </div>
+        <div class="reg_form" style="display:none;">
+            <div class="btn_back">
+                <img src="~/images/back.png" title="go back" class="reg_btn" />
+                <span>Sign In</span>
+            </div>
+            <div>
+                <span class="title">Email:</span>
+                <input type="email" spellcheck="false" />
+            </div>
+            <div>
+                <span class="title">Password:</span>
+                <input type="password" maxlength="32" />
+            </div>
+            <div class="action_panel">
+                <img src="~/images/clear.svg" draggable="false" title="clear" class="reg_btn" />
+                <img src="~/images/signin.svg" draggable="false" title="sign in" class="reg_btn" />
+            </div>
+        </div>
+        <div id="reg_panel_verify" style="display:none;">
+            <p style="text-align:center">Enter 4 digit code from your verification email.</p>
+            <div style="text-align:center">
+                <input onkeypress="num(event)" oninput="pasteCancel(event)" type="text" maxlength="4" spellcheck="false" />
+            </div>
+            <img src="~/images/verify.svg" class="reg_btn" style="margin: 0 auto;" />
         </div>
     </div>
 </body>

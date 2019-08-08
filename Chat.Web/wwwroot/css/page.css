@@ -2,7 +2,9 @@
     box-sizing:border-box;
 }
 body {
-    margin:0;
+    margin: 0;
+    background-color: #000338;
+    background-image: url("/images/concrete-wall-2.png");
 }
 
 .disable-select {

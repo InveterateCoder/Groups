@@ -1,22 +1,11 @@
-﻿#reg {
-    background-color: #000338;
-    background-image: url("/images/concrete-wall-2.png");
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 10px;
-    font-family: 'Concert One';
-}
-#reg_panel {
+﻿#reg_panel {
     background-color: rgba(234,234,234,0.65);
-    top: 50%;
     width: 100%;
     height: 350px;
     max-width: 550px;
     border-radius: 15px;
     box-shadow: 0 0 10px black;
+    font-family: 'Concert One';
     margin: auto;
 }
 #reg_panel > div[class=header] {
@@ -50,35 +39,29 @@
     background-color: white;
     color: black;
 }
-#reg_registration {
+
+.reg_form {
     margin: 0 20px;
     font-size: 19px;
     display: flex;
     flex-flow: column;
-    height:75%;
+    height: 75%;
     justify-content: space-between;
 }
-#reg_registration input{
+.reg_form input{
     background-color: transparent;
     border: none;
     border-bottom: 1px solid black;
     font-size:17px;
     width: 67%;
 }
-#reg_registration input:focus{
+.reg_form input:focus{
     outline: none;
 }
 .btn_back > img {
     width: 35px;
     vertical-align: middle;
     margin-right: 10px;
-}
-.btn_back > img:hover{
-    cursor: pointer;
-    transform: scale(1.2, 1.2);
-}
-.btn_back > img:hover:active{
-    transform: scale(0.8,0.8);
 }
 .btn_back > span {
     vertical-align: middle;
@@ -87,18 +70,38 @@
     float: left;
     width: 100px;
 }
-#clear_reg{
+.action_panel{
     display: flex;
     justify-content: space-evenly;
     padding-bottom: 10px;
 }
-#clear_reg > img{
-    width:40px;
+
+#reg_panel_verify{
+    display: flex;
+    height: 75%;
+    flex-flow: column;
+    justify-content: space-around;
+    font-size: 19px;
+}
+.reg_btn{
+    width: 40px;
     cursor: pointer;
 }
-#clear_reg > img:hover{
-    transform: scale(1.2, 1.2);
+.reg_btn:hover{
+    transform: scale(1.1, 1.1);
 }
-#clear_reg > img:hover:active{
-    transform: scale(0.8, 0.8);
+.reg_btn:hover:active{
+    transform: scale(0.9, 0.9);
+}
+#reg_panel_verify input {
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid black;
+    font-size: 60px;
+    width:160px;
+    text-align:center;
+    letter-spacing:5px;
+}
+#reg_panel_verify input:focus{
+    outline:none;
 }
