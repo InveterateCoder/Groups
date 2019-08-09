@@ -67,9 +67,9 @@
         <div id="reg_panel_verify" style="display:none;">
             <p style="text-align:center">Enter 4 digit code from your verification email.</p>
             <div style="text-align:center">
-                <input onkeypress="num(event)" oninput="pasteCancel(event)" type="text" maxlength="4" spellcheck="false" />
+                <input onkeypress="app.reg_panel.num(event)" oninput="app.reg_panel.pasteFilter(event)" type="text" maxlength="4" spellcheck="false" />
             </div>
-            <img src="~/images/verify.svg" class="reg_btn" style="margin: 0 auto;" />
+            <img src="~/images/verify.svg" class="reg_btn" style="margin: 0 auto;" title="verify" />
         </div>
     </div>
 </body>
