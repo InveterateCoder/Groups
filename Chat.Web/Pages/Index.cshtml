@@ -14,19 +14,22 @@
     <div id="reg_panel" class="disable-select">
         <div class="header">Groups</div>
         <div id="reg_panel_menu">
-            <div>
+            <div onclick="app.reg_panel.goto('reg')">
                 <img src="~/images/register.svg" style="width:80%" draggable="false" />
                 <div>Register</div>
             </div>
-            <div>
+            <div onclick="app.reg_panel.goto('sign')">
                 <img src="~/images/signin.svg" style="width:80%" draggable="false" />
                 <div>Sign In</div>
             </div>
         </div>
         <div class="reg_form" style="display:none;">
             <div class="btn_back">
-                <img src="~/images/back.png" title="go back" class="reg_btn" />
-                <span>Registration</span>
+                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
+                    <img src="~/images/back.png" title="go back" width="35" />
+                </div>
+                <span>Register</span>
             </div>
             <div>
                 <span class="title">Name:</span>
@@ -41,14 +44,26 @@
                 <input type="password" maxlength="32" />
             </div>
             <div class="action_panel">
-                <img src="~/images/clear.svg" draggable="false" title="clear" class="reg_btn" />
-                <img src="~/images/unlock.svg" draggable="false" title="enter code" class="reg_btn" />
-                <img src="~/images/register.svg" draggable="false" title="register" class="reg_btn" />
+                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.clear('reg')">
+                    <img src="~/images/clear.svg" draggable="false" title="clear" width="40" />
+                </div>
+                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('numb')">
+                    <img src="~/images/unlock.svg" draggable="false" title="enter code" width="40" />
+                </div>
+                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)">
+                    <img src="~/images/register.svg" draggable="false" title="register" width="40" />
+                </div>
             </div>
         </div>
         <div class="reg_form" style="display:none;">
             <div class="btn_back">
-                <img src="~/images/back.png" title="go back" class="reg_btn" />
+                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
+                    <img src="~/images/back.png" title="go back" width="35" />
+                </div>
                 <span>Sign In</span>
             </div>
             <div>
@@ -60,8 +75,14 @@
                 <input type="password" maxlength="32" />
             </div>
             <div class="action_panel">
-                <img src="~/images/clear.svg" draggable="false" title="clear" class="reg_btn" />
-                <img src="~/images/signin.svg" draggable="false" title="sign in" class="reg_btn" />
+                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.clear('sign')">
+                    <img src="~/images/clear.svg" draggable="false" title="clear" width="40" />
+                </div>
+                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)">
+                    <img src="~/images/signin.svg" draggable="false" title="sign in" width="40" />
+                </div>
             </div>
         </div>
         <div id="reg_panel_verify" style="display:none;">
@@ -69,8 +90,18 @@
             <div style="text-align:center">
                 <input onkeypress="app.reg_panel.num(event)" oninput="app.reg_panel.pasteFilter(event)" type="text" maxlength="4" spellcheck="false" />
             </div>
-            <img src="~/images/verify.svg" class="reg_btn" style="margin: 0 auto;" title="verify" />
+            <div class="action_panel">
+                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
+                    <img src="~/images/home.svg" draggable="false" width="40" title="home" />
+                </div>
+                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)">
+                    <img src="~/images/verify.svg" draggable="false" width="40" title="verify" />
+                </div>
+            </div>
         </div>
     </div>
+    <div id="wait"></div>
 </body>
 </html>

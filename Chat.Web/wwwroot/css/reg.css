@@ -52,16 +52,20 @@
     background-color: transparent;
     border: none;
     border-bottom: 1px solid black;
-    font-size:17px;
+    font-size:19px;
     width: 67%;
 }
 .reg_form input:focus{
     outline: none;
 }
-.btn_back > img {
-    width: 35px;
+.btn_back > div {
+    display:inline;
     vertical-align: middle;
     margin-right: 10px;
+}
+.btn_back > div > img {
+    width:35px;
+    vertical-align: middle;
 }
 .btn_back > span {
     vertical-align: middle;
@@ -82,16 +86,6 @@
     flex-flow: column;
     justify-content: space-around;
     font-size: 19px;
-}
-.reg_btn{
-    width: 40px;
-    cursor: pointer;
-}
-.reg_btn:hover{
-    transform: scale(1.1, 1.1);
-}
-.reg_btn:hover:active{
-    transform: scale(0.9, 0.9);
 }
 #reg_panel_verify input {
     background-color: transparent;
