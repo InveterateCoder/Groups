@@ -6,8 +6,87 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 class api_class {
-    register(name, email, password) {
-
+    constructor() { }
+    async register(chatterer) {
+        try {
+            let ret = false;
+            let resp = await this.post('/api/account/reg', chatterer);
+            switch (resp){
+                case "registered":
+                    app.alert("already registered");
+                    break;
+                case "email_is_taken":
+                    app.alert("this email is registered already")
+                    break;
+                case "name_is_taken":
+                    app.alert("this nick name has been taken by another user")
+                    break;
+                case "pending_" + chatterer.email:
+                    ret = true;
+                    break;
+                default:
+                    app.alert(resp);
+                    break;
+            }
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
+    async validate(number) {
+        try {
+            let ret = false;
+            let resp = await this.post('api/account/val', number);
+            switch (resp) {
+                case "registered":
+                    app.alert("already registered");
+                    break;
+                case "invalid_confirmation_id":
+                    app.alert("wrong number");
+                    break;
+                case "register_request_required":
+                    app.alert("registration is required prior to email verification");
+                    break;
+                case "email_is_taken":
+                    app.alert("this email is registered already")
+                    break;
+                case "name_is_taken":
+                    app.alert("this nick name has been taken by another user")
+                    break;
+                case "added_" + chatterer.email:
+                    ret = true;
+                    break;
+                default:
+                    app.alert(resp);
+                    break;
+            }
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
+    async post(addr, obj) {
+        app.wait();
+        let ret;
+        try {
+            let resp = await fetch(addr, {
+                method: 'post',
+                headers: {
+                    'Accept': 'plain/text', 'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(obj)
+            });
+            ret = await resp.text();
+        }
+        catch (err) {
+            ret = err.message;
+        }
+        app.resume();
+        return ret;
     }
 }
 class reg_panel_class {
@@ -99,9 +178,42 @@ class reg_panel_class {
                 break;
         }
     }
+    register() {
+        let form = this.panel.children[2].getElementsByTagName('input');
+        let chatterer = {
+            name: form[0].value,
+            email: form[1].value,
+            password: form[2].value
+        };
+        if (chatterer.name.length < 5 || chatterer.name.length > 64)
+            app.alert("the name's length should be minimum 5 characters and maximum 64");
+        else if (chatterer.email.length == 0 || !form[1].checkValidity())
+            app.alert('wrong email address');
+        else if (chatterer.password.length < 8 || chatterer.password.length > 32)
+            app.alert("the password's length should be minimum 8 characters and maximum 32");
+        else {
+            app.api.register(chatterer).then(ok => {
+                if (ok)
+                    this.goto("numb");
+            });
+        }
+    }
+    validate() {
+        let num = this.panel.children[4].getElementsByTagName('input')[0].value;
+        if (num.length != 4)
+            app.alert("code must consist of 4 digits");
+        else {
+            app.api.validate(Number(num)).then(ok => {
+                if (ok) {
+                    app.alert("ok");
+                }
+            });
+        }
+    }
 }
 class app_class {
     constructor() {
+        this.api = new api_class();
         this.reg_panel = new reg_panel_class();
     }
     on_resize() {
@@ -112,5 +224,10 @@ class app_class {
     }
     resume() {
         document.getElementById('wait').style.visibility = 'hidden';
+    }
+    alert(message) {
+        let el = document.getElementById('message');
+        el.children[0].children[0].textContent = message;
+        el.style.display = 'block';
     }
 }

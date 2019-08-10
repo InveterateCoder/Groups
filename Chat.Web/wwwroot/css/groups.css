@@ -3,6 +3,7 @@
 }
 body {
     margin: 0;
+    padding: 0;
     background-color: rgb(0, 3, 56);
     background-image: url("/images/concrete-wall-2.png");
 }
@@ -26,4 +27,38 @@ body {
     background-size: 300px 300px;
     background-image: url("/images/wait.gif");
     visibility: hidden;
+}
+#message {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: transparent;
+}
+#message > div {
+    background-color: ghostwhite;
+    max-width: 490px;
+    width: 100%;
+    margin: 20px auto;
+    padding:5px 15px;
+    border-radius: 25px;
+    box-shadow: 0 0 20px black, 0 0 15px red;
+    font-family: Courier New, Courier, monospace;
+}
+#message > div > button {
+    background-color: dodgerblue;
+    width:57px;
+    height:32px;
+    border-radius:25px;
+    outline:none;
+    margin-bottom:10px;
+    float:right;
+    text-align: center;
+    color: white;
+}
+#message > div:after{
+    content: '';
+    display: block;
+    clear:both;
 }

@@ -41,7 +41,7 @@
             </div>
             <div>
                 <span class="title">Password:</span>
-                <input type="password" maxlength="32" />
+                <input type="password" />
             </div>
             <div class="action_panel">
                 <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
@@ -53,7 +53,7 @@
                     <img src="~/images/unlock.svg" draggable="false" title="enter code" width="40" />
                 </div>
                 <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)">
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.register()">
                     <img src="~/images/register.svg" draggable="false" title="register" width="40" />
                 </div>
             </div>
@@ -96,12 +96,18 @@
                     <img src="~/images/home.svg" draggable="false" width="40" title="home" />
                 </div>
                 <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)">
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.validate()">
                     <img src="~/images/verify.svg" draggable="false" width="40" title="verify" />
                 </div>
             </div>
         </div>
     </div>
     <div id="wait"></div>
+    <div id="message" style="display:none">
+        <div>
+            <p></p>
+            <button onclick="document.getElementById('message').style.display = 'none'">OK</button>
+        </div>
+    </div>
 </body>
 </html>

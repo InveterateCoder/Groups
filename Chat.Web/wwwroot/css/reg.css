@@ -61,7 +61,7 @@
 .btn_back > div {
     display:inline;
     vertical-align: middle;
-    margin-right: 10px;
+    margin-right: 15px;
 }
 .btn_back > div > img {
     width:35px;
@@ -76,7 +76,7 @@
 }
 .action_panel{
     display: flex;
-    justify-content: space-evenly;
+    justify-content: space-around;
     padding-bottom: 10px;
 }
 
