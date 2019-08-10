@@ -39,28 +39,49 @@ class api_class {
         try {
             let ret = false;
             let resp = await this.post('api/account/val', number);
+            if (resp.startsWith('added_'))
+                ret = true;
+            else if (resp == 'registered')
+                app.alert('already registered');
+            else if (resp == 'invalid_confirmation_id')
+                app.alert('wrong number');
+            else if (resp == 'register_request_required')
+                app.alert('registration is required prior to email verification');
+            else if (resp == 'email_is_taken')
+                app.alert('this email is registered already');
+            else if (resp == 'name_is_taken')
+                app.alert("this nickname has been already taken by another user");
+            else app.alert(resp);
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
+    async signin(chatterer) {
+        try {
+            let ret = false;
+            let resp = await this.post('api/account/sign', chatterer);
             switch (resp) {
-                case "registered":
-                    app.alert("already registered");
+                case 'already_signed':
+                    document.cookie = 'Chat_Authentication_Token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    app.alert('signed out, try again');
                     break;
-                case "invalid_confirmation_id":
-                    app.alert("wrong number");
+                case 'user_not_found':
+                    app.alert("email address was not found");
                     break;
-                case "register_request_required":
-                    app.alert("registration is required prior to email verification");
+                case 'password_incorrect':
+                    app.alert('wrong password, try again')
                     break;
-                case "email_is_taken":
-                    app.alert("this email is registered already")
+                case 'multiple_signins_forbidden':
+                    app.alert('access denied, already signed in');
                     break;
-                case "name_is_taken":
-                    app.alert("this nick name has been taken by another user")
-                    break;
-                case "added_" + chatterer.email:
+                case 'OK':
                     ret = true;
                     break;
                 default:
                     app.alert(resp);
-                    break;
             }
             return ret;
         }
@@ -205,10 +226,22 @@ class reg_panel_class {
         else {
             app.api.validate(Number(num)).then(ok => {
                 if (ok) {
-                    app.alert("ok");
+                    this.goto("sign");
                 }
             });
         }
+    }
+    signin() {
+        let form = this.panel.children[3].getElementsByTagName('input');
+        let chatterer = {
+            email: form[0].value,
+            password: form[1].value
+        };
+        if (chatterer.email.length == 0 || !form[0].checkValidity())
+            app.alert("wrong email address");
+        else if (chatterer.password.length < 8 || chatterer.password.length > 32)
+            app.alert("the password's length should be minimum 8 characters and maximum 32");
+        //todo implement signing
     }
 }
 class app_class {

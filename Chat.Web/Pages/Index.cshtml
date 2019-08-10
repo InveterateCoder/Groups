@@ -27,7 +27,7 @@
             <div class="btn_back">
                 <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
                      onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
-                    <img src="~/images/back.png" title="go back" width="35" />
+                    <img src="~/images/back.png" draggable="false" title="go back" width="35" />
                 </div>
                 <span>Register</span>
             </div>
@@ -62,7 +62,7 @@
             <div class="btn_back">
                 <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
                      onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
-                    <img src="~/images/back.png" title="go back" width="35" />
+                    <img src="~/images/back.png" draggable="false" title="go back" width="35" />
                 </div>
                 <span>Sign In</span>
             </div>
@@ -72,7 +72,7 @@
             </div>
             <div>
                 <span class="title">Password:</span>
-                <input type="password" maxlength="32" />
+                <input type="password" />
             </div>
             <div class="action_panel">
                 <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
@@ -80,7 +80,7 @@
                     <img src="~/images/clear.svg" draggable="false" title="clear" width="40" />
                 </div>
                 <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)">
+                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.signin()">
                     <img src="~/images/signin.svg" draggable="false" title="sign in" width="40" />
                 </div>
             </div>
@@ -102,9 +102,15 @@
             </div>
         </div>
     </div>
+    <div id="group_select" style="display:none">
+
+    </div>
+    <div id="ingroup" style="display:none">
+
+    </div>
     <div id="wait"></div>
     <div id="message" style="display:none">
-        <div>
+        <div class="disable-select">
             <p></p>
             <button onclick="document.getElementById('message').style.display = 'none'">OK</button>
         </div>

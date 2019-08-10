@@ -45,20 +45,16 @@ body {
     border-radius: 25px;
     box-shadow: 0 0 20px black, 0 0 15px red;
     font-family: Courier New, Courier, monospace;
+    text-align: center;
 }
 #message > div > button {
     background-color: dodgerblue;
-    width:57px;
+    width:100px;
     height:32px;
     border-radius:25px;
     outline:none;
-    margin-bottom:10px;
-    float:right;
+    margin:auto;
+    margin-bottom: 3px;
     text-align: center;
     color: white;
-}
-#message > div:after{
-    content: '';
-    display: block;
-    clear:both;
 }
