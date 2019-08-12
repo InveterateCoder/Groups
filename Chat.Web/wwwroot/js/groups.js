@@ -164,21 +164,24 @@ class reg_panel_class {
             case 'home':
                 this.hide();
                 this.panel.children[1].style.display = 'flex';
+                this.place = place;
                 break;
             case 'reg':
                 this.hide();
                 this.panel.children[2].style.display = 'flex';
+                this.place = place;
                 break;
             case 'sign':
                 this.hide();
                 this.panel.children[3].style.display = 'flex';
+                this.place = place;
                 break;
             case 'numb':
                 this.hide();
                 this.panel.children[4].style.display = 'flex';
+                this.place = place;
                 break;
         }
-        this.place = place;
     }
     hide() {
         switch (this.place) {
@@ -241,11 +244,23 @@ class reg_panel_class {
             app.alert("wrong email address");
         else if (chatterer.password.length < 8 || chatterer.password.length > 32)
             app.alert("the password's length should be minimum 8 characters and maximum 32");
-        //todo implement signing
+        else app.api.signin(chatterer).then(ok => {
+            if (ok)
+                app.goto('groups');
+        });
     }
 }
+
 class app_class {
     constructor() {
+        if (localStorage.getItem('page') == null || !document.cookie.startsWith('Chat_Authentication_Token')) {
+            if (document.cookie.startsWith('Chat_Authentication_Token'))
+                document.cookie = 'Chat_Authentication_Token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            localStorage.setItem('page', 'reg');
+            this.goto('reg');
+        }
+        else
+            this.goto(localStorage.getItem('page'));
         this.api = new api_class();
         this.reg_panel = new reg_panel_class();
     }
@@ -262,5 +277,43 @@ class app_class {
         let el = document.getElementById('message');
         el.children[0].children[0].textContent = message;
         el.style.display = 'block';
+    }
+    goto(place) {
+        switch (place) {
+            case 'reg':
+                this.hide();
+                document.body.style.backgroundColor = 'rgb(0, 3, 56)';
+                document.body.style.backgroundImage = 'url("/images/concrete-wall-2.png")';
+                document.body.children[0].style.display = 'block';
+                localStorage.setItem('page', place);
+                break;
+            case 'groups':
+                this.hide();
+                document.body.children[1].style.display = 'block';
+                localStorage.setItem('page', place);
+                break;
+            case 'ingroup':
+                this.hide();
+                document.body.children[2].style.display = 'block';
+                localStorage.setItem('page', place);
+                break;
+        }
+    }
+    hide() {
+        switch (localStorage.getItem('page')) {
+            case 'reg':
+                document.body.children[0].style.display = 'none';
+                try {
+                    app.reg_panel.goto('home');
+                }
+                catch{}
+                break;
+            case 'groups':
+                document.body.children[1].style.display = 'none';
+                break;
+            case 'ingroup':
+                document.body.children[2].style.display = 'none';
+                break;
+        }
     }
 }

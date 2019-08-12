@@ -210,21 +210,46 @@ namespace Chat.Web.Controllers
             string ret;
             try
             {
-                if (_user.Token == null)
-                    ret = "not_signed";
+                var chatterer = _dbContext.Chatterers.Where(c => c.Token == _user.Token).SingleOrDefault();
+                if (chatterer == null)
+                {
+                    ret = "token_not_found";
+                    HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                }
                 else
                 {
-                    var chatterer = _dbContext.Chatterers.Where(c => c.Token == _user.Token).SingleOrDefault();
-                    if (chatterer == null)
-                    {
-                        ret = "token_not_found";
-                        HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                    }
+                    chatterer.Token = null;
+                    chatterer.InGroup = null;
+                    chatterer.InGroupPassword = null;
+                    await _dbContext.SaveChangesAsync();
+                    HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                    ret = "OK";
+                }
+            }
+            catch(Exception e)
+            {
+                ret = e.Message;
+            }
+            return Content(ret, "text/plain");
+        }
+        [HttpPost("adm/del")]
+        public async Task<ContentResult> Delete([FromBody]SignRequest request)
+        {
+            string ret;
+            try
+            {
+                var chatterer = _dbContext.Chatterers.Where(c => c.Email == request.Email).SingleOrDefault();
+                if (chatterer == null)
+                    ret = "not_found";
+                else
+                {
+                    if (chatterer.Password != request.Password)
+                        ret = "password_incorrect";
                     else
                     {
-                        chatterer.Token = null;
+                        Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                        _dbContext.Chatterers.Remove(chatterer);
                         await _dbContext.SaveChangesAsync();
-                        HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
                         ret = "OK";
                     }
                 }
@@ -235,112 +260,69 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("del")]
-        public async Task<ContentResult> Delete([FromBody]SignRequest request)
+        [HttpPost("adm/change/pass")]
+        public async Task<ContentResult> ChangePassword([FromBody]ChangePasswordRequest request)
         {
             string ret;
             try
             {
-                if (_user.Name == null)
-                    ret = "not_signed";
+                var chatterer = _dbContext.Chatterers.Where(c => c.Email == request.SignInInfo.Email).SingleOrDefault();
+                if (chatterer == null)
+                    ret = "wrong_email";
                 else
                 {
-                    var chatterer = _dbContext.Chatterers.Where(c => c.Email == request.Email).SingleOrDefault();
-                    if (chatterer == null)
-                        ret = "not_found";
+                    if (chatterer.Name != _user.Name)
+                        ret = "wrong_email";
                     else
                     {
-                        if (chatterer.Password != request.Password)
-                            ret = "password_incorrect";
+                        if (chatterer.Password != request.SignInInfo.Password)
+                            ret = "wrong_password";
                         else
                         {
-                            Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                            _dbContext.Chatterers.Remove(chatterer);
+                            chatterer.Password = request.NewPassword;
                             await _dbContext.SaveChangesAsync();
+                            Response.Cookies.Delete(StaticData.AuthenticationCookieName);
                             ret = "OK";
                         }
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 ret = e.Message;
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("change/pass")]
-        public async Task<ContentResult> ChangePassword([FromBody]ChangePasswordRequest request)
-        {
-            string ret;
-            if (_user.Name == null)
-                ret = "not_signed";
-            else
-            {
-                try
-                {
-                    var chatterer = _dbContext.Chatterers.Where(c => c.Email == request.SignInInfo.Email).SingleOrDefault();
-                    if (chatterer == null)
-                        ret = "wrong_email";
-                    else
-                    {
-                        if (chatterer.Name != _user.Name)
-                            ret = "wrong_email";
-                        else
-                        {
-                            if (chatterer.Password != request.SignInInfo.Password)
-                                ret = "wrong_password";
-                            else
-                            {
-                                chatterer.Password = request.NewPassword;
-                                await _dbContext.SaveChangesAsync();
-                                Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                                ret = "OK";
-                            }
-                        }
-                    }
-                }
-                catch(Exception e)
-                {
-                    ret = e.Message;
-                }
-            }
-            return Content(ret, "text/plain");
-        }
-        [HttpPost("change/name")]
+        [HttpPost("adm/change/name")]
         public async Task<ContentResult> ChangeName([FromBody]ChangeNameRequest request)
         {
             string ret;
-            if (_user.Name == null)
-                ret = "not_signed";
-            else
+            try
             {
-                try
+                var chatterer = _dbContext.Chatterers.Where(c => c.Email == request.SignInInfo.Email).SingleOrDefault();
+                if (chatterer == null)
+                    ret = "wrong_email";
+                else
                 {
-                    var chatterer = _dbContext.Chatterers.Where(c => c.Email == request.SignInInfo.Email).SingleOrDefault();
-                    if (chatterer == null)
+                    if (chatterer.Name != _user.Name)
                         ret = "wrong_email";
                     else
                     {
-                        if (chatterer.Name != _user.Name)
-                            ret = "wrong_email";
+                        if (chatterer.Password != request.SignInInfo.Password)
+                            ret = "wrong_password";
                         else
                         {
-                            if (chatterer.Password != request.SignInInfo.Password)
-                                ret = "wrong_password";
-                            else
-                            {
-                                chatterer.Name = request.NewName;
-                                await _dbContext.SaveChangesAsync();
-                                Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                                ret = "OK";
-                            }
+                            chatterer.Name = request.NewName;
+                            await _dbContext.SaveChangesAsync();
+                            Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                            ret = "OK";
                         }
                     }
                 }
-                catch (Exception e)
-                {
-                    ret = e.Message;
-                }
+            }
+            catch (Exception e)
+            {
+                ret = e.Message;
             }
             return Content(ret, "text/plain");
         }

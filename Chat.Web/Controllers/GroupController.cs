@@ -11,21 +11,21 @@ namespace Chat.Web.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class GroupController : ControllerBase
+    public class GroupsController : ControllerBase
     {
         private ChatterersDb _dbContext;
         private User _user;
-        public GroupController(ChatterersDb dbContext, User user)
+        public GroupsController(ChatterersDb dbContext, User user)
         {
             _dbContext = dbContext;
             _user = user;
         }
-        [HttpGet("list/{start:int:min(0)}/{quantity:int:range(1,100)?}")]
-        public JsonResult Groups(int start, int quantity)
+        [HttpGet("list/{query:maxlength(64)}/{start:int:min(0)}/{quantity:int:range(1,100)?}")]
+        public JsonResult Groups(string query, int start, int quantity)
         {
             try
             {
-                var groups = _dbContext.Chatterers.Select(c => c.Group).Where(g => g != null);
+                var groups = _dbContext.Chatterers.Select(c => c.Group).Where(g => g != null && g.StartsWith(query, StringComparison.OrdinalIgnoreCase));
                 var groupsCount = groups.Count();
                 if (groupsCount <= start)
                     return new JsonResult(0);
@@ -34,19 +34,6 @@ namespace Chat.Web.Controllers
                 if (start + quantity > groupsCount)
                     quantity = groupsCount - start;
                 return new JsonResult(groups.OrderBy(o => o, StringComparer.OrdinalIgnoreCase).TakeLast(groupsCount - start).Take(quantity));
-            }
-            catch(Exception e)
-            {
-                return new JsonResult(e.Message);
-            }
-        }
-        [HttpGet("find/{query:maxlength(64)}/{max:int:range(1,100)}")]
-        public JsonResult Find(string query, int max)
-        {
-            try
-            {
-                return new JsonResult(_dbContext.Chatterers.Select(c => c.Group).Where(g => g.StartsWith(query,
-                    StringComparison.OrdinalIgnoreCase)).OrderBy(s => s, StringComparer.OrdinalIgnoreCase).Take(max));
             }
             catch(Exception e)
             {

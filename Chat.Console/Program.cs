@@ -18,7 +18,10 @@ namespace Chat.Console
     {
         static void Main(string[] args)
         {
-           
+            string[] arr = { "hello", "this", "me", "time", null };
+            foreach (var s in arr)
+                if (s != null && s.StartsWith("t"))
+                    console.WriteLine(s);
         }
     }
 }
