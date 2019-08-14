@@ -1,60 +1,80 @@
-﻿*{
-    box-sizing:border-box;
-}
-body {
-    margin: 0;
+﻿#groups {
+    font-family: 'Noto Sans', sans-serif;
     padding: 0;
-    background-color: black;
 }
-.disable-select {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-#wait {
-    position: absolute;
+#groups > nav {
+    display:flex;
+    position: fixed;
+    left: 0;
     top: 0;
     right: 0;
-    bottom: 0;
-    left: 0;
-    background-color: rgba(0,0,0,0.7);
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 300px 300px;
-    background-image: url("/images/wait.gif");
-    visibility: hidden;
+    padding: 10px 14px;
+    background-color: #343a40;
 }
-#message {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background-color: transparent;
-}
-#message > div {
-    background-color: ghostwhite;
-    max-width: 490px;
-    width: 100%;
-    margin: 20px auto;
-    padding:5px 15px;
-    border-radius: 25px;
-    box-shadow: 0 0 20px black, 0 0 15px red;
-    font-family: Courier New, Courier, monospace;
-    text-align: center;
-}
-#message > div > button {
-    background-color: dodgerblue;
-    width:100px;
-    height:32px;
-    border-radius:25px;
-    outline:none;
-    margin:auto;
-    margin-bottom: 3px;
-    text-align: center;
+#groups > nav > div > span {
+    font-size: 20px;
     color: white;
+    margin-right: 20px;
+    vertical-align: middle;
 }
-#message > div > p {
-    word-wrap:break-word;
+#groups > nav > div > code {
+    display: inline-block;
+    color: gold;
+    vertical-align: top;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#groups > nav > input {
+    background-color: rgba(0,0,0,0.3);
+    caret-color: white;
+    color: white;
+    outline: none;
+    min-width: 175px;
+    max-width: 235px;
+    width: 100%;
+    padding:0 3px;
+}
+#groups > div {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: normal;
+    margin: 57px 20px 20px 20px;
+}
+#hmbrgr {
+    cursor:pointer;
+}
+#bar1, #bar2, #bar3 {
+    width: 35px;
+    height: 5px;
+    background-color: #e6e6e6;
+    transition: 0.4s;
+}
+#bar1 {
+    margin-bottom: 6px;
+}
+#bar2 {
+    margin: 6px 0;
+}
+#bar3 {
+    margin-top: 6px;
+}
+.clicked #bar1 {
+    -webkit-transform: rotate(-45deg) translate(-9px, 6px);
+    transform: rotate(-45deg) translate(-9px, 6px);
+}
+.clicked #bar2 {
+    opacity: 0;
+}
+.clicked #bar3 {
+    -webkit-transform: rotate(45deg) translate(-8px, -8px);
+    transform: rotate(45deg) translate(-8px, -8px);
+} 
+button {
+    background-color: white;
+    outline: none;
+    padding: 4px 8px;
+    margin: 7px;
+    font-weight: bold;
+    font-size: 17px;
 }

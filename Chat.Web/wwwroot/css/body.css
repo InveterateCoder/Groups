@@ -1,0 +1,60 @@
+﻿*{
+    box-sizing:border-box;
+}
+body {
+    margin: 0;
+    padding: 0;
+    background-color: black;
+}
+.disable-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+#wait {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0,0,0,0.7);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 300px 300px;
+    background-image: url("/images/wait.gif");
+    visibility: hidden;
+}
+#message {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: transparent;
+}
+#message > div {
+    background-color: ghostwhite;
+    max-width: 490px;
+    width: 100%;
+    margin: 20px auto;
+    padding:5px 15px;
+    border-radius: 25px;
+    box-shadow: 0 0 20px black, 0 0 15px red;
+    font-family: Courier New, Courier, monospace;
+    text-align: center;
+}
+#message > div > button {
+    background-color: dodgerblue;
+    width:100px;
+    height:32px;
+    border-radius:25px;
+    outline:none;
+    margin:auto;
+    margin-bottom: 3px;
+    text-align: center;
+    color: white;
+}
+#message > div > p {
+    word-wrap:break-word;
+}

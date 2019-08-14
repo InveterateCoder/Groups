@@ -1,4 +1,5 @@
 ﻿using Chat.Web.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
@@ -191,8 +192,9 @@ namespace Chat.Web.Controllers
                                 sha256.Dispose();
                                 bytes = null;
                                 await _dbContext.SaveChangesAsync();
-                                HttpContext.Response.Cookies.Append(StaticData.AuthenticationCookieName, user.Token);
-                                ret = "OK";
+                                HttpContext.Response.Cookies.Append(StaticData.AuthenticationCookieName, user.Token,
+                                    new CookieOptions { Secure = true, SameSite = SameSiteMode.Strict, Expires = DateTimeOffset.Now.AddDays(30) });
+                                ret = $"OK_{user.Name}";
                             }
                         }
                     }

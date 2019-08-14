@@ -63,26 +63,21 @@ class api_class {
         try {
             let ret = false;
             let resp = await this.post('api/account/sign', chatterer);
-            switch (resp) {
-                case 'already_signed':
-                    document.cookie = 'Chat_Authentication_Token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                    app.alert('signed out, try again');
-                    break;
-                case 'user_not_found':
-                    app.alert("email address was not found");
-                    break;
-                case 'password_incorrect':
-                    app.alert('wrong password, try again')
-                    break;
-                case 'multiple_signins_forbidden':
-                    app.alert('access denied, already signed in');
-                    break;
-                case 'OK':
-                    ret = true;
-                    break;
-                default:
-                    app.alert(resp);
+            if (resp == 'already_signed') {
+                document.cookie = 'Chat_Authentication_Token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                app.alert("you've been signed out, try again");
             }
+            else if (resp == 'user_not_found')
+                app.alert("specified email address hasn't been found");
+            else if (resp == 'password_incorrect')
+                app.alert('wrong password, try again');
+            else if (resp == 'multiple_signins_forbidden')
+                app.alert('access denied, already signed in');
+            else if (resp.startsWith('OK_')) {
+                localStorage.setItem('name', resp.substring(3));
+                ret = true;
+            }
+            else app.alert(resp);
             return ret;
         }
         catch (err) {
@@ -251,6 +246,16 @@ class reg_panel_class {
     }
 }
 
+class groups_class {
+    constructor() {
+        this.groups_window = document.getElementById('groups');
+        this.hmbrgr_btn = document.getElementById('hmbrgr');
+    }
+    hmbrg_click() {
+        this.hmbrgr_btn.classList.toggle('clicked');
+    }
+}
+
 class app_class {
     constructor() {
         if (localStorage.getItem('page') == null || !document.cookie.startsWith('Chat_Authentication_Token')) {
@@ -263,6 +268,7 @@ class app_class {
             this.goto(localStorage.getItem('page'));
         this.api = new api_class();
         this.reg_panel = new reg_panel_class();
+        this.groups = new groups_class();
     }
     on_resize() {
         this.reg_panel.move();
@@ -289,6 +295,8 @@ class app_class {
                 break;
             case 'groups':
                 this.hide();
+                document.body.style.backgroundColor = '#efefef';
+                document.body.style.backgroundImage = 'url("/images/low-contrast-linen.png")';
                 document.body.children[1].style.display = 'block';
                 localStorage.setItem('page', place);
                 break;

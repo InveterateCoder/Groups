@@ -7,6 +7,7 @@
     <meta charset="utf-8" />
     <title>Chat</title>
     <link href="https://fonts.googleapis.com/css?family=Concert+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans&display=swap" rel="stylesheet">
     <link asp-href-include="~/css/*" rel="stylesheet" />
     <script asp-src-include="~/js/*"></script>
 </head>
@@ -102,8 +103,24 @@
             </div>
         </div>
     </div>
-    <div id="groups" style="display:none">
-        <h1 style="color:white;">HELLO</h1>
+    <div id="groups" class="disable-select" style="display:none">
+        <nav>
+            <div>
+                <span>Groups</span><code>
+                <script>document.write(localStorage.getItem('name') + 'dfadaslfksdajfksdjfks')</script></code>
+            </div>
+            <div style="width:100px;max-width:60px;min-width:20px;"></div>
+            <input type="text" maxlength="64" />
+            <div style="width:100%"></div>
+            <div id="hmbrgr" onclick="app.groups.hmbrg_click()">
+                <div id="bar1"></div>
+                <div id="bar2"></div>
+                <div id="bar3"></div>
+            </div>
+        </nav>
+        <div>
+            
+        </div>
     </div>
     <div id="ingroup" style="display:none">
 
