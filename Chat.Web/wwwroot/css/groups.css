@@ -10,18 +10,22 @@
     right: 0;
     padding: 10px 14px;
     background-color: #343a40;
+    justify-content:space-between;
 }
-#groups > nav > div > span {
+#groups > nav > div {
+    width: 275px;
+}
+#groups > nav > div:first-child > span {
     font-size: 20px;
     color: white;
     margin-right: 20px;
     vertical-align: middle;
 }
-#groups > nav > div > code {
+#groups > nav > div:first-child > code {
     display: inline-block;
     color: gold;
     vertical-align: top;
-    max-width: 100px;
+    max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -30,10 +34,8 @@
     caret-color: white;
     color: white;
     outline: none;
-    min-width: 175px;
-    max-width: 235px;
-    width: 100%;
-    padding:0 3px;
+    padding:5px;
+    width: 275px;
 }
 #groups > div {
     display: flex;
@@ -69,7 +71,16 @@
 .clicked #bar3 {
     -webkit-transform: rotate(45deg) translate(-8px, -8px);
     transform: rotate(45deg) translate(-8px, -8px);
-} 
+}
+#groups > nav > div:nth-child(3) span {
+    float: right;
+    color: rgba(255,255,255,0.6);
+}
+#groups > nav > div:nth-child(3) span:hover {
+    color: white;
+    cursor: pointer;
+    text-shadow: 0 0 10px white;
+}
 button {
     background-color: white;
     outline: none;
@@ -77,4 +88,25 @@ button {
     margin: 7px;
     font-weight: bold;
     font-size: 17px;
+}
+@media screen and (max-width: 900px) {
+    #groups > nav > div:first-child {
+        display: none;
+    }
+    #groups > nav > div:nth-child(3) > div:first-child {
+        display: none;
+    }
+    #groups > nav > div:nth-child(3) {
+        width: auto;
+        margin-left: 20px;
+    }
+    #groups > nav > input {
+        max-width: 275px;
+        width: 100%;
+    }
+}
+@media screen and (min-width: 900px){
+    #hmbrgr {
+        display: none;
+    }
 }

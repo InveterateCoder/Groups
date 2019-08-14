@@ -258,6 +258,8 @@ class groups_class {
 
 class app_class {
     constructor() {
+        this.api = new api_class();
+        this.groups = new groups_class();
         if (localStorage.getItem('page') == null || !document.cookie.startsWith('Chat_Authentication_Token')) {
             if (document.cookie.startsWith('Chat_Authentication_Token'))
                 document.cookie = 'Chat_Authentication_Token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
@@ -266,9 +268,8 @@ class app_class {
         }
         else
             this.goto(localStorage.getItem('page'));
-        this.api = new api_class();
         this.reg_panel = new reg_panel_class();
-        this.groups = new groups_class();
+        //setTimeout(() => this.goto('groups'), 20000);
     }
     on_resize() {
         this.reg_panel.move();
@@ -298,6 +299,7 @@ class app_class {
                 document.body.style.backgroundColor = '#efefef';
                 document.body.style.backgroundImage = 'url("/images/low-contrast-linen.png")';
                 document.body.children[1].style.display = 'block';
+                this.groups.groups_window.getElementsByTagName('code')[0].textContent = localStorage.getItem('name');
                 localStorage.setItem('page', place);
                 break;
             case 'ingroup':
@@ -314,7 +316,7 @@ class app_class {
                 try {
                     app.reg_panel.goto('home');
                 }
-                catch{}
+                catch(err){}
                 break;
             case 'groups':
                 document.body.children[1].style.display = 'none';

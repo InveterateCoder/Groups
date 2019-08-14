@@ -1,18 +1,18 @@
 ﻿#reg_panel {
     background-color: rgba(234,234,234,0.65);
     width: 100%;
-    height: 350px;
+    height: 330px;
     max-width: 550px;
     border-radius: 15px;
     box-shadow: 0 0 10px black;
     font-family: 'Concert One';
     margin: auto;
 }
-#reg_panel > div[class=header] {
+#header {
     font-size: 60px;
     text-align: center;
-    padding-top: 12px;
     text-shadow: 0 0 3px white;
+    height: 85px;
 }
 #reg_panel_menu{
     display: flex;
@@ -24,7 +24,7 @@
     text-align:center;
     font-size:30px;
     width: 100%;
-    max-width: 200px;
+    max-width: 170px;
     padding: 5px 10px;
 }
 #reg_panel_menu > div:hover{
@@ -39,13 +39,13 @@
     background-color: white;
     color: black;
 }
-
 .reg_form {
     margin: 0 20px;
     font-size: 19px;
     display: flex;
     flex-flow: column;
-    height: 75%;
+    max-height: 800px;
+    height:245px;
     justify-content: space-between;
 }
 .reg_form input{
@@ -74,7 +74,7 @@
     float: left;
     width: 100px;
 }
-.action_panel{
+.action_panel {
     display: flex;
     justify-content: space-around;
     padding-bottom: 10px;
@@ -82,7 +82,7 @@
 
 #reg_panel_verify{
     display: flex;
-    height: 75%;
+    height: 245px;
     flex-flow: column;
     justify-content: space-around;
     font-size: 19px;

@@ -13,7 +13,7 @@
 </head>
 <body>
     <div id="reg_panel" class="disable-select" style="display:none">
-        <div class="header">Groups</div>
+        <div id="header">Groups</div>
         <div id="reg_panel_menu">
             <div onclick="app.reg_panel.goto('reg')">
                 <img src="~/images/register.svg" style="width:80%" draggable="false" />
@@ -106,16 +106,20 @@
     <div id="groups" class="disable-select" style="display:none">
         <nav>
             <div>
-                <span>Groups</span><code>
-                <script>document.write(localStorage.getItem('name') + 'dfadaslfksdajfksdjfks')</script></code>
+                <span>Groups</span>
+                <code></code>
             </div>
-            <div style="width:100px;max-width:60px;min-width:20px;"></div>
-            <input type="text" maxlength="64" />
-            <div style="width:100%"></div>
-            <div id="hmbrgr" onclick="app.groups.hmbrg_click()">
-                <div id="bar1"></div>
-                <div id="bar2"></div>
-                <div id="bar3"></div>
+            <input type="text" maxlength="64" placeholder="Search" />
+            <div>
+                <div>
+                    <span>Account</span>
+                    <span style="margin-right:20px">My Group</span>
+                </div>
+                <div id="hmbrgr" onclick="app.groups.hmbrg_click()">
+                    <div id="bar1"></div>
+                    <div id="bar2"></div>
+                    <div id="bar3"></div>
+                </div>
             </div>
         </nav>
         <div>
