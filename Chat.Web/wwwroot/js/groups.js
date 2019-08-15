@@ -250,6 +250,7 @@ class groups_class {
     constructor() {
         this.groups_window = document.getElementById('groups');
         this.hmbrgr_btn = document.getElementById('hmbrgr');
+        this.sm_initialized = false;
     }
     hmbrg_click() {
         this.hmbrgr_btn.classList.toggle('clicked');
@@ -264,6 +265,29 @@ class groups_class {
         for (let i = 0; i < this.hmbrgr_btn.children.length; i++) {
             this.hmbrgr_btn.children[i].style.backgroundColor = 'silver';
             this.hmbrgr_btn.children[i].style.boxShadow = 'none';
+        }
+    }
+    sm_initialize() {
+        let height = this.groups_window.children[0].offsetHeight;
+        let sm_acc = document.getElementById('sm_account');
+        sm_acc.style.right = '0px';
+        sm_acc.style.top = height + 'px';
+        sm_acc.style.width = this.groups_window.children[0].children[2].children[0].children[0].offsetWidth + 28 + 'px';
+        let sm_group = document.getElementById('sm_group');
+        sm_group.style.right = sm_acc.offsetWidth + 'px';
+        sm_group.style.top = height + 'px';
+        sm_group.style.width = this.groups_window.children[0].children[2].children[0].children[1].offsetWidth + 28 + 'px';
+    }
+    sm_account() {
+        if (!this.sm_initialized) {
+            this.sm_initialize();
+            this.sm_initialized = true;
+        }
+    }
+    sm_group() {
+        if (!this.sm_initialized) {
+            this.sm_initialize();
+            this.sm_initialized = true;
         }
     }
 }

@@ -112,8 +112,8 @@
             <input type="text" maxlength="64" placeholder="Search" />
             <div>
                 <div>
-                    <span>Account</span>
-                    <span style="margin-right:20px">My Group</span>
+                    <span onclick="app.groups.sm_account()">Account</span>
+                    <span style="margin-right:28px" onclick="app.groups.sm_group()">My Group</span>
                 </div>
                 <div id="hmbrgr" onclick="app.groups.hmbrg_click()" onmouseover="app.groups.hmbrg_over()" onmouseout="app.groups.hmbrg_out()">
                     <div id="bar1"></div>
@@ -122,12 +122,12 @@
                 </div>
             </div>
         </nav>
-        <ul id="sm_group" style="left:50px">
+        <ul id="sm_group">
             <li>Group</li>
             <li>Cr/Del</li>
             <li>?Change</li>
         </ul>
-        <ul id="sm_account" style="left:250px;">
+        <ul id="sm_account">
             <li>Sign Out</li>
             <li>Change</li>
             <li>Delete</li>

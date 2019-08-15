@@ -93,11 +93,12 @@
     background-color: #343a40;
     list-style-type: none;
     margin: 0;
-    padding: 0;
+    padding: 10px 0;
     color:silver;
     font-family: Arial, Helvetica, sans-serif;
-    padding:7px;
     text-align:center;
+    border-radius: 0 0 5px 5px;
+    box-shadow: 0 5px 5px black;
 }
 #sm_group > li, #sm_account > li {
     padding:6px;
