@@ -115,15 +115,25 @@
                     <span>Account</span>
                     <span style="margin-right:20px">My Group</span>
                 </div>
-                <div id="hmbrgr" onclick="app.groups.hmbrg_click()">
+                <div id="hmbrgr" onclick="app.groups.hmbrg_click()" onmouseover="app.groups.hmbrg_over()" onmouseout="app.groups.hmbrg_out()">
                     <div id="bar1"></div>
                     <div id="bar2"></div>
                     <div id="bar3"></div>
                 </div>
             </div>
         </nav>
+        <ul id="sm_group" style="left:50px">
+            <li>Group</li>
+            <li>Cr/Del</li>
+            <li>?Change</li>
+        </ul>
+        <ul id="sm_account" style="left:250px;">
+            <li>Sign Out</li>
+            <li>Change</li>
+            <li>Delete</li>
+        </ul>
         <div>
-            
+            <!--buttons-->
         </div>
     </div>
     <div id="ingroup" style="display:none">

@@ -254,6 +254,18 @@ class groups_class {
     hmbrg_click() {
         this.hmbrgr_btn.classList.toggle('clicked');
     }
+    hmbrg_over() {
+        for (let i = 0; i < this.hmbrgr_btn.children.length; i++) {
+            this.hmbrgr_btn.children[i].style.backgroundColor = 'white';
+            this.hmbrgr_btn.children[i].style.boxShadow = '0 0 4px white';
+        }
+    }
+    hmbrg_out() {
+        for (let i = 0; i < this.hmbrgr_btn.children.length; i++) {
+            this.hmbrgr_btn.children[i].style.backgroundColor = 'silver';
+            this.hmbrgr_btn.children[i].style.boxShadow = 'none';
+        }
+    }
 }
 
 class app_class {
@@ -269,7 +281,6 @@ class app_class {
         else
             this.goto(localStorage.getItem('page'));
         this.reg_panel = new reg_panel_class();
-        //setTimeout(() => this.goto('groups'), 20000);
     }
     on_resize() {
         this.reg_panel.move();
