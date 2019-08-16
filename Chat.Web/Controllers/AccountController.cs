@@ -194,7 +194,7 @@ namespace Chat.Web.Controllers
                                 await _dbContext.SaveChangesAsync();
                                 HttpContext.Response.Cookies.Append(StaticData.AuthenticationCookieName, user.Token,
                                     new CookieOptions { Secure = true, SameSite = SameSiteMode.Strict, Expires = DateTimeOffset.Now.AddDays(30) });
-                                ret = $"OK_{user.Name}";
+                                ret = $"OK_{user.Name.Length}_{user.Name}{user.Group ?? string.Empty}";
                             }
                         }
                     }

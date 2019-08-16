@@ -79,33 +79,51 @@
     -webkit-transform: rotate(45deg) translate(-8px, -8px);
     transform: rotate(45deg) translate(-8px, -8px);
 }
-#groups > nav > div:nth-child(3) span {
-    float: right;
-    color: rgba(255,255,255,0.6);
-}
-#groups > nav > div:nth-child(3) span:hover {
+#groups .open {
     color: white;
-    cursor: pointer;
     text-shadow: 0 0 10px white;
 }
+#groups > nav > div:nth-child(3) span {
+    float: right;
+    cursor: pointer;
+}
+#groups > nav > div:nth-child(3) span:not([class=open]) {
+    color: rgba(255,255,255,0.6);
+}
+#groups > nav > div:nth-child(3) span:hover:not([class=open]) {
+    color:white;
+    text-shadow:0 0 10px white;
+}
 #sm_group, #sm_account {
-    position: fixed;
-    background-color: #343a40;
-    list-style-type: none;
-    margin: 0;
-    padding: 10px 0;
+    position:fixed;
+    background-color:#343a40;
+    list-style-type:none;
+    margin:0;
+    padding:10px 0;
     color:silver;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family:Arial, Helvetica, sans-serif;
     text-align:center;
-    border-radius: 0 0 5px 5px;
-    box-shadow: 0 5px 5px black;
+    border-radius:0 0 5px 5px;
+    box-shadow:0 5px 5px black;
+    outline:none;
+    visibility:hidden;
 }
 #sm_group > li, #sm_account > li {
-    padding:6px;
+    padding:6px 10px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+#sm_group > li:hover, #sm_account > li:hover {
+    background-color:white;
+    cursor:pointer;
+    color:black;
+}
+#sm_group > li:active, #sm_account > li:active {
+    text-shadow:0 0 10px rgba(0,0,255,0.5);
 }
 @media screen and (max-width: 900px) {
     #groups > nav > div:first-child {
-        display: none;
+        display:none;
     }
     #groups > nav > div:nth-child(3) > div:first-child {
         display: none;

@@ -74,7 +74,14 @@ class api_class {
             else if (resp == 'multiple_signins_forbidden')
                 app.alert('access denied, already signed in');
             else if (resp.startsWith('OK_')) {
-                localStorage.setItem('name', resp.substring(3));
+                let index = resp.indexOf('_', 3);
+                let len = Number(resp.substring(3, index));
+                localStorage.setItem('name', resp.substring(index + 1, index + 1 + len));
+                let group = resp.substring(index + 1 + len);
+                if (group)
+                    localStorage.setItem('group', group);
+                else
+                    localStorage.removeItem('group');
                 ret = true;
             }
             else app.alert(resp);
@@ -251,6 +258,12 @@ class groups_class {
         this.groups_window = document.getElementById('groups');
         this.hmbrgr_btn = document.getElementById('hmbrgr');
         this.sm_initialized = false;
+        this.sm_acc = document.getElementById('sm_account');
+        this.sm_group = document.getElementById('sm_group');
+        this.account_btn = this.groups_window.children[0].children[2].children[0].children[0];
+        this.group_btn = this.groups_window.children[0].children[2].children[0].children[1];
+        this.acc_open = false;
+        this.group_open = false;
     }
     hmbrg_click() {
         this.hmbrgr_btn.classList.toggle('clicked');
@@ -269,26 +282,60 @@ class groups_class {
     }
     sm_initialize() {
         let height = this.groups_window.children[0].offsetHeight;
-        let sm_acc = document.getElementById('sm_account');
-        sm_acc.style.right = '0px';
-        sm_acc.style.top = height + 'px';
-        sm_acc.style.width = this.groups_window.children[0].children[2].children[0].children[0].offsetWidth + 28 + 'px';
-        let sm_group = document.getElementById('sm_group');
-        sm_group.style.right = sm_acc.offsetWidth + 'px';
-        sm_group.style.top = height + 'px';
-        sm_group.style.width = this.groups_window.children[0].children[2].children[0].children[1].offsetWidth + 28 + 'px';
+        this.sm_acc.style.right = '0px';
+        this.sm_acc.style.top = height + 'px';
+        this.sm_acc.style.width = this.account_btn.offsetWidth + 28 + 'px';
+        this.sm_group.style.right = this.sm_acc.offsetWidth + 'px';
+        this.sm_group.style.top = height + 'px';
+        this.sm_group.style.width = this.group_btn.offsetWidth + 28 + 'px';
     }
-    sm_account() {
-        if (!this.sm_initialized) {
-            this.sm_initialize();
-            this.sm_initialized = true;
+    sm_accf() {
+        if (this.acc_open) {
+            this.account_btn.classList.remove('open');
+            this.acc_open = false;
+            this.sm_acc.style.visibility = 'hidden';
+        }
+        else {
+            if (!this.sm_initialized) {
+                this.sm_initialize();
+                this.sm_initialized = true;
+            }
+            this.account_btn.classList.add('open');
+            this.sm_acc.style.visibility = 'visible';
+            this.sm_acc.focus();
+            this.acc_open = true;
         }
     }
-    sm_group() {
-        if (!this.sm_initialized) {
-            this.sm_initialize();
-            this.sm_initialized = true;
+    sm_groupf() {
+        if (this.group_open) {
+            this.group_btn.classList.remove('open');
+            this.group_open = false;
+            this.sm_group.style.visibility = 'hidden';
         }
+        else {
+            if (!this.sm_initialized) {
+                this.sm_initialize();
+                this.sm_initialized = true;
+            }
+            this.group_btn.classList.add('open');
+            this.sm_group.style.visibility = 'visible';
+            this.sm_group.focus();
+            this.group_open = true;
+        }
+    }
+    sm_onblur(el) {
+        setTimeout(() => {
+            if (el.id == 'sm_account') {
+                this.account_btn.classList.remove('open');
+                this.acc_open = false;
+                this.sm_acc.style.visibility = 'hidden';
+            }
+            else {
+                this.group_btn.classList.remove('open');
+                this.group_open = false;
+                this.sm_group.style.visibility = 'hidden';
+            }
+        }, 100);
     }
 }
 
