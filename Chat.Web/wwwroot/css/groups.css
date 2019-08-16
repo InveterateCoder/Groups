@@ -107,6 +107,7 @@
     box-shadow:0 5px 5px black;
     outline:none;
     visibility:hidden;
+    transition:opacity 0.17s;
 }
 #sm_group > li, #sm_account > li {
     padding:6px 10px;

@@ -290,52 +290,66 @@ class groups_class {
         this.sm_group.style.width = this.group_btn.offsetWidth + 28 + 'px';
     }
     sm_accf() {
-        if (this.acc_open) {
-            this.account_btn.classList.remove('open');
-            this.acc_open = false;
-            this.sm_acc.style.visibility = 'hidden';
-        }
-        else {
-            if (!this.sm_initialized) {
-                this.sm_initialize();
-                this.sm_initialized = true;
-            }
-            this.account_btn.classList.add('open');
-            this.sm_acc.style.visibility = 'visible';
-            this.sm_acc.focus();
-            this.acc_open = true;
-        }
+        this.sm_proc(this.sm_acc, this.account_btn, this.acc_open, true);
     }
     sm_groupf() {
-        if (this.group_open) {
-            this.group_btn.classList.remove('open');
-            this.group_open = false;
-            this.sm_group.style.visibility = 'hidden';
+        this.sm_proc(this.sm_group, this.group_btn, this.group_open);
+    }
+    sm_proc(el, btn, open, isacc = false) {
+        if (open) {
+            btn.classList.remove('open');
+            if (isacc)
+                this.acc_open = false;
+            else
+                this.group_open = false;
+            el.style.opacity = '0';
+            el.style.visibility = 'hidden';
         }
         else {
             if (!this.sm_initialized) {
                 this.sm_initialize();
                 this.sm_initialized = true;
             }
-            this.group_btn.classList.add('open');
-            this.sm_group.style.visibility = 'visible';
-            this.sm_group.focus();
-            this.group_open = true;
+            btn.classList.add('open');
+            el.style.visibility = 'visible';
+            el.style.opacity = '1';
+            el.focus();
+            if (isacc)
+                this.acc_open = true;
+            else
+                this.group_open = true;
         }
     }
     sm_onblur(el) {
+        el.style.opacity = '0';
+        if (el.id == 'sm_account')
+            this.account_btn.classList.remove('open');
+        else
+            this.group_btn.classList.remove('open');
         setTimeout(() => {
             if (el.id == 'sm_account') {
-                this.account_btn.classList.remove('open');
                 this.acc_open = false;
                 this.sm_acc.style.visibility = 'hidden';
             }
             else {
-                this.group_btn.classList.remove('open');
                 this.group_open = false;
                 this.sm_group.style.visibility = 'hidden';
             }
-        }, 100);
+        }, 170);
+    }
+    groups_resize() {
+        if (this.acc_open) {
+            this.account_btn.classList.remove('open');
+            this.acc_open = false;
+            this.sm_acc.style.opacity = '0';
+            this.sm_acc.style.visibility = 'hidden';
+        }
+        else if (this.group_open) {
+            this.group_btn.classList.remove('open');
+            this.group_open = false;
+            this.sm_acc.style.opacity = '0';
+            this.sm_group.style.visibility = 'hidden';
+        }
     }
 }
 
@@ -355,6 +369,7 @@ class app_class {
     }
     on_resize() {
         this.reg_panel.move();
+        this.groups.groups_resize();
     }
     wait() {
         document.getElementById('wait').style.visibility = 'visible';
