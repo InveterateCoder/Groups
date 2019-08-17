@@ -104,6 +104,17 @@
         </div>
     </div>
     <div id="groups" class="disable-select" style="display:none">
+        <dl id="m_all" class="hidden">
+            <dt>Account</dt>
+            <dd>Sign Out</dd>
+            <dd>Change</dd>
+            <dd style="border-bottom:1px solid gray;">Delete</dd>
+            <dt>My Group</dt>
+            <dd style="border-bottom:1px solid gray;">Create</dd>
+            <dd style="color:gold"></dd>
+            <dd>Change</dd>
+            <dd style="border-bottom:1px solid gray;">Delete</dd>
+        </dl>
         <nav>
             <div>
                 <span>Groups</span>
@@ -112,8 +123,8 @@
             <input type="text" maxlength="64" placeholder="Search" />
             <div>
                 <div>
-                    <span onmouseup="app.groups.sm_accf()">Account</span>
-                    <span style="margin-right:28px" onmouseup="app.groups.sm_groupf()">My Group</span>
+                    <span onmouseup="app.groups.m_accf()">Account</span>
+                    <span style="margin-right:28px" onmouseup="app.groups.m_groupf()">My Group</span>
                 </div>
                 <div id="hmbrgr" onclick="app.groups.hmbrg_click()" onmouseover="app.groups.hmbrg_over()" onmouseout="app.groups.hmbrg_out()">
                     <div id="bar1"></div>
@@ -122,17 +133,18 @@
                 </div>
             </div>
         </nav>
-        <ul id="sm_group" tabindex="0" onblur="app.groups.sm_onblur(this)">
+        <ul id="m_group" tabindex="0" onblur="app.groups.m_onblur(this)">
             <li>Create</li>
-            <li>Groupdfafafd</li>
+            <li style="color:gold"></li>
             <li>Change</li>
             <li>Delete</li>
         </ul>
-        <ul id="sm_account" tabindex="0" onblur="app.groups.sm_onblur(this)">
+        <ul id="m_account" tabindex="0" onblur="app.groups.m_onblur(this)">
             <li>Sign Out</li>
             <li>Change</li>
             <li>Delete</li>
         </ul>
+
         <div>
             <!--buttons-->
         </div>

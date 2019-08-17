@@ -257,16 +257,24 @@ class groups_class {
     constructor() {
         this.groups_window = document.getElementById('groups');
         this.hmbrgr_btn = document.getElementById('hmbrgr');
-        this.sm_initialized = false;
-        this.sm_acc = document.getElementById('sm_account');
-        this.sm_group = document.getElementById('sm_group');
-        this.account_btn = this.groups_window.children[0].children[2].children[0].children[0];
-        this.group_btn = this.groups_window.children[0].children[2].children[0].children[1];
+        this.m_acc = document.getElementById('m_account');
+        this.m_group = document.getElementById('m_group');
+        this.m_all = document.getElementById('m_all');
+        this.account_btn = this.groups_window.children[1].children[2].children[0].children[0];
+        this.group_btn = this.groups_window.children[1].children[2].children[0].children[1];
         this.acc_open = false;
         this.group_open = false;
     }
     hmbrg_click() {
         this.hmbrgr_btn.classList.toggle('clicked');
+        if (this.hmbrgr_btn.classList.contains('clicked')) {
+            this.m_all.style.opacity = '1';
+            this.m_all.style.transform = 'translate(0,0)';
+        }
+        else {
+            this.m_all.style.opacity = '0';
+            this.m_all.style.transform = `translate(0, -${this.m_all.offsetHeight}px)`;
+        }
     }
     hmbrg_over() {
         for (let i = 0; i < this.hmbrgr_btn.children.length; i++) {
@@ -280,22 +288,50 @@ class groups_class {
             this.hmbrgr_btn.children[i].style.boxShadow = 'none';
         }
     }
-    sm_initialize() {
-        let height = this.groups_window.children[0].offsetHeight;
-        this.sm_acc.style.right = '0px';
-        this.sm_acc.style.top = height + 'px';
-        this.sm_acc.style.width = this.account_btn.offsetWidth + 28 + 'px';
-        this.sm_group.style.right = this.sm_acc.offsetWidth + 'px';
-        this.sm_group.style.top = height + 'px';
-        this.sm_group.style.width = this.group_btn.offsetWidth + 28 + 'px';
+    initialize(group = true) {
+        let height = this.groups_window.children[1].offsetHeight;
+        this.m_acc.style.right = '0px';
+        this.m_acc.style.top = height + 'px';
+        this.m_acc.style.width = this.account_btn.offsetWidth + 28 + 'px';
+        this.m_group.style.right = this.m_acc.offsetWidth + 'px';
+        this.m_group.style.top = height + 'px';
+        this.m_group.style.width = this.group_btn.offsetWidth + 28 + 'px';
+        if (group)
+            this.group_conf();
+        this.m_all.style.top = this.groups_window.children[1].offsetHeight + 'px';
+        this.m_all.style.transform = `translate(0, -${this.m_all.offsetHeight}px)`;
     }
-    sm_accf() {
-        this.sm_proc(this.sm_acc, this.account_btn, this.acc_open, true);
+    group_conf() {
+        if (localStorage.getItem('group')) {
+            this.m_group.children[0].style.display = 'none';
+            this.m_group.children[1].textContent = localStorage.getItem('group');
+            this.m_group.children[1].style.display = 'list-item';
+            this.m_group.children[2].style.display = 'list-item';
+            this.m_group.children[3].style.display = 'list-item';
+            this.m_all.children[5].style.display = 'none';
+            this.m_all.children[6].textContent = localStorage.getItem('group')
+            this.m_all.children[6].style.display = 'block';
+            this.m_all.children[7].style.display = 'block';
+            this.m_all.children[8].style.display = 'block';
+        }
+        else {
+            this.m_group.children[0].style.display = 'list-item';
+            this.m_group.children[1].style.display = 'none';
+            this.m_group.children[2].style.display = 'none';
+            this.m_group.children[3].style.display = 'none';
+            this.m_all.children[5].style.display = 'block';
+            this.m_all.children[6].style.display = 'none';
+            this.m_all.children[7].style.display = 'none';
+            this.m_all.children[8].style.display = 'none';
+        }
     }
-    sm_groupf() {
-        this.sm_proc(this.sm_group, this.group_btn, this.group_open);
+    m_accf() {
+        this.m_proc(this.m_acc, this.account_btn, this.acc_open, true);
     }
-    sm_proc(el, btn, open, isacc = false) {
+    m_groupf() {
+        this.m_proc(this.m_group, this.group_btn, this.group_open);
+    }
+    m_proc(el, btn, open, isacc = false) {
         if (open) {
             btn.classList.remove('open');
             if (isacc)
@@ -306,10 +342,6 @@ class groups_class {
             el.style.visibility = 'hidden';
         }
         else {
-            if (!this.sm_initialized) {
-                this.sm_initialize();
-                this.sm_initialized = true;
-            }
             btn.classList.add('open');
             el.style.visibility = 'visible';
             el.style.opacity = '1';
@@ -320,20 +352,20 @@ class groups_class {
                 this.group_open = true;
         }
     }
-    sm_onblur(el) {
+    m_onblur(el) {
         el.style.opacity = '0';
-        if (el.id == 'sm_account')
+        if (el.id == 'm_account')
             this.account_btn.classList.remove('open');
         else
             this.group_btn.classList.remove('open');
         setTimeout(() => {
-            if (el.id == 'sm_account') {
+            if (el.id == 'm_account') {
                 this.acc_open = false;
-                this.sm_acc.style.visibility = 'hidden';
+                this.m_acc.style.visibility = 'hidden';
             }
             else {
                 this.group_open = false;
-                this.sm_group.style.visibility = 'hidden';
+                this.m_group.style.visibility = 'hidden';
             }
         }, 170);
     }
@@ -341,15 +373,21 @@ class groups_class {
         if (this.acc_open) {
             this.account_btn.classList.remove('open');
             this.acc_open = false;
-            this.sm_acc.style.opacity = '0';
-            this.sm_acc.style.visibility = 'hidden';
+            this.m_acc.style.opacity = '0';
+            this.m_acc.style.visibility = 'hidden';
         }
         else if (this.group_open) {
             this.group_btn.classList.remove('open');
             this.group_open = false;
-            this.sm_acc.style.opacity = '0';
-            this.sm_group.style.visibility = 'hidden';
+            this.m_group.style.opacity = '0';
+            this.m_group.style.visibility = 'hidden';
         }
+        if (this.hmbrgr_btn.classList.contains('clicked')) {
+            this.hmbrgr_btn.classList.remove('clicked');
+            this.m_all.style.opacity = '0';
+            this.m_all.style.transform = `translate(0, -${this.m_all.offsetHeight}px)`;
+        }
+        this.initialize(false);
     }
 }
 
@@ -398,6 +436,7 @@ class app_class {
                 document.body.children[1].style.display = 'block';
                 this.groups.groups_window.getElementsByTagName('code')[0].textContent = localStorage.getItem('name');
                 localStorage.setItem('page', place);
+                this.groups.initialize();
                 break;
             case 'ingroup':
                 this.hide();

@@ -57,7 +57,7 @@
     width: 35px;
     height: 5px;
     background-color: silver;
-    transition: 0.4s;
+    transition: transform 0.4s;
 }
 #bar1 {
     margin-bottom: 6px;
@@ -94,7 +94,7 @@
     color:white;
     text-shadow:0 0 10px white;
 }
-#sm_group, #sm_account {
+#m_group, #m_account {
     position:fixed;
     background-color:#343a40;
     list-style-type:none;
@@ -109,18 +109,53 @@
     visibility:hidden;
     transition:opacity 0.17s;
 }
-#sm_group > li, #sm_account > li {
+#m_group > li, #m_account > li {
     padding:6px 10px;
     overflow:hidden;
     text-overflow:ellipsis;
 }
-#sm_group > li:hover, #sm_account > li:hover {
-    background-color:white;
+#m_group > li:hover, #m_account > li:hover {
+    background-color:whitesmoke;
+    border-radius:5px;
+    box-shadow:0 0 7px black;
     cursor:pointer;
     color:black;
 }
-#sm_group > li:active, #sm_account > li:active {
-    text-shadow:0 0 10px rgba(0,0,255,0.5);
+#m_group > li:active, #m_account > li:active {
+    text-shadow:0 0 10px rgba(0,0,0,0.5);
+}
+#m_all {
+    position:fixed;
+    margin:0;
+    left:0;
+    right:0;
+    background-color: #343a40;
+    font-size:17px;
+    padding:1px 0 20px 0;
+    transition:transform 0.4s, opacity 0.4s;
+    opacity:0;
+}
+#m_all > dt {
+    color:white;
+    margin:25px 5px 10px 5px;
+}
+#m_all > dd {
+    margin:0;
+    color:silver;
+    font-family:Courier New, Courier, monospace;
+    font-size:18px;
+    text-align:center;
+    padding:7px;
+    border-top:1px solid gray;
+}
+#m_all > dd:hover {
+    background-color:whitesmoke;
+    color:black;
+    cursor:pointer;
+}
+#m_all > dd:active {
+    text-shadow:0 0 10px rgba(0,0,0,0.5);
+    outline:1px solid red;
 }
 @media screen and (max-width: 900px) {
     #groups > nav > div:first-child {
