@@ -413,6 +413,7 @@ class groups_class {
                 app.goto('reg');
                 localStorage.removeItem('name');
                 localStorage.removeItem('group');
+                this.close_all_menus();
             }
         });
     }
@@ -426,7 +427,6 @@ class app_class {
         if (localStorage.getItem('page') == null || !document.cookie.startsWith('Chat_Authentication_Token')) {
             if (document.cookie.startsWith('Chat_Authentication_Token'))
                 document.cookie = 'Chat_Authentication_Token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-            localStorage.setItem('page', 'reg');
             if (localStorage.getItem('name'))
                 localStorage.removeItem('name');
             if (localStorage.getItem('group'))
@@ -454,14 +454,16 @@ class app_class {
     goto(place) {
         switch (place) {
             case 'reg':
-                this.hide();
+                if (localStorage.getItem('page') != 'reg')
+                    this.hide();
                 document.body.style.backgroundColor = 'rgb(0, 3, 56)';
                 document.body.style.backgroundImage = 'url("/images/concrete-wall-2.png")';
                 document.body.children[0].style.display = 'block';
                 localStorage.setItem('page', place);
                 break;
             case 'groups':
-                this.hide();
+                if (localStorage.getItem('page') != 'groups')
+                    this.hide();
                 document.body.style.backgroundColor = '#efefef';
                 document.body.style.backgroundImage = 'url("/images/low-contrast-linen.png")';
                 document.body.children[1].style.display = 'block';
@@ -470,7 +472,8 @@ class app_class {
                 this.groups.initialize();
                 break;
             case 'ingroup':
-                this.hide();
+                if (localStorage.getItem('page') != 'ingroup')
+                    this.hide();
                 document.body.children[2].style.display = 'block';
                 localStorage.setItem('page', place);
                 break;
@@ -486,7 +489,6 @@ class app_class {
                 catch(err){}
                 break;
             case 'groups':
-                document.groups.close_all_menus();
                 document.body.children[1].style.display = 'none';
                 break;
             case 'ingroup':
