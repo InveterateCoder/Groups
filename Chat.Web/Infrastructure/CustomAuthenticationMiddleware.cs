@@ -43,7 +43,7 @@ namespace Chat.Web.Infrastructure
             }
             if ((context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/hub"), StringComparison.OrdinalIgnoreCase)
                 || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/groups"), StringComparison.OrdinalIgnoreCase)
-                || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/account/adm"), StringComparison.OrdinalIgnoreCase))
+                || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/account/user"), StringComparison.OrdinalIgnoreCase))
                 && user.Name == null)
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             else

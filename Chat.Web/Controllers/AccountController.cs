@@ -206,27 +206,19 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("sign/out")]
+        [HttpPost("user/signout")]
         public async Task<ContentResult> SignOut()
         {
             string ret;
             try
             {
-                var chatterer = _dbContext.Chatterers.Where(c => c.Token == _user.Token).SingleOrDefault();
-                if (chatterer == null)
-                {
-                    ret = "token_not_found";
-                    HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                }
-                else
-                {
-                    chatterer.Token = null;
-                    chatterer.InGroup = null;
-                    chatterer.InGroupPassword = null;
-                    await _dbContext.SaveChangesAsync();
-                    HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                    ret = "OK";
-                }
+                var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
+                chatterer.Token = null;
+                chatterer.InGroup = null;
+                chatterer.InGroupPassword = null;
+                await _dbContext.SaveChangesAsync();
+                HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                ret = "OK";
             }
             catch(Exception e)
             {
@@ -234,7 +226,7 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("adm/del")]
+        [HttpPost("user/del")]
         public async Task<ContentResult> Delete([FromBody]SignRequest request)
         {
             string ret;
@@ -262,7 +254,7 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("adm/change/pass")]
+        [HttpPost("user/change/pass")]
         public async Task<ContentResult> ChangePassword([FromBody]ChangePasswordRequest request)
         {
             string ret;
@@ -295,7 +287,7 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("adm/change/name")]
+        [HttpPost("user/change/name")]
         public async Task<ContentResult> ChangeName([FromBody]ChangeNameRequest request)
         {
             string ret;

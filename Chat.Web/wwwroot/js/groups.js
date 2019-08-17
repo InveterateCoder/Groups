@@ -92,6 +92,21 @@ class api_class {
             return false;
         }
     }
+    async signout() {
+        try {
+            let ret = false;
+            let resp = await this.post('api/account/user/signout');
+            if (resp == 'OK')
+                ret = true;
+            else
+                app.alert(resp);
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
     async post(addr, obj) {
         app.wait();
         let ret;
@@ -101,7 +116,7 @@ class api_class {
                 headers: {
                     'Accept': 'plain/text', 'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(obj)
+                body: JSON.stringify(obj || '')
             });
             ret = await resp.text();
         }
@@ -119,7 +134,7 @@ class reg_panel_class {
         this.move();
     }
     move() {
-        let mt = (window.innerHeight - this.panel.offsetHeight) / 2;
+        let mt = (window.innerHeight - 330) / 2;
         mt = mt < 0 ? 0 : mt;
         this.panel.style.marginTop = mt + 'px';
     }
@@ -369,7 +384,7 @@ class groups_class {
             }
         }, 170);
     }
-    groups_resize() {
+    close_all_menus() {
         if (this.acc_open) {
             this.account_btn.classList.remove('open');
             this.acc_open = false;
@@ -387,23 +402,39 @@ class groups_class {
             this.m_all.style.opacity = '0';
             this.m_all.style.transform = `translate(0, -${this.m_all.offsetHeight}px)`;
         }
+    }
+    groups_resize() {
+        this.close_all_menus();
         this.initialize(false);
+    }
+    signout() {
+        app.api.signout().then(ok => {
+            if (ok) {
+                app.goto('reg');
+                localStorage.removeItem('name');
+                localStorage.removeItem('group');
+            }
+        });
     }
 }
 
 class app_class {
     constructor() {
         this.api = new api_class();
+        this.reg_panel = new reg_panel_class();
         this.groups = new groups_class();
         if (localStorage.getItem('page') == null || !document.cookie.startsWith('Chat_Authentication_Token')) {
             if (document.cookie.startsWith('Chat_Authentication_Token'))
                 document.cookie = 'Chat_Authentication_Token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
             localStorage.setItem('page', 'reg');
+            if (localStorage.getItem('name'))
+                localStorage.removeItem('name');
+            if (localStorage.getItem('group'))
+                localStorage.removeItem('group');
             this.goto('reg');
         }
         else
             this.goto(localStorage.getItem('page'));
-        this.reg_panel = new reg_panel_class();
     }
     on_resize() {
         this.reg_panel.move();
@@ -455,6 +486,7 @@ class app_class {
                 catch(err){}
                 break;
             case 'groups':
+                document.groups.close_all_menus();
                 document.body.children[1].style.display = 'none';
                 break;
             case 'ingroup':

@@ -106,7 +106,7 @@
     <div id="groups" class="disable-select" style="display:none">
         <dl id="m_all" class="hidden">
             <dt>Account</dt>
-            <dd>Sign Out</dd>
+            <dd onclick="app.groups.signout()">Sign Out</dd>
             <dd>Change</dd>
             <dd style="border-bottom:1px solid gray;">Delete</dd>
             <dt>My Group</dt>
@@ -140,7 +140,7 @@
             <li>Delete</li>
         </ul>
         <ul id="m_account" tabindex="0" onblur="app.groups.m_onblur(this)">
-            <li>Sign Out</li>
+            <li onclick="app.groups.signout()">Sign Out</li>
             <li>Change</li>
             <li>Delete</li>
         </ul>
