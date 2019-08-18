@@ -1,12 +1,15 @@
 ﻿#reg_panel {
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
     background-color: rgba(234,234,234,0.65);
-    width: 100%;
+    width: 95%;
     height: 330px;
     max-width: 550px;
     border-radius: 15px;
     box-shadow: 0 0 10px black;
     font-family: 'Concert One';
-    margin: auto;
 }
 #header {
     font-size: 60px;

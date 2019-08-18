@@ -130,13 +130,7 @@ class api_class {
 class reg_panel_class {
     constructor() {
         this.panel = document.getElementById('reg_panel');
-        this.place = 'home';
-        this.move();
-    }
-    move() {
-        let mt = (window.innerHeight - 330) / 2;
-        mt = mt < 0 ? 0 : mt;
-        this.panel.style.marginTop = mt + 'px';
+        this.place = 'home';;
     }
     num(e) {
         if (isNaN(e.key))
@@ -437,7 +431,6 @@ class app_class {
             this.goto(localStorage.getItem('page'));
     }
     on_resize() {
-        this.reg_panel.move();
         this.groups.groups_resize();
     }
     wait() {
