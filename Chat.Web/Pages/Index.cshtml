@@ -34,15 +34,15 @@
             </div>
             <div>
                 <span class="title">Name:</span>
-                <input type="text" spellcheck="false" />
+                <input type="text" spellcheck="false" maxlength="64" />
             </div>
             <div>
                 <span class="title">Email:</span>
-                <input type="email" spellcheck="false" />
+                <input type="email" spellcheck="false" maxlength="256" />
             </div>
             <div>
                 <span class="title">Password:</span>
-                <input type="password" />
+                <input type="password" maxlength="32" />
             </div>
             <div class="action_panel">
                 <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
@@ -69,11 +69,11 @@
             </div>
             <div>
                 <span class="title">Email:</span>
-                <input type="email" spellcheck="false" />
+                <input type="email" spellcheck="false" maxlength="256" />
             </div>
             <div>
                 <span class="title">Password:</span>
-                <input type="password" />
+                <input type="password" maxlength="32" />
             </div>
             <div class="action_panel">
                 <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
@@ -107,8 +107,8 @@
         <dl id="m_all" class="hidden">
             <dt>Account</dt>
             <dd onclick="app.groups.signout()">Sign Out</dd>
-            <dd>Change</dd>
-            <dd style="border-bottom:1px solid gray;">Delete</dd>
+            <dd onclick="app.groups.acc_change()">Change</dd>
+            <dd style="border-bottom:1px solid gray;" onclick="app.groups.acc_delete()">Delete</dd>
             <dt>My Group</dt>
             <dd style="border-bottom:1px solid gray;">Create</dd>
             <dd style="color:gold"></dd>
@@ -120,7 +120,7 @@
                 <span>Groups</span>
                 <code></code>
             </div>
-            <input type="text" maxlength="64" placeholder="Search" />
+            <input type="text" maxlength="64" placeholder="Search" spellcheck="false" />
             <div>
                 <div>
                     <span onmouseup="app.groups.m_accf()">Account</span>
@@ -141,18 +141,53 @@
         </ul>
         <ul id="m_account" tabindex="0" onblur="app.groups.m_onblur(this)">
             <li onclick="app.groups.signout()">Sign Out</li>
-            <li>Change</li>
-            <li>Delete</li>
+            <li onclick="app.groups.acc_change()">Change</li>
+            <li onclick="app.groups.acc_delete()">Delete</li>
         </ul>
         <div id="groups_btns">
             <!--buttons-->
         </div>
-        <div id="acc_change_form">
+        <div id="acc_change_form" style="display:none">
             <video autoplay muted loop oncontextmenu="return false">
                 <source src="~/images/lines.mp4" type="video/mp4" />
             </video>
             <div>
-
+                <div>Groups</div>
+                <div>
+                    <div>Email:</div>
+                    <input type="email" maxlength="256" placeholder="Your registered email address" />
+                </div>
+                <div>
+                    <div>Password:</div>
+                    <input type="password" maxlength="32" placeholder="Your current password" />
+                </div>
+                <div>
+                    <div>New Name:</div>
+                    <input type="text" spellcheck="false" maxlength="64" placeholder="Leave blank to leave unchanged" />
+                </div>
+                <div>
+                    <div>New Password:</div>
+                    <input type="password" maxlength="32" placeholder="Leave blank to leave unchanged" />
+                </div>
+                <div>
+                    <button onclick="app.groups.acc_change_close()">Cancel</button>
+                    <button onclick="app.groups.acc_change_ok()">OK</button>
+                </div>
+            </div>
+            <div>
+                <div>Groups</div>
+                <div>
+                    <div>Email:</div>
+                    <input type="email" maxlength="256" placeholder="Your registered email address" />
+                </div>
+                <div>
+                    <div>Password:</div>
+                    <input type="password" maxlength="32" placeholder="Your password" />
+                </div>
+                <div>
+                    <button onclick="app.groups.acc_change_close()">Cancel</button>
+                    <button onclick="app.groups.acc_change_del()">Delete</button>
+                </div>
             </div>
         </div>
     </div>

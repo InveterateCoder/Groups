@@ -12,14 +12,14 @@ class api_class {
             let ret = false;
             let resp = await this.post('/api/account/reg', chatterer);
             switch (resp){
-                case "registered":
-                    app.alert("already registered");
+                case "signed_out":
+                    app.alert("You've been signed out, try again");
                     break;
                 case "email_is_taken":
-                    app.alert("this email is registered already")
+                    app.alert("This email address has been already registered");
                     break;
                 case "name_is_taken":
-                    app.alert("this nick name has been taken by another user")
+                    app.alert("This nickname has been already taken");
                     break;
                 case "pending_" + chatterer.email:
                     ret = true;
@@ -41,16 +41,16 @@ class api_class {
             let resp = await this.post('api/account/val', number);
             if (resp.startsWith('added_'))
                 ret = true;
-            else if (resp == 'registered')
-                app.alert('already registered');
+            else if (resp == 'signed_out')
+                app.alert("You've been signed out, try again");
             else if (resp == 'invalid_confirmation_id')
-                app.alert('wrong number');
-            else if (resp == 'register_request_required')
-                app.alert('registration is required prior to email verification');
+                app.alert('Wrong number');
+            else if (resp == 'reg_request_required')
+                app.alert('Registration is required prior to email verification');
             else if (resp == 'email_is_taken')
-                app.alert('this email is registered already');
+                app.alert("This email address has been already registered");
             else if (resp == 'name_is_taken')
-                app.alert("this nickname has been already taken by another user");
+                app.alert("This nickname has been already taken");
             else app.alert(resp);
             return ret;
         }
@@ -63,16 +63,14 @@ class api_class {
         try {
             let ret = false;
             let resp = await this.post('api/account/sign', chatterer);
-            if (resp == 'already_signed') {
-                document.cookie = 'Chat_Authentication_Token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                app.alert("you've been signed out, try again");
-            }
+            if (resp == 'signed_out')
+                app.alert("You've been signed out, try again");
             else if (resp == 'user_not_found')
-                app.alert("specified email address hasn't been found");
+                app.alert("The email address is not registered");
             else if (resp == 'password_incorrect')
-                app.alert('wrong password, try again');
+                app.alert('Wrong password');
             else if (resp == 'multiple_signins_forbidden')
-                app.alert('access denied, already signed in');
+                app.alert('Access denied, already signed in');
             else if (resp.startsWith('OK_')) {
                 let index = resp.indexOf('_', 3);
                 let len = Number(resp.substring(3, index));
@@ -100,6 +98,72 @@ class api_class {
                 ret = true;
             else
                 app.alert(resp);
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
+    async acc_change(request) {
+        try {
+            let ret = {
+                name: false,
+                pass: false
+            };
+            let resp = await this.post('api/account/user/change', request);
+            switch (resp) {
+                case "wrong_email":
+                    app.alert("Wrong email address.")
+                    break;
+                case "wrong_password":
+                    app.alert("Wrong password")
+                    break;
+                case "no_change_requested":
+                    app.alert("Empty request");
+                    break;
+                case "same_credentials":
+                    app.alert("No changes have been made, same credentials");
+                    break;
+                case "name_changed":
+                    ret.name = true;
+                    localStorage.setItem('name', request.NewName);
+                    break;
+                case "pass_changed":
+                    ret.pass = true;
+                    break;
+                case "name&pass_changed":
+                    ret.name = true;
+                    ret.pass = true;
+                    localStorage.setItem('name', request.NewName);
+                    break;
+                default:
+                    app.alert(resp);
+            }
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
+    async acc_delete(signin) {
+        try {
+            let ret = false;
+            let resp = await this.post('api/account/user/del', signin);
+            switch (resp) {
+                case "wrong_email":
+                    app.alert("Wrong email address");
+                    break;
+                case "wrong_password":
+                    app.alert("Wrong password");
+                    break;
+                case "deleted":
+                    ret = true;
+                    break;
+                default:
+                    app.alert(resp);
+            }
             return ret;
         }
         catch (err) {
@@ -221,11 +285,11 @@ class reg_panel_class {
             password: form[2].value
         };
         if (chatterer.name.length < 5 || chatterer.name.length > 64)
-            app.alert("the name's length should be minimum 5 characters and maximum 64");
-        else if (chatterer.email.length == 0 || !form[1].checkValidity())
-            app.alert('wrong email address');
+            app.alert("The name's length should be minimum 5 characters and maximum 64");
+        else if (!chatterer.email || !form[1].checkValidity())
+            app.alert('Incorrect email address');
         else if (chatterer.password.length < 8 || chatterer.password.length > 32)
-            app.alert("the password's length should be minimum 8 characters and maximum 32");
+            app.alert("The password's length should be minimum 8 characters and maximum 32");
         else {
             app.api.register(chatterer).then(ok => {
                 if (ok)
@@ -236,7 +300,7 @@ class reg_panel_class {
     validate() {
         let num = this.panel.children[4].getElementsByTagName('input')[0].value;
         if (num.length != 4)
-            app.alert("code must consist of 4 digits");
+            app.alert("Code must consist of 4 digits");
         else {
             app.api.validate(Number(num)).then(ok => {
                 if (ok) {
@@ -251,10 +315,10 @@ class reg_panel_class {
             email: form[0].value,
             password: form[1].value
         };
-        if (chatterer.email.length == 0 || !form[0].checkValidity())
-            app.alert("wrong email address");
+        if (!chatterer.email || !form[0].checkValidity())
+            app.alert("Incorrect email address");
         else if (chatterer.password.length < 8 || chatterer.password.length > 32)
-            app.alert("the password's length should be minimum 8 characters and maximum 32");
+            app.alert("The password's length should be minimum 8 characters and maximum 32");
         else app.api.signin(chatterer).then(ok => {
             if (ok)
                 app.goto('groups');
@@ -273,6 +337,7 @@ class groups_class {
         this.group_btn = this.groups_window.children[1].children[2].children[0].children[1];
         this.acc_open = false;
         this.group_open = false;
+        this.acc_change_form = document.getElementById('acc_change_form');
     }
     hmbrg_click() {
         this.hmbrgr_btn.classList.toggle('clicked');
@@ -402,14 +467,89 @@ class groups_class {
         this.initialize(false);
     }
     signout() {
+        this.close_all_menus();
         app.api.signout().then(ok => {
             if (ok) {
                 app.goto('reg');
                 localStorage.removeItem('name');
                 localStorage.removeItem('group');
-                this.close_all_menus();
             }
         });
+    }
+    acc_change() {
+        this.acc_change_form.children[2].style.display = 'none';
+        this.acc_change_form.children[1].style.display = 'flex';
+        this.acc_change_form.style.display = 'block';
+        this.close_all_menus();
+    }
+    acc_delete() {
+        this.acc_change_form.children[1].style.display = 'none';
+        this.acc_change_form.children[2].style.display = 'flex';
+        this.acc_change_form.style.display = 'block';
+        this.close_all_menus();
+    }
+    acc_change_close() {
+        this.acc_change_form.style.display = 'none';
+        let inputs = this.acc_change_form.getElementsByTagName('input');
+        for (let i = 0; i < inputs.length; i++)
+            inputs[i].value = null;
+    }
+    acc_change_ok() {
+        let form = this.acc_change_form.getElementsByTagName('input');
+        let request = {
+            SignInInfo: {
+                email: form[0].value,
+                password: form[1].value
+            },
+            NewName: form[2].value,
+            NewPassword: form[3].value
+        };
+        if (!request.SignInInfo.email || !form[0].checkValidity())
+            app.alert("Incorrect email address");
+        else if (request.SignInInfo.password.length < 8 || request.SignInInfo.password.length > 32)
+            app.alert("Password must be at least 8 characters long and maximum 32");
+        else if (request.NewName.length > 0 && (request.NewName.length < 5 || request.NewName.length > 64))
+            app.alert("New name must be at least 5 characters long and maximum 64");
+        else if (request.NewPassword.length > 0 && (request.NewPassword.length < 8 || request.NewPassword.length > 32))
+            app.alert("New password must be at least 8 characters long and maximum 32");
+        else if (request.SignInInfo.password == request.NewPassword || request.NewName == localStorage.getItem('name'))
+            app.alert("Leave blank if the credentials are same");
+        else if (!request.NewName && !request.NewPassword)
+            app.alert("No changes are specified");
+        else {
+            if (request.NewName.length == 0)
+                request.NewName = null;
+            if (request.NewPassword.length == 0)
+                request.NewPassword = null;
+            app.api.acc_change(request).then(ret => {
+                if (ret.name || ret.pass) {
+                    if (ret.name)
+                        this.groups_window.getElementsByTagName('code')[0].textContent = localStorage.getItem('name');
+                    this.acc_change_close();
+                }
+            });
+        }
+    }
+    acc_change_del() {
+        this.close_all_menus();
+        let form = this.acc_change_form.getElementsByTagName('input');
+        let signin = {
+            email: form[4].value,
+            password: form[5].value
+        };
+        if (!signin.email || !form[4].checkValidity())
+            app.alert("Incorrect email address");
+        else if (signin.password.length < 8 || signin.password.length > 32)
+            app.alert("Password must be at least 8 characters long and maximum 32");
+        else {
+            app.api.acc_delete(signin).then(ret => {
+                if (ret) {
+                    app.goto('reg');
+                    localStorage.removeItem('name');
+                    localStorage.removeItem('group');
+                }
+            });
+        }
     }
 }
 

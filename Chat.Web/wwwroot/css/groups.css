@@ -30,7 +30,6 @@
 }
 #groups > nav > input {
     background-color: rgba(0,0,0,0.3);
-    caret-color: white;
     color: white;
     outline: none;
     padding:5px;
@@ -163,12 +162,11 @@
     left:0;
     right:0;
     bottom:0;
-    
 }
 #acc_change_form > video {
     position: fixed;
-    right: 0;
-    bottom: 0;
+    left: 0;
+    top: 0;
     min-height: 100%;
     min-width: 100%;
 }
@@ -178,11 +176,43 @@
     left:50%;
     width:95%;
     max-width:550px;
-    height:330px;
+    height:100%;
+    max-height:330px;
     box-shadow:0 0 7px 2px white;
     background-color:rgba(0,0,0,0.8);
     transform:translate(-50%, -50%);
+    font-family:Courier New, Courier, monospace;
+    color:white;
+    overflow:auto;
+    display: none;
+    flex-direction: column;
+    padding:15px;
+    justify-content:space-between;
 }
+#acc_change_form > div > div:first-child {
+    text-align:center;
+    font-size:30px;
+}
+#acc_change_form > div > div:last-child {
+    display:flex;
+    justify-content:space-around;
+}
+#acc_change_form > div > div:last-child > button {
+    background-color:transparent;
+    color:white;
+    width:100px;
+    padding:4px 0;
+}
+#acc_change_form > div > div > div {
+    display:inline-block;
+    width:30%;
+}
+#acc_change_form > div > div > input{
+     background-color:transparent;
+     color:white;
+     width:64%;
+     padding:3px 5px;
+ }
 @media screen and (max-width: 900px) {
     #groups > nav > div:first-child {
         display:none;

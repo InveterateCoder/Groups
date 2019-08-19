@@ -29,11 +29,15 @@ namespace Chat.Web.Controllers
         {
             string ret;
             if (_user.Name != null)
-                ret = "registered";
+            {
+                Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                ret = "signed_out";
+            }
             else
             {
                 try
                 {
+                    request.Email = request.Email.ToLower();
                     if (_dbContext.Chatterers.Any(c => c.Email == request.Email))
                         ret = "email_is_taken";
                     else if (_dbContext.Chatterers.Any(c => c.Name == request.Name))
@@ -83,7 +87,10 @@ namespace Chat.Web.Controllers
         {
             string ret;
             if (_user.Name != null)
-                ret = "registered";
+            {
+                Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                ret = "signed_out";
+            }
             else
             {
                 try
@@ -106,11 +113,11 @@ namespace Chat.Web.Controllers
                     }
                     catch
                     {
-                        throw new InvalidOperationException("register_request_required");
+                        throw new InvalidOperationException("reg_request_required");
                     }
                     if (files.Length <= 0)
                     {
-                        ret = "register_request_required";
+                        ret = "reg_request_required";
                     }
                     else
                     {
@@ -132,7 +139,7 @@ namespace Chat.Web.Controllers
                             }
                         }
                         if (request == null)
-                            ret = "register_request_required";
+                            ret = "reg_request_required";
                         else
                         {
                             if (_dbContext.Chatterers.Any(c => c.Email == request.Email))
@@ -168,10 +175,13 @@ namespace Chat.Web.Controllers
             try
             {
                 if (_user.Name != null)
-                    ret = "already_signed";
+                {
+                    Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                    ret = "signed_out";
+                }
                 else
                 {
-                    var user = _dbContext.Chatterers.Where(c => c.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase)).SingleOrDefault();
+                    var user = _dbContext.Chatterers.Where(c => c.Email == request.Email.ToLower()).SingleOrDefault();
                     if (user == null)
                         ret = "user_not_found";
                     else
@@ -185,9 +195,16 @@ namespace Chat.Web.Controllers
                             else
                             {
                                 SHA256 sha256 = SHA256.Create();
-                                byte[] bytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(
+                                byte[] bytes;
+                                string token;
+                                do
+                                {
+                                    bytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(
                                     $"{DateTime.UtcNow.ToString()}-{user.Name}-{user.Email}-{user.Password}-{Guid.NewGuid().ToString()}"));
-                                user.Token = Convert.ToBase64String(bytes);
+                                    token = Convert.ToBase64String(bytes);
+                                }
+                                while (_dbContext.Chatterers.Where(c => c.Token == token).FirstOrDefault() != null);
+                                user.Token = token;
                                 user.LastActive = DateTime.UtcNow.Ticks;
                                 sha256.Dispose();
                                 bytes = null;
@@ -232,20 +249,17 @@ namespace Chat.Web.Controllers
             string ret;
             try
             {
-                var chatterer = _dbContext.Chatterers.Where(c => c.Email == request.Email).SingleOrDefault();
-                if (chatterer == null)
-                    ret = "not_found";
+                var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
+                if (request.Email.ToLower() != chatterer.Email)
+                    ret = "wrong_email";
+                else if (request.Password != chatterer.Password)
+                    ret = "wrong_password";
                 else
                 {
-                    if (chatterer.Password != request.Password)
-                        ret = "password_incorrect";
-                    else
-                    {
-                        Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                        _dbContext.Chatterers.Remove(chatterer);
-                        await _dbContext.SaveChangesAsync();
-                        ret = "OK";
-                    }
+                    Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                    _dbContext.Chatterers.Remove(chatterer);
+                    await _dbContext.SaveChangesAsync();
+                    ret = "deleted";
                 }
             }
             catch(Exception e)
@@ -261,33 +275,37 @@ namespace Chat.Web.Controllers
             try
             {
                 var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
-                if (request.SignInInfo.Email != chatterer.Email)
+                if (request.SignInInfo.Email.ToLower() != chatterer.Email)
                     ret = "wrong_email";
                 else if (request.SignInInfo.Password != chatterer.Password)
                     ret = "wrong_password";
+                else if (request.NewName == null && request.NewPassword == null)
+                    ret = "no_change_requested";
                 else
                 {
-                    if (request.NewName != chatterer.Name && request.NewPassword != chatterer.Password)
+
+                    if (request.NewName != null && request.NewName != chatterer.Name
+                        && request.NewPassword != null && request.NewPassword != chatterer.Password)
                     {
                         chatterer.Name = request.NewName;
                         chatterer.Password = request.NewPassword;
                         await _dbContext.SaveChangesAsync();
                         ret = "name&pass_changed";
                     }
-                    else if (request.NewName != chatterer.Name)
+                    else if (request.NewName != null && request.NewName != chatterer.Name)
                     {
                         chatterer.Name = request.NewName;
                         await _dbContext.SaveChangesAsync();
                         ret = "name_changed";
                     }
-                    else if (request.NewPassword != chatterer.Password)
+                    else if (request.NewPassword != null && request.NewPassword != chatterer.Password)
                     {
                         chatterer.Password = request.NewPassword;
                         await _dbContext.SaveChangesAsync();
                         ret = "pass_changed";
                     }
                     else
-                        ret = "not_changed";
+                        ret = "same_credentials";
                 }
             }
             catch(Exception e)
