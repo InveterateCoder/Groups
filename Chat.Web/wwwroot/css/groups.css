@@ -109,7 +109,8 @@
     transition:opacity 0.17s;
 }
 #m_group > li, #m_account > li {
-    padding:6px 10px;
+    padding:6px 0;
+    white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
 }
@@ -140,12 +141,17 @@
 }
 #m_all > dd {
     margin:0;
-    color:silver;
     font-family:Courier New, Courier, monospace;
     font-size:18px;
     text-align:center;
-    padding:7px;
+    padding:7px 20px;
     border-top:1px solid gray;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+#m_all > dd:not(.ddgold){
+    color:silver;
 }
 #m_all > dd:hover {
     background-color:whitesmoke;
@@ -155,6 +161,9 @@
 #m_all > dd:active {
     text-shadow:0 0 10px rgba(0,0,0,0.5);
     outline:1px solid red;
+}
+.ddgold {
+    color:gold;
 }
 #groups_forms {
     position: fixed;

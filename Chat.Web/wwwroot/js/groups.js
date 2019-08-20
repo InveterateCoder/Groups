@@ -125,9 +125,6 @@ class api_class {
                     ret.pass = true;
                     localStorage.setItem('name', request.NewName);
                     break;
-                case "wrong_email":
-                    app.alert("Wrong email address.")
-                    break;
                 case "wrong_password":
                     app.alert("Wrong password")
                     break;
@@ -174,9 +171,10 @@ class api_class {
     async grp_reg(info) {
         try {
             let ret = false;
-            let resp = await post("api/groups/reg", info);
+            let resp = await this.post("api/groups/reg", info);
             switch (resp) {
                 case "OK":
+                    localStorage.setItem('group', info.GroupName);
                     ret = true;
                     break;
                 case "has_group":
@@ -184,6 +182,40 @@ class api_class {
                     break;
                 case "name_taken":
                     app.alert("A group with such name already exists");
+                    break;
+                default:
+                    app.alert(resp);
+            }
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
+    async grp_change(info) {
+        try {
+            let ret = false;
+            let resp = await this.post("api/groups/change", info);
+            switch (resp) {
+                case "name_changed":
+                case "name&pass_changed":
+                    localStorage.setItem('group', info.NewGroupName);
+                case "pass_changed":
+                    ret = true;
+                    break;
+                case "has_no_group":
+                    localStorage.removeItem('group');
+                    ret = true;
+                    break;
+                case "wrong_password":
+                    app.alert("Wrong password");
+                    break;
+                case "not_changed":
+                    app.alert("No changes were made");
+                    break;
+                case "no_change_requested":
+                    app.alert("No change was requested");
                     break;
                 default:
                     app.alert(resp);
@@ -310,11 +342,11 @@ class reg_panel_class {
             email: form[1].value,
             password: form[2].value
         };
-        if (chatterer.name.length < 5 || chatterer.name.length > 64)
+        if (!app.nameValid(chatterer.name))
             app.alert("The name's length should be minimum 5 characters and maximum 64");
         else if (!chatterer.email || !form[1].checkValidity())
             app.alert('Incorrect email address');
-        else if (chatterer.password.length < 8 || chatterer.password.length > 32)
+        else if (!app.passwordValid(chatterer.password))
             app.alert("The password's length should be minimum 8 characters and maximum 32");
         else {
             app.api.register(chatterer).then(ok => {
@@ -343,7 +375,7 @@ class reg_panel_class {
         };
         if (!chatterer.email || !form[0].checkValidity())
             app.alert("Incorrect email address");
-        else if (chatterer.password.length < 8 || chatterer.password.length > 32)
+        else if (!app.passwordValid(chatterer.password))
             app.alert("The password's length should be minimum 8 characters and maximum 32");
         else app.api.signin(chatterer).then(ok => {
             if (ok)
@@ -511,31 +543,36 @@ class groups_class {
         this.groups_forms.style.display = 'none';
         this.groups_forms.children[n].style.display = 'none';
         let form = this.groups_forms.children[n].getElementsByTagName('input');
-        for (let i = 0; i < form.length; i++)
-            form[i].value = null;
+        if (n == 4) {
+            this.groups_forms.children[4].children[4].style.visibility = 'visible';
+            form[2].checked = false;
+            for (let i = 0; i < form.length; i++) {
+                if (i == 2) continue;
+                form[i].value = null;
+            };
+        }
+        else
+            for (let i = 0; i < form.length; i++) {
+                form[i].value = null;
+            };
     }
     acc_change() {
         let form = this.groups_forms.children[1].getElementsByTagName('input');
         let request = {
-            SignInInfo: {
-                email: form[0].value,
-                password: form[1].value
-            },
-            NewName: form[2].value,
-            NewPassword: form[3].value
+            Password: form[0].value,
+            NewName: form[1].value,
+            NewPassword: form[2].value
         };
-        if (!request.SignInInfo.email || !form[0].checkValidity())
-            app.alert("Incorrect email address");
-        else if (request.SignInInfo.password.length < 8 || request.SignInInfo.password.length > 32)
+        if (!app.passwordValid(request.Password))
             app.alert("Password must be at least 8 characters long and maximum 32");
-        else if (request.NewName.length > 0 && (request.NewName.length < 5 || request.NewName.length > 64))
+        else if (request.NewName.length > 0 && !app.nameValid(request.NewName))
             app.alert("New name must be at least 5 characters long and maximum 64");
-        else if (request.NewPassword.length > 0 && (request.NewPassword.length < 8 || request.NewPassword.length > 32))
+        else if (request.NewPassword.length > 0 && !app.passwordValid(request.NewPassword))
             app.alert("New password must be at least 8 characters long and maximum 32");
-        else if (request.SignInInfo.password == request.NewPassword || request.NewName == localStorage.getItem('name'))
-            app.alert("Leave blank if the credentials are same");
+        else if (request.Password == request.NewPassword || request.NewName == localStorage.getItem('name'))
+            app.alert("Leave blank if the credentials are the same");
         else if (!request.NewName && !request.NewPassword)
-            app.alert("No changes are specified");
+            app.alert("No change requested");
         else {
             if (request.NewName.length == 0)
                 request.NewName = null;
@@ -558,7 +595,7 @@ class groups_class {
         };
         if (!signin.email || !form[0].checkValidity())
             app.alert("Incorrect email address");
-        else if (signin.password.length < 8 || signin.password.length > 32)
+        else if (!app.passwordValid(signin.password))
             app.alert("Password must be at least 8 characters long and maximum 32");
         else {
             app.api.acc_delete(signin).then(ret => {
@@ -570,6 +607,67 @@ class groups_class {
                 }
             });
         }
+    }
+    group_create() {
+        let form = this.groups_forms.children[3].getElementsByTagName('input');
+        let info = {
+            Password: form[0].value,
+            GroupName: form[1].value,
+            GroupPassword: form[2].value
+        };
+        if (!app.passwordValid(info.Password))
+            app.alert("Password must be at least 8 characters long and maximum 32");
+        else if (!app.nameValid(info.GroupName))
+            app.alert("Group name must be at least 5 characters long and maximum 64");
+        else if (info.GroupPassword.length > 0 && !app.passwordValid(info.GroupPassword))
+            app.alert("Group password must be at least 8 characters long and maximum 32");
+        else {
+            if (info.GroupPassword.length == 0)
+                info.GroupPassword = null;
+            app.api.grp_reg(info).then(ret => {
+                if (ret) {
+                    this.group_conf();
+                    this.form_close(3);
+                }
+            });
+        }
+    }
+    group_change() {
+        let form = this.groups_forms.children[4].getElementsByTagName('input');
+        let info = {
+            Password: form[0].value,
+            NewGroupName: form[1].value,
+            NewGroupPassword: form[3].value
+        };
+        if (!app.passwordValid(info.Password))
+            app.alert("Password must be at least 8 characters long and maximum 32");
+        else if (info.NewGroupName.length > 0 && !app.nameValid(info.NewGroupName))
+            app.alert("New name must be at least 5 characters long and maximum 64");
+        else if (!form[2].checked && info.NewGroupPassword.length > 0 && !app.passwordValid(info.NewGroupPassword))
+            app.alert("New password must be at least 8 characters long and maximum 32");
+        else {
+            if (form[2].checked) info.NewGroupPassword = null;
+            else if (info.NewGroupPassword.length == 0) info.NewGroupPassword = "000";
+            if (info.NewGroupName.length == 0)
+                info.NewGroupName = null; 
+            if (!info.NewGroupName && info.NewGroupPassword == "000")
+                app.alert("No change requested");
+            else {
+                app.api.grp_change(info).then(ret => {
+                    if (ret) {
+                        this.group_conf();
+                        this.form_close(4);
+                    }
+                });
+            }
+        }
+
+    }
+    on_pass_del_change(el) {
+        if (el.checked)
+            this.groups_forms.children[4].children[4].style.visibility = 'hidden';
+        else
+            this.groups_forms.children[4].children[4].style.visibility = 'visible';
     }
 }
 
@@ -620,7 +718,6 @@ class app_class {
                 document.body.style.backgroundColor = '#efefef';
                 document.body.style.backgroundImage = 'url("/images/low-contrast-linen.png")';
                 this.groups.groups_window.getElementsByTagName('code')[0].textContent = localStorage.getItem('name');
-                this.groups.initialize();
                 document.body.children[1].style.display = 'block';
                 localStorage.setItem('page', place);
                 this.groups.initialize();
@@ -649,5 +746,17 @@ class app_class {
                 document.body.children[2].style.display = 'none';
                 break;
         }
+    }
+    passwordValid(password) {
+        if (!password || password.length < 8 || password.length > 32)
+            return false;
+        else
+            return true;
+    }
+    nameValid(name) {
+        if (!name || name.length < 5 || name.length > 64)
+            return false;
+        else
+            return true;
     }
 }

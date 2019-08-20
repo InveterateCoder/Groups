@@ -103,22 +103,81 @@ namespace Chat.Web.Controllers
             }
         }
         [HttpPost("reg")]
-        public async Task<ContentResult> Register([FromBody]GroupRequest request)
+        public async Task<ContentResult> Register([FromBody]GroupRegRequest request)
         {
             string ret;
             try
             {
                 if (_user.Group != null)
                     ret = "has_group";
-                else if (_dbContext.Chatterers.Any(c => c.Group == request.Name))
+                else if (_dbContext.Chatterers.Any(c => c.Group == request.GroupName))
                     ret = "name_taken";
                 else
                 {
                     var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
-                    chatterer.Group = request.Name;
-                    chatterer.GroupPassword = request.Password;
-                    await _dbContext.SaveChangesAsync();
-                    ret = "OK";
+                    if (request.Password != chatterer.Password)
+                        ret = "wrong_password";
+                    else
+                    {
+                        chatterer.Group = request.GroupName;
+                        chatterer.GroupPassword = request.GroupPassword;
+                        await _dbContext.SaveChangesAsync();
+                        ret = "OK";
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                ret = e.Message;
+            }
+            return Content(ret, "text/plain");
+        }
+        [HttpPost("change")]
+        public async Task<ContentResult> Change([FromBody]GroupChangeRequest request)
+        {
+            string ret;
+            try
+            {
+                if (_user.Group == null)
+                    ret = "has_no_group";
+                else if (request.NewGroupName == null && request.NewGroupPassword != null && request.NewGroupPassword.Length < 8)
+                    ret = "no_change_requested";
+                else
+                {
+                    var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
+                    if (chatterer.Password != request.Password)
+                        ret = "wrong_password";
+                    else
+                    {
+                        bool name = false, pass = false;
+                        if (request.NewGroupName != null && request.NewGroupName != chatterer.Group)
+                        {
+                            name = true;
+                            chatterer.Group = request.NewGroupName;
+                        }
+                        if (request.NewGroupPassword != chatterer.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8)) 
+                        {
+                            pass = true;
+                            chatterer.GroupPassword = request.NewGroupPassword;
+                        }
+                        if (name && pass)
+                        {
+                            await _dbContext.SaveChangesAsync();
+                            ret = "name&pass_changed";
+                        }
+                        else if (name)
+                        {
+                            await _dbContext.SaveChangesAsync();
+                            ret = "name_changed";
+                        }
+                        else if (pass)
+                        {
+                            await _dbContext.SaveChangesAsync();
+                            ret = "pass_changed";
+                        }
+                        else
+                            ret = "not_changed";
+                    }
                 }
             }
             catch(Exception e)

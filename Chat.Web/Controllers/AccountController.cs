@@ -275,9 +275,7 @@ namespace Chat.Web.Controllers
             try
             {
                 var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
-                if (request.SignInInfo.Email.ToLower() != chatterer.Email)
-                    ret = "wrong_email";
-                else if (request.SignInInfo.Password != chatterer.Password)
+                if (request.Password != chatterer.Password)
                     ret = "wrong_password";
                 else if (request.NewName == null && request.NewPassword == null)
                     ret = "no_change_requested";

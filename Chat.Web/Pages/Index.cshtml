@@ -104,15 +104,15 @@
         </div>
     </div>
     <div id="groups" class="disable-select" style="display:none">
-        <dl id="m_all" class="hidden">
+        <dl id="m_all">
             <dt>Account</dt>
             <dd onclick="app.groups.signout()">Sign Out</dd>
             <dd onclick="app.groups.form_open(1)">Change</dd>
             <dd style="border-bottom:1px solid gray;" onclick="app.groups.form_open(2)">Delete</dd>
             <dt>My Group</dt>
-            <dd style="border-bottom:1px solid gray;">Create</dd>
-            <dd style="color:gold"></dd>
-            <dd>Change</dd>
+            <dd style="border-bottom:1px solid gray;" onclick="app.groups.form_open(3)">Create</dd>
+            <dd class="ddgold"></dd>
+            <dd onclick="app.groups.form_open(4)">Change</dd>
             <dd style="border-bottom:1px solid gray;">Delete</dd>
         </dl>
         <nav>
@@ -134,9 +134,9 @@
             </div>
         </nav>
         <ul id="m_group" tabindex="0" onblur="app.groups.m_onblur(this)">
-            <li>Create</li>
-            <li style="color:gold"></li>
-            <li>Change</li>
+            <li onclick="app.groups.form_open(3)">Create</li>
+            <li style="padding: 6px 13px" class="ddgold"></li>
+            <li onclick="app.groups.form_open(4)">Change</li>
             <li>Delete</li>
         </ul>
         <ul id="m_account" tabindex="0" onblur="app.groups.m_onblur(this)">
@@ -148,18 +148,14 @@
             <!--buttons-->
         </div>
         <div id="groups_forms" style="display:none">
-            <video autoplay muted loop oncontextmenu="return false">
+            <video preload="auto" autoplay muted loop oncontextmenu="return false">
                 <source src="~/images/lines.mp4" type="video/mp4" />
             </video>
             <div>
                 <div>Change Personal Info</div>
                 <div>
-                    <div>Email:</div>
-                    <input type="email" maxlength="256" placeholder="Your registered email address" />
-                </div>
-                <div>
                     <div>Password:</div>
-                    <input type="password" maxlength="32" placeholder="Your current password" />
+                    <input type="password" maxlength="32" placeholder="Current password" />
                 </div>
                 <div>
                     <div>New Name:</div>
@@ -187,6 +183,48 @@
                 <div>
                     <button onclick="app.groups.form_close(2)">Cancel</button>
                     <button onclick="app.groups.acc_delete()">Delete</button>
+                </div>
+            </div>
+            <div>
+                <div>Create Group</div>
+                <div>
+                    <div>Password:</div>
+                    <input type="password" maxlength="32" placeholder="Your password" />
+                </div>
+                <div>
+                    <div>Group Name:</div>
+                    <input type="text" spellcheck="false" maxlength="64" placeholder="Create your group name" />
+                </div>
+                <div>
+                    <div>Group Password:</div>
+                    <input type="password" maxlength="32" placeholder="Create your group password" />
+                </div>
+                <div>
+                    <button onclick="app.groups.form_close(3)">Cancel</button>
+                    <button onclick="app.groups.group_create()">Create</button>
+                </div>
+            </div>
+            <div>
+                <div>Change Group Info</div>
+                <div>
+                    <div>Password:</div>
+                    <input type="password" maxlength="32" placeholder="Your password" />
+                </div>
+                <div>
+                    <div>New Name:</div>
+                    <input type="text" spellcheck="false" maxlength="64" placeholder="Leave blank to leave unchanged" />
+                </div>
+                <div>
+                    <div>Delete Password:</div>
+                    <input type="checkbox" onchange="app.groups.on_pass_del_change(this)" />
+                </div>
+                <div>
+                    <div>New Password:</div>
+                    <input type="password" maxlength="32" placeholder="Leave blank to leave unchanged" />
+                </div>
+                <div>
+                    <button onclick="app.groups.form_close(4)">Cancel</button>
+                    <button onclick="app.groups.group_change()">Change</button>
                 </div>
             </div>
         </div>
