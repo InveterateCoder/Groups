@@ -31,12 +31,12 @@
     width: 100%;
     max-width: 170px;
     padding: 5px 10px;
+    border-radius:30px;
 }
 #reg_panel_menu > div:hover{
     color:white;
     background-color: #000338;
     background-image: url("/images/concrete-wall-2.png");
-    border-radius:30px;
     border:2px solid white;
     cursor: pointer;
 }

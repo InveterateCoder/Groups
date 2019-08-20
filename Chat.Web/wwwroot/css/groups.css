@@ -156,21 +156,22 @@
     text-shadow:0 0 10px rgba(0,0,0,0.5);
     outline:1px solid red;
 }
-#acc_change_form {
-    position:fixed;
-    top:0;
-    left:0;
-    right:0;
-    bottom:0;
+#groups_forms {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color:black;
 }
-#acc_change_form > video {
+#groups_forms > video {
     position: fixed;
     left: 0;
     top: 0;
     min-height: 100%;
     min-width: 100%;
 }
-#acc_change_form > div {
+#groups_forms > div {
     position:relative;
     top:50%;
     left:50%;
@@ -189,30 +190,30 @@
     padding:15px;
     justify-content:space-between;
 }
-#acc_change_form > div > div:first-child {
+#groups_forms > div > div:first-child {
     text-align:center;
     font-size:30px;
 }
-#acc_change_form > div > div:last-child {
+#groups_forms > div > div:last-child {
     display:flex;
     justify-content:space-around;
 }
-#acc_change_form > div > div:last-child > button {
+#groups_forms > div > div:last-child > button {
     background-color:transparent;
     color:white;
     width:100px;
     padding:4px 0;
 }
-#acc_change_form > div > div > div {
+#groups_forms > div > div > div {
     display:inline-block;
     width:30%;
 }
-#acc_change_form > div > div > input{
-     background-color:transparent;
-     color:white;
-     width:64%;
-     padding:3px 5px;
- }
+#groups_forms > div > div > input {
+    background-color: transparent;
+    color: white;
+    width: 64%;
+    padding: 3px 5px;
+}
 @media screen and (max-width: 900px) {
     #groups > nav > div:first-child {
         display:none;

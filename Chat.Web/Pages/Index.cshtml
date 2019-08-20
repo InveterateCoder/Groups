@@ -89,7 +89,7 @@
         <div id="reg_panel_verify" style="display:none;">
             <p style="text-align:center">Enter 4 digit code from your verification email.</p>
             <div style="text-align:center">
-                <input onkeypress="app.reg_panel.num(event)" oninput="app.reg_panel.pasteFilter(event)" type="text" maxlength="4" spellcheck="false" />
+                <input onkeypress="app.reg_panel.num(event)" oninput="app.reg_panel.pasteFilter(event)" type="text" maxlength="4" spellcheck="false" autocomplete="off" />
             </div>
             <div class="action_panel">
                 <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
@@ -107,8 +107,8 @@
         <dl id="m_all" class="hidden">
             <dt>Account</dt>
             <dd onclick="app.groups.signout()">Sign Out</dd>
-            <dd onclick="app.groups.acc_change()">Change</dd>
-            <dd style="border-bottom:1px solid gray;" onclick="app.groups.acc_delete()">Delete</dd>
+            <dd onclick="app.groups.form_open(1)">Change</dd>
+            <dd style="border-bottom:1px solid gray;" onclick="app.groups.form_open(2)">Delete</dd>
             <dt>My Group</dt>
             <dd style="border-bottom:1px solid gray;">Create</dd>
             <dd style="color:gold"></dd>
@@ -141,18 +141,18 @@
         </ul>
         <ul id="m_account" tabindex="0" onblur="app.groups.m_onblur(this)">
             <li onclick="app.groups.signout()">Sign Out</li>
-            <li onclick="app.groups.acc_change()">Change</li>
-            <li onclick="app.groups.acc_delete()">Delete</li>
+            <li onclick="app.groups.form_open(1)">Change</li>
+            <li onclick="app.groups.form_open(2)">Delete</li>
         </ul>
         <div id="groups_btns">
             <!--buttons-->
         </div>
-        <div id="acc_change_form" style="display:none">
+        <div id="groups_forms" style="display:none">
             <video autoplay muted loop oncontextmenu="return false">
                 <source src="~/images/lines.mp4" type="video/mp4" />
             </video>
             <div>
-                <div>Groups</div>
+                <div>Change Personal Info</div>
                 <div>
                     <div>Email:</div>
                     <input type="email" maxlength="256" placeholder="Your registered email address" />
@@ -170,12 +170,12 @@
                     <input type="password" maxlength="32" placeholder="Leave blank to leave unchanged" />
                 </div>
                 <div>
-                    <button onclick="app.groups.acc_change_close()">Cancel</button>
-                    <button onclick="app.groups.acc_change_ok()">OK</button>
+                    <button onclick="app.groups.form_close(1)">Cancel</button>
+                    <button onclick="app.groups.acc_change()">OK</button>
                 </div>
             </div>
             <div>
-                <div>Groups</div>
+                <div>Delete Account</div>
                 <div>
                     <div>Email:</div>
                     <input type="email" maxlength="256" placeholder="Your registered email address" />
@@ -185,8 +185,8 @@
                     <input type="password" maxlength="32" placeholder="Your password" />
                 </div>
                 <div>
-                    <button onclick="app.groups.acc_change_close()">Cancel</button>
-                    <button onclick="app.groups.acc_change_del()">Delete</button>
+                    <button onclick="app.groups.form_close(2)">Cancel</button>
+                    <button onclick="app.groups.acc_delete()">Delete</button>
                 </div>
             </div>
         </div>

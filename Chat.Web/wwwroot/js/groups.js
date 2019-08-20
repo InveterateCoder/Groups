@@ -11,7 +11,10 @@ class api_class {
         try {
             let ret = false;
             let resp = await this.post('/api/account/reg', chatterer);
-            switch (resp){
+            switch (resp) {
+                case "pending_" + chatterer.email:
+                    ret = true;
+                    break;
                 case "signed_out":
                     app.alert("You've been signed out, try again");
                     break;
@@ -21,12 +24,8 @@ class api_class {
                 case "name_is_taken":
                     app.alert("This nickname has been already taken");
                     break;
-                case "pending_" + chatterer.email:
-                    ret = true;
-                    break;
                 default:
                     app.alert(resp);
-                    break;
             }
             return ret;
         }
@@ -63,15 +62,7 @@ class api_class {
         try {
             let ret = false;
             let resp = await this.post('api/account/sign', chatterer);
-            if (resp == 'signed_out')
-                app.alert("You've been signed out, try again");
-            else if (resp == 'user_not_found')
-                app.alert("The email address is not registered");
-            else if (resp == 'password_incorrect')
-                app.alert('Wrong password');
-            else if (resp == 'multiple_signins_forbidden')
-                app.alert('Access denied, already signed in');
-            else if (resp.startsWith('OK_')) {
+            if (resp.startsWith('OK_')) {
                 let index = resp.indexOf('_', 3);
                 let len = Number(resp.substring(3, index));
                 localStorage.setItem('name', resp.substring(index + 1, index + 1 + len));
@@ -82,7 +73,16 @@ class api_class {
                     localStorage.removeItem('group');
                 ret = true;
             }
-            else app.alert(resp);
+            else if (resp == 'signed_out')
+                app.alert("You've been signed out, try again");
+            else if (resp == 'user_not_found')
+                app.alert("The email address is not registered");
+            else if (resp == 'password_incorrect')
+                app.alert('Wrong password');
+            else if (resp == 'multiple_signins_forbidden')
+                app.alert('Access denied, already signed in');
+            else
+                app.alert(resp);
             return ret;
         }
         catch (err) {
@@ -113,18 +113,6 @@ class api_class {
             };
             let resp = await this.post('api/account/user/change', request);
             switch (resp) {
-                case "wrong_email":
-                    app.alert("Wrong email address.")
-                    break;
-                case "wrong_password":
-                    app.alert("Wrong password")
-                    break;
-                case "no_change_requested":
-                    app.alert("Empty request");
-                    break;
-                case "same_credentials":
-                    app.alert("No changes have been made, same credentials");
-                    break;
                 case "name_changed":
                     ret.name = true;
                     localStorage.setItem('name', request.NewName);
@@ -136,6 +124,18 @@ class api_class {
                     ret.name = true;
                     ret.pass = true;
                     localStorage.setItem('name', request.NewName);
+                    break;
+                case "wrong_email":
+                    app.alert("Wrong email address.")
+                    break;
+                case "wrong_password":
+                    app.alert("Wrong password")
+                    break;
+                case "no_change_requested":
+                    app.alert("Empty request");
+                    break;
+                case "same_credentials":
+                    app.alert("No changes have been made, same credentials");
                     break;
                 default:
                     app.alert(resp);
@@ -152,14 +152,38 @@ class api_class {
             let ret = false;
             let resp = await this.post('api/account/user/del', signin);
             switch (resp) {
+                case "deleted":
+                    ret = true;
+                    break;
                 case "wrong_email":
                     app.alert("Wrong email address");
                     break;
                 case "wrong_password":
                     app.alert("Wrong password");
                     break;
-                case "deleted":
+                default:
+                    app.alert(resp);
+            }
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
+    async grp_reg(info) {
+        try {
+            let ret = false;
+            let resp = await post("api/groups/reg", info);
+            switch (resp) {
+                case "OK":
                     ret = true;
+                    break;
+                case "has_group":
+                    app.alert("You have already registered a group");
+                    break;
+                case "name_taken":
+                    app.alert("A group with such name already exists");
                     break;
                 default:
                     app.alert(resp);
@@ -183,6 +207,8 @@ class api_class {
                 body: JSON.stringify(obj || '')
             });
             ret = await resp.text();
+            if (ret == 'not_authorized' || ret == 'single_connection_only')
+                location.reload();
         }
         catch (err) {
             ret = err.message;
@@ -337,7 +363,7 @@ class groups_class {
         this.group_btn = this.groups_window.children[1].children[2].children[0].children[1];
         this.acc_open = false;
         this.group_open = false;
-        this.acc_change_form = document.getElementById('acc_change_form');
+        this.groups_forms = document.getElementById('groups_forms');
     }
     hmbrg_click() {
         this.hmbrgr_btn.classList.toggle('clicked');
@@ -476,26 +502,20 @@ class groups_class {
             }
         });
     }
+    form_open(n) {
+        this.groups_forms.children[n].style.display = 'flex';
+        this.groups_forms.style.display = 'block';
+        this.close_all_menus();
+    }
+    form_close(n) {
+        this.groups_forms.style.display = 'none';
+        this.groups_forms.children[n].style.display = 'none';
+        let form = this.groups_forms.children[n].getElementsByTagName('input');
+        for (let i = 0; i < form.length; i++)
+            form[i].value = null;
+    }
     acc_change() {
-        this.acc_change_form.children[2].style.display = 'none';
-        this.acc_change_form.children[1].style.display = 'flex';
-        this.acc_change_form.style.display = 'block';
-        this.close_all_menus();
-    }
-    acc_delete() {
-        this.acc_change_form.children[1].style.display = 'none';
-        this.acc_change_form.children[2].style.display = 'flex';
-        this.acc_change_form.style.display = 'block';
-        this.close_all_menus();
-    }
-    acc_change_close() {
-        this.acc_change_form.style.display = 'none';
-        let inputs = this.acc_change_form.getElementsByTagName('input');
-        for (let i = 0; i < inputs.length; i++)
-            inputs[i].value = null;
-    }
-    acc_change_ok() {
-        let form = this.acc_change_form.getElementsByTagName('input');
+        let form = this.groups_forms.children[1].getElementsByTagName('input');
         let request = {
             SignInInfo: {
                 email: form[0].value,
@@ -525,19 +545,18 @@ class groups_class {
                 if (ret.name || ret.pass) {
                     if (ret.name)
                         this.groups_window.getElementsByTagName('code')[0].textContent = localStorage.getItem('name');
-                    this.acc_change_close();
+                    this.form_close(1);
                 }
             });
         }
     }
-    acc_change_del() {
-        this.close_all_menus();
-        let form = this.acc_change_form.getElementsByTagName('input');
+    acc_delete() {
+        let form = this.groups_forms.children[2].getElementsByTagName('input');
         let signin = {
-            email: form[4].value,
-            password: form[5].value
+            email: form[0].value,
+            password: form[1].value
         };
-        if (!signin.email || !form[4].checkValidity())
+        if (!signin.email || !form[0].checkValidity())
             app.alert("Incorrect email address");
         else if (signin.password.length < 8 || signin.password.length > 32)
             app.alert("Password must be at least 8 characters long and maximum 32");
@@ -547,6 +566,7 @@ class groups_class {
                     app.goto('reg');
                     localStorage.removeItem('name');
                     localStorage.removeItem('group');
+                    this.form_close(2);
                 }
             });
         }
@@ -599,8 +619,9 @@ class app_class {
                     this.hide();
                 document.body.style.backgroundColor = '#efefef';
                 document.body.style.backgroundImage = 'url("/images/low-contrast-linen.png")';
-                document.body.children[1].style.display = 'block';
                 this.groups.groups_window.getElementsByTagName('code')[0].textContent = localStorage.getItem('name');
+                this.groups.initialize();
+                document.body.children[1].style.display = 'block';
                 localStorage.setItem('page', place);
                 this.groups.initialize();
                 break;

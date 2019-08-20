@@ -108,21 +108,17 @@ namespace Chat.Web.Controllers
             string ret;
             try
             {
-                var groups = _dbContext.Chatterers.Select(c => c.Group).Where(g => g != null);
-                if (groups.Any(g => g == request.Name))
+                if (_user.Group != null)
+                    ret = "has_group";
+                else if (_dbContext.Chatterers.Any(c => c.Group == request.Name))
                     ret = "name_taken";
                 else
                 {
                     var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
-                    if(chatterer.Group != null)
-                        ret = "has_group";
-                    else
-                    {
-                        chatterer.Group = request.Name;
-                        chatterer.GroupPassword = request.Password;
-                        await _dbContext.SaveChangesAsync();
-                        ret = "OK";
-                    }
+                    chatterer.Group = request.Name;
+                    chatterer.GroupPassword = request.Password;
+                    await _dbContext.SaveChangesAsync();
+                    ret = "OK";
                 }
             }
             catch(Exception e)

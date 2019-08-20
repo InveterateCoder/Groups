@@ -18,34 +18,47 @@ namespace Chat.Web.Infrastructure
             {
                 var chatterer = dbContext.Chatterers.Where(c => c.Token == token).SingleOrDefault();
                 if(chatterer == null)
+                {
                     context.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                    await Filter(context);
+                }
                 else
                 {
-                    if(activeUsers.Users.Any(u=>u.Name == chatterer.Name))
+                    if (activeUsers.Users.Any(u => u.Name == chatterer.Name))
                     {
                         context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                        return;
+                        context.Response.ContentType = "text/plain";
+                        await context.Response.WriteAsync("single_connection_only");
                     }
-                    if (chatterer.InGroup != null)
+                    else
                     {
-                        if (!(chatterer.InGroupPassword == dbContext.Chatterers.Where(c => c.Group == chatterer.InGroup).SingleOrDefault()?.GroupPassword))
+                        if (chatterer.InGroup != null && chatterer.InGroupPassword != dbContext.Chatterers.Where(c => c.Group == chatterer.InGroup).SingleOrDefault()?.GroupPassword)
                         {
                             chatterer.InGroup = null;
                             chatterer.InGroupPassword = null;
                             await dbContext.SaveChangesAsync();
                         }
+                        user.Name = chatterer.Name;
+                        user.Group = chatterer.Group;
+                        user.InGroup = chatterer.InGroup;
+                        user.Token = token;
+                        await Filter(context, true);
                     }
-                    user.Name = chatterer.Name;
-                    user.Group = chatterer.Group;
-                    user.InGroup = chatterer.InGroup;
-                    user.Token = token;
                 }
             }
-            if ((context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/hub"), StringComparison.OrdinalIgnoreCase)
+            else
+                await Filter(context);
+        }
+        private async Task Filter(HttpContext context, bool signed = false)
+        {
+            if (!signed && (context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/hub"), StringComparison.OrdinalIgnoreCase)
                 || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/groups"), StringComparison.OrdinalIgnoreCase)
-                || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/account/user"), StringComparison.OrdinalIgnoreCase))
-                && user.Name == null)
+                || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/account/user"), StringComparison.OrdinalIgnoreCase)))
+            {
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                context.Response.ContentType = "text/plain";
+                await context.Response.WriteAsync("not_authorized");
+            }
             else
                 await _next(context);
         }
