@@ -149,29 +149,34 @@ namespace Chat.Web.Controllers
                         ret = "wrong_password";
                     else
                     {
-                        bool name = false, pass = false;
-                        if (request.NewGroupName != null && request.NewGroupName != chatterer.Group)
+                        if (request.NewGroupName != null && request.NewGroupName != chatterer.Group && request.NewGroupPassword != chatterer.GroupPassword
+                            && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
                         {
-                            name = true;
-                            chatterer.Group = request.NewGroupName;
+                            if (_dbContext.Chatterers.Any(c => c.Group == request.NewGroupName))
+                                ret = "group_name_exists";
+                            else
+                            {
+                                chatterer.Group = request.NewGroupName;
+                                chatterer.GroupPassword = request.NewGroupPassword;
+                                await _dbContext.SaveChangesAsync();
+                                ret = "name&pass_changed";
+                            }
+
                         }
-                        if (request.NewGroupPassword != chatterer.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8)) 
+                        else if (request.NewGroupName != null && request.NewGroupName != chatterer.Group)
                         {
-                            pass = true;
+                            if (_dbContext.Chatterers.Any(c => c.Group == request.NewGroupName))
+                                ret = "group_name_exists";
+                            else
+                            {
+                                chatterer.Group = request.NewGroupName;
+                                await _dbContext.SaveChangesAsync();
+                                ret = "name_changed";
+                            }
+                        }
+                        else if (request.NewGroupPassword != chatterer.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8)) 
+                        {
                             chatterer.GroupPassword = request.NewGroupPassword;
-                        }
-                        if (name && pass)
-                        {
-                            await _dbContext.SaveChangesAsync();
-                            ret = "name&pass_changed";
-                        }
-                        else if (name)
-                        {
-                            await _dbContext.SaveChangesAsync();
-                            ret = "name_changed";
-                        }
-                        else if (pass)
-                        {
                             await _dbContext.SaveChangesAsync();
                             ret = "pass_changed";
                         }

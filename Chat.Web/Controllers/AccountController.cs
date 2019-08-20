@@ -211,7 +211,7 @@ namespace Chat.Web.Controllers
                                 await _dbContext.SaveChangesAsync();
                                 HttpContext.Response.Cookies.Append(StaticData.AuthenticationCookieName, user.Token,
                                     new CookieOptions { Secure = true, SameSite = SameSiteMode.Strict, Expires = DateTimeOffset.Now.AddDays(30) });
-                                ret = $"OK_{user.Name.Length}_{user.Name}{user.Group ?? string.Empty}";
+                                ret = "OK";
                             }
                         }
                     }
@@ -223,6 +223,8 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
+        [HttpPost("user/info")]
+        public JsonResult Info() => new JsonResult(new { name = _user.Name, group = _user.Group });
         [HttpPost("user/signout")]
         public async Task<ContentResult> SignOut()
         {
@@ -281,20 +283,29 @@ namespace Chat.Web.Controllers
                     ret = "no_change_requested";
                 else
                 {
-
                     if (request.NewName != null && request.NewName != chatterer.Name
                         && request.NewPassword != null && request.NewPassword != chatterer.Password)
                     {
-                        chatterer.Name = request.NewName;
-                        chatterer.Password = request.NewPassword;
-                        await _dbContext.SaveChangesAsync();
-                        ret = "name&pass_changed";
+                        if (_dbContext.Chatterers.Any(c => c.Name == request.NewName))
+                            ret = "name_exists";
+                        else
+                        {
+                            chatterer.Name = request.NewName;
+                            chatterer.Password = request.NewPassword;
+                            await _dbContext.SaveChangesAsync();
+                            ret = "name&pass_changed";
+                        }
                     }
                     else if (request.NewName != null && request.NewName != chatterer.Name)
                     {
-                        chatterer.Name = request.NewName;
-                        await _dbContext.SaveChangesAsync();
-                        ret = "name_changed";
+                        if (_dbContext.Chatterers.Any(c => c.Name == request.NewName))
+                            ret = "name_exists";
+                        else
+                        {
+                            chatterer.Name = request.NewName;
+                            await _dbContext.SaveChangesAsync();
+                            ret = "name_changed";
+                        }
                     }
                     else if (request.NewPassword != null && request.NewPassword != chatterer.Password)
                     {

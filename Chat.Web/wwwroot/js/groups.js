@@ -62,17 +62,8 @@ class api_class {
         try {
             let ret = false;
             let resp = await this.post('api/account/sign', chatterer);
-            if (resp.startsWith('OK_')) {
-                let index = resp.indexOf('_', 3);
-                let len = Number(resp.substring(3, index));
-                localStorage.setItem('name', resp.substring(index + 1, index + 1 + len));
-                let group = resp.substring(index + 1 + len);
-                if (group)
-                    localStorage.setItem('group', group);
-                else
-                    localStorage.removeItem('group');
-                ret = true;
-            }
+            if (resp == "OK")
+                ret = await this.usr_info();
             else if (resp == 'signed_out')
                 app.alert("You've been signed out, try again");
             else if (resp == 'user_not_found')
@@ -115,7 +106,7 @@ class api_class {
             switch (resp) {
                 case "name_changed":
                     ret.name = true;
-                    localStorage.setItem('name', request.NewName);
+                    sessionStorage.setItem('name', request.NewName);
                     break;
                 case "pass_changed":
                     ret.pass = true;
@@ -123,11 +114,13 @@ class api_class {
                 case "name&pass_changed":
                     ret.name = true;
                     ret.pass = true;
-                    localStorage.setItem('name', request.NewName);
+                    sessionStorage.setItem('name', request.NewName);
                     break;
                 case "wrong_password":
                     app.alert("Wrong password")
                     break;
+                case "name_exists":
+                    app.alert("The name is already taken, choose another one");
                 case "no_change_requested":
                     app.alert("Empty request");
                     break;
@@ -174,7 +167,7 @@ class api_class {
             let resp = await this.post("api/groups/reg", info);
             switch (resp) {
                 case "OK":
-                    localStorage.setItem('group', info.GroupName);
+                    sessionStorage.setItem('group', info.GroupName);
                     ret = true;
                     break;
                 case "has_group":
@@ -200,16 +193,19 @@ class api_class {
             switch (resp) {
                 case "name_changed":
                 case "name&pass_changed":
-                    localStorage.setItem('group', info.NewGroupName);
+                    sessionStorage.setItem('group', info.NewGroupName);
                 case "pass_changed":
                     ret = true;
                     break;
                 case "has_no_group":
-                    localStorage.removeItem('group');
+                    sessionStorage.removeItem('group');
                     ret = true;
                     break;
                 case "wrong_password":
                     app.alert("Wrong password");
+                    break;
+                case "group_name_exists":
+                    app.alert("The group name is already taken, choose another one");
                     break;
                 case "not_changed":
                     app.alert("No changes were made");
@@ -221,6 +217,42 @@ class api_class {
                     app.alert(resp);
             }
             return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
+    async usr_info(first = false) {
+        try {
+            let ret = false;
+            let fetresp = await fetch('api/account/user/info', {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json', 'Content-Type': 'application/json'
+                }
+            });
+            let resp = await fetresp.text();
+            if (resp == 'not_authorized' || ret == 'single_connection_only') {
+                sessionStorage.removeItem('name');
+                sessionStorage.removeItem('group');
+                if (!first)
+                    location.reload();
+            }
+            else {
+                let obj = JSON.parse(resp);
+                if (obj.name != null) {
+                    sessionStorage.setItem('name', obj.name);
+                    ret = true;
+                }
+                else
+                    sessionStorage.removeItem('name');
+                if (obj.group != null)
+                    sessionStorage.setItem('group', obj.group);
+                else
+                    sessionStorage.removeItem('group');
+                return ret;
+            }
         }
         catch (err) {
             app.alert(err.message);
@@ -434,14 +466,14 @@ class groups_class {
         this.m_all.style.transform = `translate(0, -${this.m_all.offsetHeight}px)`;
     }
     group_conf() {
-        if (localStorage.getItem('group')) {
+        if (sessionStorage.getItem('group')) {
             this.m_group.children[0].style.display = 'none';
-            this.m_group.children[1].textContent = localStorage.getItem('group');
+            this.m_group.children[1].textContent = sessionStorage.getItem('group');
             this.m_group.children[1].style.display = 'list-item';
             this.m_group.children[2].style.display = 'list-item';
             this.m_group.children[3].style.display = 'list-item';
             this.m_all.children[5].style.display = 'none';
-            this.m_all.children[6].textContent = localStorage.getItem('group')
+            this.m_all.children[6].textContent = sessionStorage.getItem('group')
             this.m_all.children[6].style.display = 'block';
             this.m_all.children[7].style.display = 'block';
             this.m_all.children[8].style.display = 'block';
@@ -529,8 +561,8 @@ class groups_class {
         app.api.signout().then(ok => {
             if (ok) {
                 app.goto('reg');
-                localStorage.removeItem('name');
-                localStorage.removeItem('group');
+                sessionStorage.removeItem('name');
+                sessionStorage.removeItem('group');
             }
         });
     }
@@ -569,7 +601,7 @@ class groups_class {
             app.alert("New name must be at least 5 characters long and maximum 64");
         else if (request.NewPassword.length > 0 && !app.passwordValid(request.NewPassword))
             app.alert("New password must be at least 8 characters long and maximum 32");
-        else if (request.Password == request.NewPassword || request.NewName == localStorage.getItem('name'))
+        else if (request.Password == request.NewPassword || request.NewName == sessionStorage.getItem('name'))
             app.alert("Leave blank if the credentials are the same");
         else if (!request.NewName && !request.NewPassword)
             app.alert("No change requested");
@@ -581,7 +613,7 @@ class groups_class {
             app.api.acc_change(request).then(ret => {
                 if (ret.name || ret.pass) {
                     if (ret.name)
-                        this.groups_window.getElementsByTagName('code')[0].textContent = localStorage.getItem('name');
+                        this.groups_window.getElementsByTagName('code')[0].textContent = sessionStorage.getItem('name');
                     this.form_close(1);
                 }
             });
@@ -601,8 +633,8 @@ class groups_class {
             app.api.acc_delete(signin).then(ret => {
                 if (ret) {
                     app.goto('reg');
-                    localStorage.removeItem('name');
-                    localStorage.removeItem('group');
+                    sessionStorage.removeItem('name');
+                    sessionStorage.removeItem('group');
                     this.form_close(2);
                 }
             });
@@ -676,17 +708,12 @@ class app_class {
         this.api = new api_class();
         this.reg_panel = new reg_panel_class();
         this.groups = new groups_class();
-        if (localStorage.getItem('page') == null || !document.cookie.startsWith('Chat_Authentication_Token')) {
-            if (document.cookie.startsWith('Chat_Authentication_Token'))
-                document.cookie = 'Chat_Authentication_Token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-            if (localStorage.getItem('name'))
-                localStorage.removeItem('name');
-            if (localStorage.getItem('group'))
-                localStorage.removeItem('group');
-            this.goto('reg');
-        }
-        else
-            this.goto(localStorage.getItem('page'));
+        this.api.usr_info(true).then(ret => {
+            if (!ret)
+                this.goto('reg');
+            else
+                this.goto('groups');
+        });
     }
     on_resize() {
         this.groups.groups_resize();
@@ -705,33 +732,33 @@ class app_class {
     goto(place) {
         switch (place) {
             case 'reg':
-                if (localStorage.getItem('page') != 'reg')
+                if (sessionStorage.getItem('page') != 'reg')
                     this.hide();
                 document.body.style.backgroundColor = 'rgb(0, 3, 56)';
                 document.body.style.backgroundImage = 'url("/images/concrete-wall-2.png")';
                 document.body.children[0].style.display = 'block';
-                localStorage.setItem('page', place);
+                sessionStorage.setItem('page', place);
                 break;
             case 'groups':
-                if (localStorage.getItem('page') != 'groups')
+                if (sessionStorage.getItem('page') != 'groups')
                     this.hide();
                 document.body.style.backgroundColor = '#efefef';
                 document.body.style.backgroundImage = 'url("/images/low-contrast-linen.png")';
-                this.groups.groups_window.getElementsByTagName('code')[0].textContent = localStorage.getItem('name');
+                this.groups.groups_window.getElementsByTagName('code')[0].textContent = sessionStorage.getItem('name');
                 document.body.children[1].style.display = 'block';
-                localStorage.setItem('page', place);
+                sessionStorage.setItem('page', place);
                 this.groups.initialize();
                 break;
             case 'ingroup':
-                if (localStorage.getItem('page') != 'ingroup')
+                if (sessionStorage.getItem('page') != 'ingroup')
                     this.hide();
                 document.body.children[2].style.display = 'block';
-                localStorage.setItem('page', place);
+                sessionStorage.setItem('page', place);
                 break;
         }
     }
     hide() {
-        switch (localStorage.getItem('page')) {
+        switch (sessionStorage.getItem('page')) {
             case 'reg':
                 document.body.children[0].style.display = 'none';
                 try {
