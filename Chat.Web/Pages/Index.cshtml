@@ -113,7 +113,7 @@
             <dd style="border-bottom:1px solid gray;" onclick="app.groups.form_open(3)">Create</dd>
             <dd class="ddgold"></dd>
             <dd onclick="app.groups.form_open(4)">Change</dd>
-            <dd style="border-bottom:1px solid gray;">Delete</dd>
+            <dd style="border-bottom:1px solid gray;" onclick="app.groups.form_open(5)">Delete</dd>
         </dl>
         <nav>
             <div>
@@ -137,7 +137,7 @@
             <li onclick="app.groups.form_open(3)">Create</li>
             <li style="padding: 6px 13px" class="ddgold"></li>
             <li onclick="app.groups.form_open(4)">Change</li>
-            <li onclick="app.api.usr_info()">Delete</li>
+            <li onclick="app.groups.form_open(5)">Delete</li>
         </ul>
         <ul id="m_account" tabindex="0" onblur="app.groups.m_onblur(this)">
             <li onclick="app.groups.signout()">Sign Out</li>
@@ -225,6 +225,17 @@
                 <div>
                     <button onclick="app.groups.form_close(4)">Cancel</button>
                     <button onclick="app.groups.group_change()">Change</button>
+                </div>
+            </div>
+            <div>
+                <div>Delete Group</div>
+                <div>
+                    <div>Password:</div>
+                    <input type="password" maxlength="32" placeholder="Your account password" />
+                </div>
+                <div>
+                    <button onclick="app.groups.form_close(5)">Cancel</button>
+                    <button onclick="app.groups.group_del()">Delete</button>
                 </div>
             </div>
         </div>

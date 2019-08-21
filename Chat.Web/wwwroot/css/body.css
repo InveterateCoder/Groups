@@ -5,6 +5,10 @@ body {
     margin: 0;
     padding: 0;
     background-color: black;
+    background-image:url(/images/earth.gif), url(/images/stardust.png);
+    background-repeat:no-repeat, repeat;
+    background-attachment:fixed, scroll;
+    background-position:center, left;
 }
 .disable-select {
     user-select: none;
@@ -22,7 +26,7 @@ body {
     background-repeat: no-repeat;
     background-position: center;
     background-size: 300px 300px;
-    background-image: url("/images/wait.gif");
+    background-image: url(/images/wait.gif);
     visibility: hidden;
 }
 #message {

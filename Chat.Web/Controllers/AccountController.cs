@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
@@ -23,6 +24,52 @@ namespace Chat.Web.Controllers
         {
             _dbContext = chaDb;
             _user = user;
+        }
+        [HttpGet("seed")]
+        public ContentResult Seed() //todo delete seeding
+        {
+            Random rand = new Random();
+            List<ChatterersDb.Chatterer> chatterers = new List<ChatterersDb.Chatterer>();
+            var chars = Enumerable.Range('A', 'Z' - 'A' + 1).Select(n => (char)n).Concat(Enumerable.Range('a', 'z' - 'a' + 1).Select(n => (char)n)).ToList();
+            chars.Add(' ');
+            for (int i = 0; i < 60; i++)
+            {
+                var chatterer = new ChatterersDb.Chatterer();
+                chatterer.Email = $"email{i}@gm.com";
+                StringBuilder strng = new StringBuilder();
+                var count = rand.Next(5, 64);
+                string name;
+                do
+                {
+                    for (int j = 0; j < count; j++)
+                    {
+                        strng.Append(chars[rand.Next(chars.Count() - 1)]);
+                    }
+                    name = strng.ToString();
+                    strng.Clear();
+                } while (_dbContext.Chatterers.Any(c => c.Name == name));
+                chatterer.Name = name;
+                chatterer.Password = $"password{i}";
+                if (i % 5 != 0)
+                {
+                    do
+                    {
+                        for (int j = 0; j < count; j++)
+                        {
+                            strng.Append(chars[rand.Next(chars.Count() - 1)]);
+                        }
+                        name = strng.ToString();
+                        strng.Clear();
+                    } while (_dbContext.Chatterers.Any(c => c.Group == name));
+                    chatterer.Group = name;
+                    if (i % 8 != 0)
+                        chatterer.GroupPassword = $"gpassword{i}";
+                }
+                chatterers.Add(chatterer);
+            }
+            _dbContext.Chatterers.AddRange(chatterers);
+            _dbContext.SaveChanges();
+            return Content("OK", "text/plain");
         }
         [HttpPost("reg")]
         public async Task<ContentResult> RequestRegister([FromBody]RegRequest request)

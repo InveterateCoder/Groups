@@ -469,11 +469,13 @@ class groups_class {
         if (sessionStorage.getItem('group')) {
             this.m_group.children[0].style.display = 'none';
             this.m_group.children[1].textContent = sessionStorage.getItem('group');
+            this.m_group.children[1].title = sessionStorage.getItem('group');
             this.m_group.children[1].style.display = 'list-item';
             this.m_group.children[2].style.display = 'list-item';
             this.m_group.children[3].style.display = 'list-item';
             this.m_all.children[5].style.display = 'none';
             this.m_all.children[6].textContent = sessionStorage.getItem('group')
+            this.m_all.children[6].title = sessionStorage.getItem('group');
             this.m_all.children[6].style.display = 'block';
             this.m_all.children[7].style.display = 'block';
             this.m_all.children[8].style.display = 'block';
@@ -695,6 +697,9 @@ class groups_class {
         }
 
     }
+    group_del() {
+        app.alert("here");
+    }
     on_pass_del_change(el) {
         if (el.checked)
             this.groups_forms.children[4].children[4].style.visibility = 'hidden';
@@ -709,10 +714,19 @@ class app_class {
         this.reg_panel = new reg_panel_class();
         this.groups = new groups_class();
         this.api.usr_info(true).then(ret => {
-            if (!ret)
-                this.goto('reg');
-            else
-                this.goto('groups');
+            setTimeout(() => {
+                document.body.style.backgroundPosition = 'unset';
+                document.body.style.backgroundRepeat = 'unset';
+                document.body.style.backgroundAttachment = 'unset';
+                if (!ret) {
+                    sessionStorage.setItem('pasge', 'reg');
+                    this.goto('reg');
+                }
+                else {
+                    sessionStorage.setItem('pasge', 'groups');
+                    this.goto('groups');
+                }
+            }, 1300);
         });
     }
     on_resize() {
@@ -745,6 +759,7 @@ class app_class {
                 document.body.style.backgroundColor = '#efefef';
                 document.body.style.backgroundImage = 'url("/images/low-contrast-linen.png")';
                 this.groups.groups_window.getElementsByTagName('code')[0].textContent = sessionStorage.getItem('name');
+                this.groups.groups_window.getElementsByTagName('code')[0].title = sessionStorage.getItem('name');
                 document.body.children[1].style.display = 'block';
                 sessionStorage.setItem('page', place);
                 this.groups.initialize();
