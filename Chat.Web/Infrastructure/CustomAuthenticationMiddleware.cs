@@ -38,10 +38,7 @@ namespace Chat.Web.Infrastructure
                             chatterer.InGroupPassword = null;
                             await dbContext.SaveChangesAsync();
                         }
-                        user.Name = chatterer.Name;
-                        user.Group = chatterer.Group;
-                        user.InGroup = chatterer.InGroup;
-                        user.Token = token;
+                        user.Chatterer = chatterer;
                         await Filter(context, true);
                     }
                 }

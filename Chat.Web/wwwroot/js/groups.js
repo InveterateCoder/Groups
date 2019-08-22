@@ -259,6 +259,29 @@ class api_class {
             return false;
         }
     }
+    async grp_del(pass) {
+        try {
+            let ret = false;
+            let resp = await this.post("api/groups/del", pass);
+            switch (resp) {
+                case "deleted":
+                case "has_no_group":
+                    sessionStorage.removeItem("group");
+                    ret = true;
+                    break;
+                case "wrong_password":
+                    app.alert("Wrong password");
+                    break;
+                default:
+                    app.alert(resp);
+            }
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
     async post(addr, obj) {
         app.wait();
         let ret;
@@ -374,12 +397,12 @@ class reg_panel_class {
             email: form[1].value,
             password: form[2].value
         };
-        if (!app.nameValid(chatterer.name))
-            app.alert("The name's length should be minimum 5 characters and maximum 64");
+        if (!app.validateName(chatterer.name))
+            app.alert(app.message.name("Name"));
         else if (!chatterer.email || !form[1].checkValidity())
             app.alert('Incorrect email address');
-        else if (!app.passwordValid(chatterer.password))
-            app.alert("The password's length should be minimum 8 characters and maximum 32");
+        else if (!app.validatePassword(chatterer.password))
+            app.alert(app.message.password("Password"));
         else {
             app.api.register(chatterer).then(ok => {
                 if (ok)
@@ -407,8 +430,8 @@ class reg_panel_class {
         };
         if (!chatterer.email || !form[0].checkValidity())
             app.alert("Incorrect email address");
-        else if (!app.passwordValid(chatterer.password))
-            app.alert("The password's length should be minimum 8 characters and maximum 32");
+        else if (!app.validatePassword(chatterer.password))
+            app.alert(app.message.password("Password"));
         else app.api.signin(chatterer).then(ok => {
             if (ok)
                 app.goto('groups');
@@ -597,12 +620,12 @@ class groups_class {
             NewName: form[1].value,
             NewPassword: form[2].value
         };
-        if (!app.passwordValid(request.Password))
-            app.alert("Password must be at least 8 characters long and maximum 32");
-        else if (request.NewName.length > 0 && !app.nameValid(request.NewName))
-            app.alert("New name must be at least 5 characters long and maximum 64");
-        else if (request.NewPassword.length > 0 && !app.passwordValid(request.NewPassword))
-            app.alert("New password must be at least 8 characters long and maximum 32");
+        if (!app.validatePassword(request.Password))
+            app.alert(app.message.password("Password"));
+        else if (request.NewName.length > 0 && !app.validateName(request.NewName))
+            app.alert(app.message.name("New name"));
+        else if (request.NewPassword.length > 0 && !app.validatePassword(request.NewPassword))
+            app.alert(app.message.password("New password"));
         else if (request.Password == request.NewPassword || request.NewName == sessionStorage.getItem('name'))
             app.alert("Leave blank if the credentials are the same");
         else if (!request.NewName && !request.NewPassword)
@@ -629,8 +652,8 @@ class groups_class {
         };
         if (!signin.email || !form[0].checkValidity())
             app.alert("Incorrect email address");
-        else if (!app.passwordValid(signin.password))
-            app.alert("Password must be at least 8 characters long and maximum 32");
+        else if (!app.validatePassword(signin.password))
+            app.alert(app.message.password("Password"));
         else {
             app.api.acc_delete(signin).then(ret => {
                 if (ret) {
@@ -649,12 +672,12 @@ class groups_class {
             GroupName: form[1].value,
             GroupPassword: form[2].value
         };
-        if (!app.passwordValid(info.Password))
-            app.alert("Password must be at least 8 characters long and maximum 32");
-        else if (!app.nameValid(info.GroupName))
-            app.alert("Group name must be at least 5 characters long and maximum 64");
-        else if (info.GroupPassword.length > 0 && !app.passwordValid(info.GroupPassword))
-            app.alert("Group password must be at least 8 characters long and maximum 32");
+        if (!app.validatePassword(info.Password))
+            app.alert(app.message.password("Password"));
+        else if (!app.validateName(info.GroupName))
+            app.alert(app.message.name("Group name"));
+        else if (info.GroupPassword.length > 0 && !app.validatePassword(info.GroupPassword))
+            app.alert(app.message.password("Group password"));
         else {
             if (info.GroupPassword.length == 0)
                 info.GroupPassword = null;
@@ -673,12 +696,12 @@ class groups_class {
             NewGroupName: form[1].value,
             NewGroupPassword: form[3].value
         };
-        if (!app.passwordValid(info.Password))
-            app.alert("Password must be at least 8 characters long and maximum 32");
-        else if (info.NewGroupName.length > 0 && !app.nameValid(info.NewGroupName))
-            app.alert("New name must be at least 5 characters long and maximum 64");
-        else if (!form[2].checked && info.NewGroupPassword.length > 0 && !app.passwordValid(info.NewGroupPassword))
-            app.alert("New password must be at least 8 characters long and maximum 32");
+        if (!app.validatePassword(info.Password))
+            app.alert(app.message.password("Password"));
+        else if (info.NewGroupName.length > 0 && !app.validateName(info.NewGroupName))
+            app.alert(app.message.name("New name"));
+        else if (!form[2].checked && info.NewGroupPassword.length > 0 && !app.validatePassword(info.NewGroupPassword))
+            app.alert(app.message.password("New password"));
         else {
             if (form[2].checked) info.NewGroupPassword = null;
             else if (info.NewGroupPassword.length == 0) info.NewGroupPassword = "000";
@@ -698,7 +721,15 @@ class groups_class {
 
     }
     group_del() {
-        app.alert("here");
+        let pass = this.groups_forms.children[5].getElementsByTagName('input')[0].value;
+        if (!app.validatePassword(pass))
+            app.alert(app.message.password("Password"));
+        else app.api.grp_del(pass).then(ret => {
+            if (ret) {
+                this.group_conf();
+                this.form_close(5);
+            }
+        });
     }
     on_pass_del_change(el) {
         if (el.checked)
@@ -728,6 +759,10 @@ class app_class {
                 }
             }, 1300);
         });
+        this.message = {
+            password: text => text + " must be at least 8 characters long and maximum 32",
+            name: text => text + " must be at least 5 characters long and maximum 64"
+        };
     }
     on_resize() {
         this.groups.groups_resize();
@@ -789,13 +824,13 @@ class app_class {
                 break;
         }
     }
-    passwordValid(password) {
+    validatePassword(password) {
         if (!password || password.length < 8 || password.length > 32)
             return false;
         else
             return true;
     }
-    nameValid(name) {
+    validateName(name) {
         if (!name || name.length < 5 || name.length > 64)
             return false;
         else

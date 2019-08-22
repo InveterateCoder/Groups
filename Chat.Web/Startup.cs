@@ -26,7 +26,7 @@ namespace Chat.Web
             });
             services.AddSingleton<ActiveUsers>();
             services.AddScoped<User>();
-            services.AddCors(opts =>
+            /*services.AddCors(opts =>
             {
                 opts.AddPolicy("_allowAll", blder =>
                  {
@@ -34,7 +34,7 @@ namespace Chat.Web
                      blder.AllowAnyHeader();
                      blder.AllowAnyMethod();
                  });
-            });
+            });*/
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddSignalR();
         }
@@ -51,7 +51,7 @@ namespace Chat.Web
                 app.UseExceptionHandler("/Error");
                 app.UseHsts();
             }
-            app.UseCors("_allowAll");
+            //app.UseCors("_allowAll");
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseMiddleware<CustomAuthenticationMiddleware>();

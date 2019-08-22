@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Chat.Web.Models;
@@ -112,18 +113,14 @@ namespace Chat.Web.Controllers
                     ret = "has_group";
                 else if (_dbContext.Chatterers.Any(c => c.Group == request.GroupName))
                     ret = "name_taken";
+                else if (request.Password != _user.Password)
+                    ret = "wrong_password";
                 else
                 {
-                    var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
-                    if (request.Password != chatterer.Password)
-                        ret = "wrong_password";
-                    else
-                    {
-                        chatterer.Group = request.GroupName;
-                        chatterer.GroupPassword = request.GroupPassword;
-                        await _dbContext.SaveChangesAsync();
-                        ret = "OK";
-                    }
+                    _user.Group = request.GroupName;
+                    _user.GroupPassword = request.GroupPassword;
+                    await _dbContext.SaveChangesAsync();
+                    ret = "OK";
                 }
             }
             catch(Exception e)
@@ -142,47 +139,43 @@ namespace Chat.Web.Controllers
                     ret = "has_no_group";
                 else if (request.NewGroupName == null && request.NewGroupPassword != null && request.NewGroupPassword.Length < 8)
                     ret = "no_change_requested";
+                else if (_user.Password != request.Password)
+                    ret = "wrong_password";
                 else
                 {
-                    var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
-                    if (chatterer.Password != request.Password)
-                        ret = "wrong_password";
-                    else
-                    {
-                        if (request.NewGroupName != null && request.NewGroupName != chatterer.Group && request.NewGroupPassword != chatterer.GroupPassword
+                    if (request.NewGroupName != null && request.NewGroupName != _user.Group && request.NewGroupPassword != _user.GroupPassword
                             && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
-                        {
-                            if (_dbContext.Chatterers.Any(c => c.Group == request.NewGroupName))
-                                ret = "group_name_exists";
-                            else
-                            {
-                                chatterer.Group = request.NewGroupName;
-                                chatterer.GroupPassword = request.NewGroupPassword;
-                                await _dbContext.SaveChangesAsync();
-                                ret = "name&pass_changed";
-                            }
-
-                        }
-                        else if (request.NewGroupName != null && request.NewGroupName != chatterer.Group)
-                        {
-                            if (_dbContext.Chatterers.Any(c => c.Group == request.NewGroupName))
-                                ret = "group_name_exists";
-                            else
-                            {
-                                chatterer.Group = request.NewGroupName;
-                                await _dbContext.SaveChangesAsync();
-                                ret = "name_changed";
-                            }
-                        }
-                        else if (request.NewGroupPassword != chatterer.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8)) 
-                        {
-                            chatterer.GroupPassword = request.NewGroupPassword;
-                            await _dbContext.SaveChangesAsync();
-                            ret = "pass_changed";
-                        }
+                    {
+                        if (_dbContext.Chatterers.Any(c => c.Group == request.NewGroupName))
+                            ret = "group_name_exists";
                         else
-                            ret = "not_changed";
+                        {
+                            _user.Group = request.NewGroupName;
+                            _user.GroupPassword = request.NewGroupPassword;
+                            await _dbContext.SaveChangesAsync();
+                            ret = "name&pass_changed";
+                        }
+
                     }
+                    else if (request.NewGroupName != null && request.NewGroupName != _user.Group)
+                    {
+                        if (_dbContext.Chatterers.Any(c => c.Group == request.NewGroupName))
+                            ret = "group_name_exists";
+                        else
+                        {
+                            _user.Group = request.NewGroupName;
+                            await _dbContext.SaveChangesAsync();
+                            ret = "name_changed";
+                        }
+                    }
+                    else if (request.NewGroupPassword != _user.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
+                    {
+                        _user.GroupPassword = request.NewGroupPassword;
+                        await _dbContext.SaveChangesAsync();
+                        ret = "pass_changed";
+                    }
+                    else
+                        ret = "not_changed";
                 }
             }
             catch(Exception e)
@@ -206,9 +199,8 @@ namespace Chat.Web.Controllers
                         ret = "password_incorrect";
                     else
                     {
-                        var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
-                        chatterer.InGroup = request.Name;
-                        chatterer.InGroupPassword = request.Password;
+                        _user.InGroup = request.Name;
+                        _user.InGroupPassword = request.Password;
                         await _dbContext.SaveChangesAsync();
                         ret = "OK";
                     }
@@ -230,10 +222,34 @@ namespace Chat.Web.Controllers
                     ret = "not_signed";
                 else
                 {
-                    var chatterer = _dbContext.Chatterers.Where(c => c.Name == _user.Name).Single();
-                    chatterer.InGroup = chatterer.InGroupPassword = null;
+                    _user.InGroup = null;
+                    _user.InGroupPassword = null;
                     await _dbContext.SaveChangesAsync();
                     ret = "OK";
+                }
+            }
+            catch(Exception e)
+            {
+                ret = e.Message;
+            }
+            return Content(ret, "text/plain");
+        }
+        [HttpPost("del")]
+        public async Task<ContentResult> Delete([Required, StringLength(32, MinimumLength = 8), FromBody] string password)
+        {
+            string ret;
+            try
+            {
+                if (_user.Group == null)
+                    ret = "has_no_group";
+                else if (_user.Password != password)
+                    ret = "wrong_password";
+                else
+                {
+                    _user.Group = null;
+                    _user.GroupPassword = null;
+                    await _dbContext.SaveChangesAsync();
+                    ret = "deleted";
                 }
             }
             catch(Exception e)
