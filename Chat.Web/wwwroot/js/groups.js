@@ -85,7 +85,7 @@ class api_class {
         try {
             let ret = false;
             let resp = await this.post('api/account/user/signout');
-            if (resp == 'OK')
+            if (resp == 'OK' || resp == "not_authorized" || resp == "single_connection_only")
                 ret = true;
             else
                 app.alert(resp);
@@ -106,7 +106,7 @@ class api_class {
             switch (resp) {
                 case "name_changed":
                     ret.name = true;
-                    sessionStorage.setItem('name', request.NewName);
+                    app.name = request.NewName;
                     break;
                 case "pass_changed":
                     ret.pass = true;
@@ -114,7 +114,7 @@ class api_class {
                 case "name&pass_changed":
                     ret.name = true;
                     ret.pass = true;
-                    sessionStorage.setItem('name', request.NewName);
+                    app.name = request.NewName;
                     break;
                 case "wrong_password":
                     app.alert("Wrong password")
@@ -126,6 +126,10 @@ class api_class {
                     break;
                 case "same_credentials":
                     app.alert("No changes have been made, same credentials");
+                    break;
+                case "not_authorized":
+                case "single_connection_only":
+                    ret.pass = true;
                     break;
                 default:
                     app.alert(resp);
@@ -151,6 +155,9 @@ class api_class {
                 case "wrong_password":
                     app.alert("Wrong password");
                     break;
+                case "not_authorized":
+                case "single_connection_only":
+                    break;
                 default:
                     app.alert(resp);
             }
@@ -167,7 +174,7 @@ class api_class {
             let resp = await this.post("api/groups/reg", info);
             switch (resp) {
                 case "OK":
-                    sessionStorage.setItem('group', info.GroupName);
+                    app.group = info.GroupName;
                     ret = true;
                     break;
                 case "has_group":
@@ -175,6 +182,10 @@ class api_class {
                     break;
                 case "name_taken":
                     app.alert("A group with such name already exists");
+                    break;
+                case "not_authorized":
+                case "single_connection_only":
+                    ret = true;
                     break;
                 default:
                     app.alert(resp);
@@ -193,12 +204,14 @@ class api_class {
             switch (resp) {
                 case "name_changed":
                 case "name&pass_changed":
-                    sessionStorage.setItem('group', info.NewGroupName);
+                    app.group = info.NewGroupName;
                 case "pass_changed":
+                case "not_authorized":
+                case "single_connection_only":
                     ret = true;
                     break;
                 case "has_no_group":
-                    sessionStorage.removeItem('group');
+                    app.group = null;
                     ret = true;
                     break;
                 case "wrong_password":
@@ -223,34 +236,32 @@ class api_class {
             return false;
         }
     }
-    async usr_info(first = false) {
+    async usr_info() {
         try {
             let ret = false;
             let fetresp = await fetch('api/account/user/info', {
-                method: 'post',
+                method: 'get',
                 headers: {
-                    'Accept': 'application/json', 'Content-Type': 'application/json'
+                    'Accept': 'application/json'
                 }
             });
-            let resp = await fetresp.text();
-            if (resp == 'not_authorized' || ret == 'single_connection_only') {
-                sessionStorage.removeItem('name');
-                sessionStorage.removeItem('group');
-                if (!first)
-                    location.reload();
+            if (fetresp.status != 200) {
+                app.name = null;
+                app.group = null;
+                app.goto('reg');
             }
             else {
-                let obj = JSON.parse(resp);
+                let obj = await fetresp.json();
                 if (obj.name != null) {
-                    sessionStorage.setItem('name', obj.name);
+                    app.name = obj.name;
                     ret = true;
                 }
                 else
-                    sessionStorage.removeItem('name');
+                    app.name = null;
                 if (obj.group != null)
-                    sessionStorage.setItem('group', obj.group);
+                    app.group = obj.group;
                 else
-                    sessionStorage.removeItem('group');
+                    app.group = null;
                 return ret;
             }
         }
@@ -266,11 +277,14 @@ class api_class {
             switch (resp) {
                 case "deleted":
                 case "has_no_group":
-                    sessionStorage.removeItem("group");
+                    app.group = null;
                     ret = true;
                     break;
                 case "wrong_password":
                     app.alert("Wrong password");
+                    break;
+                case "not_authorized":
+                case "single_connection_only":
                     break;
                 default:
                     app.alert(resp);
@@ -293,15 +307,45 @@ class api_class {
                 },
                 body: JSON.stringify(obj || '')
             });
+            if (resp.status != 200) {
+                app.name = null;
+                app.group = null;
+                app.goto('reg');
+            }
             ret = await resp.text();
-            if (ret == 'not_authorized' || ret == 'single_connection_only')
-                location.reload();
         }
         catch (err) {
             ret = err.message;
         }
-        app.resume();
-        return ret;
+        finally {
+            app.resume();
+            return ret;
+        }
+    }
+    async get(addr) {
+        let ret;
+        try {
+            let resp = await fetch(addr, {
+                method: 'get',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            if (resp.status != 200) {
+                app.name = null;
+                app.group = null;
+                app.goto('reg');
+                ret = null;
+            }
+            else
+                ret = await resp.json();
+        }
+        catch (err) {
+            ret.response = err.message;
+        }
+        finally {
+            return ret;
+        }
     }
 }
 class reg_panel_class {
@@ -446,8 +490,8 @@ class groups_class {
         this.m_acc = document.getElementById('m_account');
         this.m_group = document.getElementById('m_group');
         this.m_all = document.getElementById('m_all');
-        this.account_btn = this.groups_window.children[1].children[2].children[0].children[0];
-        this.group_btn = this.groups_window.children[1].children[2].children[0].children[1];
+        this.account_btn = this.groups_window.children[2].children[2].children[0].children[0];
+        this.group_btn = this.groups_window.children[2].children[2].children[0].children[1];
         this.acc_open = false;
         this.group_open = false;
         this.groups_forms = document.getElementById('groups_forms');
@@ -476,7 +520,8 @@ class groups_class {
         }
     }
     initialize(group = true) {
-        let height = this.groups_window.children[1].offsetHeight;
+        let height = this.groups_window.children[2].offsetHeight;
+        this.groups_window.children[0].style.top = height + 'px';
         this.m_acc.style.right = '0px';
         this.m_acc.style.top = height + 'px';
         this.m_acc.style.width = this.account_btn.offsetWidth + 28 + 'px';
@@ -485,20 +530,20 @@ class groups_class {
         this.m_group.style.width = this.group_btn.offsetWidth + 28 + 'px';
         if (group)
             this.group_conf();
-        this.m_all.style.top = this.groups_window.children[1].offsetHeight + 'px';
+        this.m_all.style.top = this.groups_window.children[2].offsetHeight + 'px';
         this.m_all.style.transform = `translate(0, -${this.m_all.offsetHeight}px)`;
     }
     group_conf() {
-        if (sessionStorage.getItem('group')) {
+        if (app.group) {
             this.m_group.children[0].style.display = 'none';
-            this.m_group.children[1].textContent = sessionStorage.getItem('group');
-            this.m_group.children[1].title = sessionStorage.getItem('group');
+            this.m_group.children[1].textContent = app.group;
+            this.m_group.children[1].title = app.group;
             this.m_group.children[1].style.display = 'list-item';
             this.m_group.children[2].style.display = 'list-item';
             this.m_group.children[3].style.display = 'list-item';
             this.m_all.children[5].style.display = 'none';
-            this.m_all.children[6].textContent = sessionStorage.getItem('group')
-            this.m_all.children[6].title = sessionStorage.getItem('group');
+            this.m_all.children[6].textContent = app.group;
+            this.m_all.children[6].title = app.group;
             this.m_all.children[6].style.display = 'block';
             this.m_all.children[7].style.display = 'block';
             this.m_all.children[8].style.display = 'block';
@@ -586,8 +631,8 @@ class groups_class {
         app.api.signout().then(ok => {
             if (ok) {
                 app.goto('reg');
-                sessionStorage.removeItem('name');
-                sessionStorage.removeItem('group');
+                app.name = null;
+                app.group = null;
             }
         });
     }
@@ -626,7 +671,7 @@ class groups_class {
             app.alert(app.message.name("New name"));
         else if (request.NewPassword.length > 0 && !app.validatePassword(request.NewPassword))
             app.alert(app.message.password("New password"));
-        else if (request.Password == request.NewPassword || request.NewName == sessionStorage.getItem('name'))
+        else if (request.Password == request.NewPassword || request.NewName == app.name)
             app.alert("Leave blank if the credentials are the same");
         else if (!request.NewName && !request.NewPassword)
             app.alert("No change requested");
@@ -638,7 +683,7 @@ class groups_class {
             app.api.acc_change(request).then(ret => {
                 if (ret.name || ret.pass) {
                     if (ret.name)
-                        this.groups_window.getElementsByTagName('code')[0].textContent = sessionStorage.getItem('name');
+                        this.groups_window.getElementsByTagName('code')[0].textContent = app.name;
                     this.form_close(1);
                 }
             });
@@ -658,8 +703,8 @@ class groups_class {
             app.api.acc_delete(signin).then(ret => {
                 if (ret) {
                     app.goto('reg');
-                    sessionStorage.removeItem('name');
-                    sessionStorage.removeItem('group');
+                    app.name = null;
+                    app.group = null;
                     this.form_close(2);
                 }
             });
@@ -737,28 +782,41 @@ class groups_class {
         else
             this.groups_forms.children[4].children[4].style.visibility = 'visible';
     }
+    on_scroll(el) {
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight) { //todo create loading buffer
+            app.alert("here");
+        }
+    }
+    test() { //todo delete
+        app.api.get("api/groups/list/40/50").then(obj => {
+            if (obj != null)
+                if (typeof obj == "string")
+                    app.alert(obj);
+                else {
+                    app.alert("nice");
+                    //do your job here
+                }
+        });
+    }
 }
 
 class app_class {
     constructor() {
+        this.page = null;
+        this.name = null;
+        this.group = null;
         this.api = new api_class();
         this.reg_panel = new reg_panel_class();
         this.groups = new groups_class();
-        this.api.usr_info(true).then(ret => {
-            setTimeout(() => {
+        setTimeout(() => {
+            this.api.usr_info().then(ret => {
                 document.body.style.backgroundPosition = 'unset';
                 document.body.style.backgroundRepeat = 'unset';
                 document.body.style.backgroundAttachment = 'unset';
-                if (!ret) {
-                    sessionStorage.setItem('pasge', 'reg');
-                    this.goto('reg');
-                }
-                else {
-                    sessionStorage.setItem('pasge', 'groups');
+                if (ret)
                     this.goto('groups');
-                }
-            }, 1300);
-        });
+            });
+        }, 1300);
         this.message = {
             password: text => text + " must be at least 8 characters long and maximum 32",
             name: text => text + " must be at least 5 characters long and maximum 64"
@@ -779,42 +837,38 @@ class app_class {
         el.style.display = 'block';
     }
     goto(place) {
+        if (this.page == place)
+            return;
         switch (place) {
             case 'reg':
-                if (sessionStorage.getItem('page') != 'reg')
-                    this.hide();
                 document.body.style.backgroundColor = 'rgb(0, 3, 56)';
                 document.body.style.backgroundImage = 'url("/images/concrete-wall-2.png")';
                 document.body.children[0].style.display = 'block';
-                sessionStorage.setItem('page', place);
+                this.hide('reg');
                 break;
             case 'groups':
-                if (sessionStorage.getItem('page') != 'groups')
-                    this.hide();
                 document.body.style.backgroundColor = '#efefef';
                 document.body.style.backgroundImage = 'url("/images/low-contrast-linen.png")';
-                this.groups.groups_window.getElementsByTagName('code')[0].textContent = sessionStorage.getItem('name');
-                this.groups.groups_window.getElementsByTagName('code')[0].title = sessionStorage.getItem('name');
+                this.groups.groups_window.getElementsByTagName('code')[0].textContent = this.name;
+                this.groups.groups_window.getElementsByTagName('code')[0].title = this.name;
                 document.body.children[1].style.display = 'block';
-                sessionStorage.setItem('page', place);
                 this.groups.initialize();
+                this.hide('groups');
                 break;
             case 'ingroup':
-                if (sessionStorage.getItem('page') != 'ingroup')
-                    this.hide();
                 document.body.children[2].style.display = 'block';
-                sessionStorage.setItem('page', place);
+                this.hide('ingroup');
                 break;
         }
     }
-    hide() {
-        switch (sessionStorage.getItem('page')) {
+    hide(place) {
+        switch (this.page) {
             case 'reg':
                 document.body.children[0].style.display = 'none';
                 try {
                     app.reg_panel.goto('home');
                 }
-                catch(err){}
+                catch (err) { }
                 break;
             case 'groups':
                 document.body.children[1].style.display = 'none';
@@ -823,6 +877,7 @@ class app_class {
                 document.body.children[2].style.display = 'none';
                 break;
         }
+        this.page = place;
     }
     validatePassword(password) {
         if (!password || password.length < 8 || password.length > 32)

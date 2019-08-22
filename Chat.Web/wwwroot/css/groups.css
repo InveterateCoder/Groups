@@ -2,6 +2,24 @@
     font-family: 'Noto Sans', sans-serif;
     padding: 0;
 }
+#groups > div:first-child {
+    display: flex;
+    flex-flow: row wrap;
+    align-content:start;
+    padding:10px;
+    position:absolute;
+    justify-content:center;
+    left:0; right:0; bottom:0;
+    overflow:auto;
+}
+#groups > div:first-child > button {
+    background-color: white;
+    outline: none;
+    padding: 5px 10px;
+    margin: 10px;
+    font-weight: bold;
+    font-size: 17px;
+}
 #groups > nav {
     display:flex;
     position: fixed;
@@ -36,20 +54,6 @@
     outline: none;
     padding:5px;
     width: 275px;
-}
-#groups_btns {
-    display: flex;
-    flex-flow: row wrap;
-    justify-content: normal;
-    margin: 57px 20px 20px 20px;
-}
-#groups_btns > button {
-    background-color: white;
-    outline: none;
-    padding: 3px 8px;
-    margin: 7px;
-    font-weight: bold;
-    font-size: 17px;
 }
 #hmbrgr {
     cursor:pointer;

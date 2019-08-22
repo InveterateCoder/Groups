@@ -21,8 +21,8 @@ namespace Chat.Web.Controllers
             _dbContext = dbContext;
             _user = user;
         }
-        [HttpGet("list/{query:maxlength(64)}/{start:int:min(0)}/{quantity:int:range(1,100)?}")]
-        public JsonResult Groups(string query, int start, int quantity)
+        [HttpGet("list/{start:int:min(0)}/{quantity:int:range(1,100)?}/{query:maxlength(64)?}")]
+        public JsonResult Groups(int start, int quantity, string query = "")
         {
             try
             {
@@ -34,7 +34,7 @@ namespace Chat.Web.Controllers
                     return new JsonResult(groupsCount - start);
                 if (start + quantity > groupsCount)
                     quantity = groupsCount - start;
-                return new JsonResult(groups.OrderBy(o => o, StringComparer.OrdinalIgnoreCase).TakeLast(groupsCount - start).Take(quantity));
+                return new JsonResult(groups.OrderBy(g => g).Skip(start).Take(quantity).ToArray());
             }
             catch(Exception e)
             {

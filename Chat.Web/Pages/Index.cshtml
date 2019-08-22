@@ -104,6 +104,10 @@
         </div>
     </div>
     <div id="groups" class="disable-select" style="display:none">
+        <div onscroll="app.groups.on_scroll(this)">
+            <!--buttons-->
+            <button onclick="app.groups.test()">Test</button>
+        </div>
         <dl id="m_all">
             <dt>Account</dt>
             <dd onclick="app.groups.signout()">Sign Out</dd>
@@ -144,9 +148,6 @@
             <li onclick="app.groups.form_open(1)">Change</li>
             <li onclick="app.groups.form_open(2)">Delete</li>
         </ul>
-        <div id="groups_btns">
-            <!--buttons-->
-        </div>
         <div id="groups_forms" style="display:none">
             <video preload="auto" autoplay muted loop oncontextmenu="return false">
                 <source src="~/images/lines.mp4" type="video/mp4" />
