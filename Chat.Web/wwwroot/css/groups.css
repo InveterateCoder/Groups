@@ -6,19 +6,31 @@
     display: flex;
     flex-flow: row wrap;
     align-content:start;
-    padding:10px;
+    padding:20px;
     position:absolute;
     justify-content:center;
     left:0; right:0; bottom:0;
     overflow:auto;
 }
 #groups > div:first-child > button {
-    background-color: white;
-    outline: none;
-    padding: 5px 10px;
-    margin: 10px;
-    font-weight: bold;
+    outline:none;
+    padding: 10px;
     font-size: 17px;
+    word-break:break-all;
+    background-color:transparent;
+    box-sizing:border-box;
+    cursor:pointer;
+    text-shadow:0 0 20px white;
+    text-decoration:underline;
+}
+#groups > div:first-child > button:not(:hover){
+    border-color:transparent;
+}
+#groups > div:first-child > button:hover{
+    background-color:#343a40;
+    color:rgb(220,220,220);
+    box-shadow:0 0 7px 2px black;
+    text-decoration:none;
 }
 #groups > nav {
     display:flex;

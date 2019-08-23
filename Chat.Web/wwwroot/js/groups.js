@@ -296,6 +296,26 @@ class api_class {
             return false;
         }
     }
+    async list_groups(start, quantity, query) {
+        let ret = null;
+        if (start != 0 && !start || isNaN(start) || start < 0)
+            return null;
+        if (!quantity && quantity != 0)
+            ret = await this.get(`api/groups/list/${start}`);
+        else {
+            if (isNaN(quantity) || quantity < 1 || quantity > 100)
+                return null;
+            if (!query && query != 0)
+                ret = await this.get(`api/groups/list/${start}/${quantity}`);
+            else {
+                if (query.length > 64)
+                    return null;
+                else
+                    ret = await this.get(`api/groups/list/${start}/${quantity}/${query}`);
+            }
+        }
+        return ret;
+    }
     async post(addr, obj) {
         app.wait();
         let ret;
@@ -495,6 +515,9 @@ class groups_class {
         this.acc_open = false;
         this.group_open = false;
         this.groups_forms = document.getElementById('groups_forms');
+        this.start = 0;
+        this.quantity = 100;
+        this.query = '';
     }
     hmbrg_click() {
         this.hmbrgr_btn.classList.toggle('clicked');
@@ -782,21 +805,53 @@ class groups_class {
         else
             this.groups_forms.children[4].children[4].style.visibility = 'visible';
     }
+    list_clear() {
+        let div = this.groups_window.firstElementChild;
+        if (div.childElementCount > 0)
+            while (div.firstElementChild)
+                div.firstElementChild.remove();
+        this.start = 0;
+    }
+    list_add(list) {
+        if (!list || !Array.isArray(list) || list.length == 0)
+            return false;
+        let div = this.groups_window.firstElementChild;
+        list.forEach((str) => {
+            if (typeof str == "string") {
+                let node = document.createElement("button");
+                var textnode = document.createTextNode(str);
+                node.appendChild(textnode);
+                node.onclick = () => app.groups.on_group_clicked(str);
+                node.tabIndex = -1;
+                div.appendChild(node);
+            }
+        });
+    }
+    list_load() { //todo loading ring
+        if (this.quantity > 0) {
+            app.api.list_groups(this.start, this.quantity, this.query).then(ret => {
+                if (ret == 0)
+                    this.quantity = 0;
+                else {
+                    if (typeof ret == "string")
+                        app.alert(ret);
+                    else if (Array.isArray(ret)) {
+                        this.start += ret.length;
+                        if (ret.length < this.quantity)
+                            this.quantity = 0;
+                        this.list_add(ret);
+                    }
+                }
+            });
+        }
+    }
     on_scroll(el) {
         if (el.scrollTop + el.clientHeight >= el.scrollHeight) { //todo create loading buffer
             app.alert("here");
         }
     }
-    test() { //todo delete
-        app.api.get("api/groups/list/40/50").then(obj => {
-            if (obj != null)
-                if (typeof obj == "string")
-                    app.alert(obj);
-                else {
-                    app.alert("nice");
-                    //do your job here
-                }
-        });
+    on_group_clicked(group) {
+        app.alert(group);
     }
 }
 
@@ -847,6 +902,8 @@ class app_class {
                 this.hide('reg');
                 break;
             case 'groups':
+                this.groups.list_clear();
+                this.groups.list_load();
                 document.body.style.backgroundColor = '#efefef';
                 document.body.style.backgroundImage = 'url("/images/low-contrast-linen.png")';
                 this.groups.groups_window.getElementsByTagName('code')[0].textContent = this.name;

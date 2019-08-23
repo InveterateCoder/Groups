@@ -32,7 +32,7 @@ namespace Chat.Web.Controllers
             List<ChatterersDb.Chatterer> chatterers = new List<ChatterersDb.Chatterer>();
             var chars = Enumerable.Range('A', 'Z' - 'A' + 1).Select(n => (char)n).Concat(Enumerable.Range('a', 'z' - 'a' + 1).Select(n => (char)n)).ToList();
             chars.Add(' ');
-            for (int i = 0; i < 60; i++)
+            for (int i = 50; i < 300; i++)
             {
                 var chatterer = new ChatterersDb.Chatterer();
                 chatterer.Email = $"email{i}@gm.com";
