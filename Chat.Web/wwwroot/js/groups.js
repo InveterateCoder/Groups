@@ -648,6 +648,8 @@ class groups_class {
     groups_resize() {
         this.close_all_menus();
         this.initialize(false);
+        if (this.groups_window.firstElementChild.scrollHeight - this.groups_window.firstElementChild.scrollTop <  window.innerHeight + 200)
+            this.list_load();
     }
     signout() {
         this.close_all_menus();
@@ -811,6 +813,7 @@ class groups_class {
             while (div.firstElementChild)
                 div.firstElementChild.remove();
         this.start = 0;
+        this.quantity = 100;
     }
     list_add(list) {
         if (!list || !Array.isArray(list) || list.length == 0)
@@ -827,7 +830,7 @@ class groups_class {
             }
         });
     }
-    list_load() { //todo loading ring
+    list_load() {
         if (this.quantity > 0) {
             app.api.list_groups(this.start, this.quantity, this.query).then(ret => {
                 if (ret == 0)
@@ -840,14 +843,16 @@ class groups_class {
                         if (ret.length < this.quantity)
                             this.quantity = 0;
                         this.list_add(ret);
+                        if (this.groups_window.firstElementChild.scrollHeight < window.innerHeight + 200)
+                            this.list_load();
                     }
                 }
             });
         }
     }
     on_scroll(el) {
-        if (el.scrollTop + el.clientHeight >= el.scrollHeight) { //todo create loading buffer
-            app.alert("here");
+        if (el.scrollTop + el.clientHeight > el.scrollHeight - 200) { //todo create loading buffer
+            this.list_load();
         }
     }
     on_group_clicked(group) {
