@@ -5,7 +5,14 @@
 <head>
     <meta name="viewport" content="width=device-width" />
     <meta charset="utf-8" />
-    <title>Chat</title>
+    <title>Groups</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
     <link href="https://fonts.googleapis.com/css?family=Concert+One&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Noto+Sans&display=swap" rel="stylesheet">
     <link asp-href-include="~/css/*" rel="stylesheet" />
@@ -123,7 +130,7 @@
                 <span>Groups</span>
                 <code></code>
             </div>
-            <input type="text" maxlength="64" placeholder="Search" spellcheck="false" />
+            <input type="text" maxlength="64" placeholder="Search" spellcheck="false" onkeyup="app.groups.on_query_key(this.value)" onpaste="app.groups.on_query_paste(event)" oncut="app.groups.on_query_cut(this)" />
             <div>
                 <div>
                     <span onmouseup="app.groups.m_accf()">Account</span>

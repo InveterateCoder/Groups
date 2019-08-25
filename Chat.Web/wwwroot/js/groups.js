@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         app.on_resize();
     });
 });
+
 class api_class {
     constructor() { }
     async register(chatterer) {
@@ -368,6 +369,7 @@ class api_class {
         }
     }
 }
+
 class reg_panel_class {
     constructor() {
         this.panel = document.getElementById('reg_panel');
@@ -518,6 +520,7 @@ class groups_class {
         this.start = 0;
         this.quantity = 100;
         this.query = '';
+        this.timeoutHandle = null;
     }
     hmbrg_click() {
         this.hmbrgr_btn.classList.toggle('clicked');
@@ -648,7 +651,7 @@ class groups_class {
     groups_resize() {
         this.close_all_menus();
         this.initialize(false);
-        if (this.groups_window.firstElementChild.scrollHeight - this.groups_window.firstElementChild.scrollTop <  window.innerHeight + 200)
+        if (this.groups_window.firstElementChild.scrollHeight - this.groups_window.firstElementChild.scrollTop <  window.innerHeight + 300)
             this.list_load();
     }
     signout() {
@@ -783,7 +786,9 @@ class groups_class {
                 app.api.grp_change(info).then(ret => {
                     if (ret) {
                         this.group_conf();
+                        this.list_clear();
                         this.form_close(4);
+                        this.list_load();
                     }
                 });
             }
@@ -843,7 +848,7 @@ class groups_class {
                         if (ret.length < this.quantity)
                             this.quantity = 0;
                         this.list_add(ret);
-                        if (this.groups_window.firstElementChild.scrollHeight < window.innerHeight + 200)
+                        if (this.groups_window.firstElementChild.scrollHeight < window.innerHeight + 300)
                             this.list_load();
                     }
                 }
@@ -851,8 +856,29 @@ class groups_class {
         }
     }
     on_scroll(el) {
-        if (el.scrollTop + el.clientHeight > el.scrollHeight - 200) { //todo create loading buffer
+        if (el.scrollTop + el.clientHeight > el.scrollHeight - 300) {
             this.list_load();
+        }
+    }
+    on_query_key(query) {
+        this.set_list_timer(query);
+    }
+    on_query_paste(e) {
+        this.set_list_timer(e.clipboardData.getData('Text'));
+    }
+    on_query_cut(el) {
+        setTimeout(() => {
+            this.set_list_timer(el.value);
+        }, 50);
+    }
+    set_list_timer(query) {
+        if (query != this.query) {
+            this.query = query;
+            clearTimeout(this.timeoutHandle);
+            this.timeoutHandle = setTimeout(() => {
+                this.list_clear();
+                this.list_load();
+            }, 800);
         }
     }
     on_group_clicked(group) {
