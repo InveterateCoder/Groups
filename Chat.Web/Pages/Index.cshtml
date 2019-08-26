@@ -6,13 +6,6 @@
     <meta name="viewport" content="width=device-width" />
     <meta charset="utf-8" />
     <title>Groups</title>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
-    <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="theme-color" content="#ffffff">
     <link href="https://fonts.googleapis.com/css?family=Concert+One&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Noto+Sans&display=swap" rel="stylesheet">
     <link asp-href-include="~/css/*" rel="stylesheet" />
@@ -121,7 +114,7 @@
             <dd style="border-bottom:1px solid gray;" onclick="app.groups.form_open(2)">Delete</dd>
             <dt>My Group</dt>
             <dd style="border-bottom:1px solid gray;" onclick="app.groups.form_open(3)">Create</dd>
-            <dd class="ddgold"></dd>
+            <dd class="ddgold" onclick="app.groups.group_signin(this.textContent)"></dd>
             <dd onclick="app.groups.form_open(4)">Change</dd>
             <dd style="border-bottom:1px solid gray;" onclick="app.groups.form_open(5)">Delete</dd>
         </dl>
@@ -145,7 +138,7 @@
         </nav>
         <ul id="m_group" tabindex="0" onblur="app.groups.m_onblur(this)">
             <li onclick="app.groups.form_open(3)">Create</li>
-            <li style="padding: 6px 13px" class="ddgold"></li>
+            <li style="padding: 6px 13px" class="ddgold" onclick="app.groups.group_signin(this.textContent)"></li>
             <li onclick="app.groups.form_open(4)">Change</li>
             <li onclick="app.groups.form_open(5)">Delete</li>
         </ul>
@@ -243,6 +236,21 @@
                 <div>
                     <button onclick="app.groups.form_close(5)">Cancel</button>
                     <button onclick="app.groups.group_del()">Delete</button>
+                </div>
+            </div>
+            <div>
+                <div>Sign In To</div>
+                <div>
+                    <div>Group:</div>
+                    <input type="text" maxlength="64" readonly />
+                </div>
+                <div>
+                    <div>Password:</div>
+                    <input type="password" maxlength="32" placeholder="Leave blank if has no password" />
+                </div>
+                <div>
+                    <button onclick="app.groups.form_close(6)">Cancel</button>
+                    <button onclick="app.groups.group_signin_send()">Sign In</button>
                 </div>
             </div>
         </div>

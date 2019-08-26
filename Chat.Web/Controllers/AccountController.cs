@@ -271,7 +271,7 @@ namespace Chat.Web.Controllers
             return Content(ret, "text/plain");
         }
         [HttpGet("user/info")]
-        public JsonResult Info() => new JsonResult(new { name = _user.Name, group = _user.Group });
+        public JsonResult Info() => new JsonResult(new { name = _user.Name, group = _user.Group, ingroup = _user.InGroup });
         [HttpPost("user/signout")]
         public async Task<ContentResult> SignOut()
         {

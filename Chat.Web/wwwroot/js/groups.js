@@ -249,7 +249,8 @@ class api_class {
             if (fetresp.status != 200) {
                 app.name = null;
                 app.group = null;
-                app.goto('reg');
+                app.ingroup = null;
+                app.goto("reg");
             }
             else {
                 let obj = await fetresp.json();
@@ -263,8 +264,12 @@ class api_class {
                     app.group = obj.group;
                 else
                     app.group = null;
-                return ret;
+                if (obj.ingroup != null)
+                    app.ingroup = obj.ingroup;
+                else
+                    app.ingroup = null;
             }
+            return ret;
         }
         catch (err) {
             app.alert(err.message);
@@ -316,6 +321,38 @@ class api_class {
             }
         }
         return ret;
+    }
+    async grp_signin(request) {
+        let ret = {
+            success: false,
+            hide: false
+        }
+        try {
+            let resp = await this.post("api/groups/sign", request);
+            switch (resp) {
+                case "OK":
+                    ret.success = true;
+                    break;
+                case "already_signed":
+                    ret.hide = true;
+                    app.alert("Already signed into a group, please sign out to proceed");
+                    break;
+                case "not_found":
+                    ret.hide = true;
+                    app.alert("Group doesn't exist")
+                    break;
+                case "wrong_password":
+                    app.alert("Wrong group password, try again")
+                    break;
+                default:
+                    app.alert(resp);
+            }
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
     }
     async post(addr, obj) {
         app.wait();
@@ -697,7 +734,7 @@ class groups_class {
             app.alert(app.message.password("Password"));
         else if (request.NewName.length > 0 && !app.validateName(request.NewName))
             app.alert(app.message.name("New name"));
-        else if (request.NewPassword.length > 0 && !app.validatePassword(request.NewPassword))
+        else if (request.NewPassword && !app.validatePassword(request.NewPassword))
             app.alert(app.message.password("New password"));
         else if (request.Password == request.NewPassword || request.NewName == app.name)
             app.alert("Leave blank if the credentials are the same");
@@ -749,7 +786,7 @@ class groups_class {
             app.alert(app.message.password("Password"));
         else if (!app.validateName(info.GroupName))
             app.alert(app.message.name("Group name"));
-        else if (info.GroupPassword.length > 0 && !app.validatePassword(info.GroupPassword))
+        else if (info.GroupPassword && !app.validatePassword(info.GroupPassword))
             app.alert(app.message.password("Group password"));
         else {
             if (info.GroupPassword.length == 0)
@@ -773,7 +810,7 @@ class groups_class {
             app.alert(app.message.password("Password"));
         else if (info.NewGroupName.length > 0 && !app.validateName(info.NewGroupName))
             app.alert(app.message.name("New name"));
-        else if (!form[2].checked && info.NewGroupPassword.length > 0 && !app.validatePassword(info.NewGroupPassword))
+        else if (!form[2].checked && info.NewGroupPassword && !app.validatePassword(info.NewGroupPassword))
             app.alert(app.message.password("New password"));
         else {
             if (form[2].checked) info.NewGroupPassword = null;
@@ -829,7 +866,7 @@ class groups_class {
                 let node = document.createElement("button");
                 var textnode = document.createTextNode(str);
                 node.appendChild(textnode);
-                node.onclick = () => app.groups.on_group_clicked(str);
+                node.onclick = () => app.groups.group_signin(str);
                 node.tabIndex = -1;
                 div.appendChild(node);
             }
@@ -881,8 +918,46 @@ class groups_class {
             }, 800);
         }
     }
-    on_group_clicked(group) {
-        app.alert(group);
+    group_signin(group) {
+        if (group && group == app.group) {
+            this.close_all_menus();
+            this.group_signin_send({ name: group, password: null });
+        }
+        else {
+            let form = this.groups_forms.children[6].getElementsByTagName('input');
+            form[0].value = group;
+            this.form_open(6);
+        }
+    }
+    group_signin_send(request = null) {
+        if (!request) {
+            let form = this.groups_forms.children[6].getElementsByTagName('input');
+            request = {
+                name: form[0].value,
+                password: form[1].value
+            }
+        }
+        if (!app.validateName(request.name))
+            app.alert(app.message.name("Group name"));
+        else if (request.password && !app.validatePassword(request.password))
+            app.alert(app.message.password("Group password"));
+        else {
+            if (!request.password)
+                request.password = null;
+            app.api.grp_signin(request).then(ret => {
+                if (ret.success) {
+                    if (this.groups_forms.children[6].style.display != 'none')
+                        this.form_close(6);
+                    app.goto('ingroup');
+                }
+                else if (ret.hide) {
+                    this.list_clear();
+                    this.list_load();
+                    if (this.groups_forms.children[6].style.display != 'none')
+                        this.form_close(6);
+                }
+            });
+        }
     }
 }
 
@@ -891,6 +966,7 @@ class app_class {
         this.page = null;
         this.name = null;
         this.group = null;
+        this.ingroup = null;
         this.api = new api_class();
         this.reg_panel = new reg_panel_class();
         this.groups = new groups_class();
@@ -899,8 +975,12 @@ class app_class {
                 document.body.style.backgroundPosition = 'unset';
                 document.body.style.backgroundRepeat = 'unset';
                 document.body.style.backgroundAttachment = 'unset';
-                if (ret)
-                    this.goto('groups');
+                if (ret) {
+                    if (this.ingroup)
+                        this.goto('ingroup');
+                    else
+                        this.goto('groups');
+                }
             });
         }, 1300);
         this.message = {
@@ -944,6 +1024,8 @@ class app_class {
                 this.hide('groups');
                 break;
             case 'ingroup':
+                document.body.style.backgroundColor = 'white';
+                document.body.style.backgroundImage = 'none';
                 document.body.children[2].style.display = 'block';
                 this.hide('ingroup');
                 break;

@@ -185,35 +185,50 @@ namespace Chat.Web.Controllers
             return Content(ret, "text/plain");
         }
         [HttpPost("sign")]
-        public async Task<ContentResult> Sign([FromBody]GroupRequest request)
+        public async Task<ContentResult> Sign([FromBody]GroupSignRequest request)
         {
             string ret;
-            try
+            if (_user.InGroup != null)
+                ret = "already_signed";
+            else
             {
-                var entity = _dbContext.Chatterers.Where(c => c.Group == request.Name).FirstOrDefault();
-                if (entity == null)
-                    ret = "not_fount";
-                else
+                try
                 {
-                    if (entity.GroupPassword != request.Password)
-                        ret = "password_incorrect";
-                    else
+                    if(request.Name == _user.Group)
                     {
-                        _user.InGroup = request.Name;
-                        _user.InGroupPassword = request.Password;
+                        _user.InGroup = _user.Group;
+                        _user.InGroupPassword = _user.GroupPassword;
                         await _dbContext.SaveChangesAsync();
                         ret = "OK";
                     }
+                    else
+                    {
+                        var entity = _dbContext.Chatterers.Where(c => c.Group == request.Name).SingleOrDefault();
+                        if (entity == null)
+                            ret = "not_found";
+                        else
+                        {
+                            if (entity.GroupPassword != request.Password)
+                                ret = "wrong_password";
+                            else
+                            {
+                                _user.InGroup = request.Name;
+                                _user.InGroupPassword = request.Password;
+                                await _dbContext.SaveChangesAsync();
+                                ret = "OK";
+                            }
+                        }
+                    }
                 }
-            }
-            catch(Exception e)
-            {
-                ret = e.Message;
+                catch (Exception e)
+                {
+                    ret = e.Message;
+                }
             }
             return Content(ret, "text/plain");
         }
         [HttpPost("sign/out")]
-        public async Task<ContentResult> SignOut([FromBody]GroupRequest request)
+        public async Task<ContentResult> SignOut()
         {
             string ret;
             try

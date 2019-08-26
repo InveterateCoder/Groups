@@ -2,11 +2,11 @@
 
 namespace Chat.Web.Models
 {
-    public class GroupRequest
+    public class GroupSignRequest
     {
         [Required, StringLength(64, MinimumLength = 5)]
         public string Name { get; set; }
-        [Required, StringLength(32, MinimumLength = 8)]
+        [StringLength(32, MinimumLength = 8)]
         public string Password { get; set; }
     }
 }
