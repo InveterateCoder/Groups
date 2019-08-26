@@ -11,7 +11,7 @@ namespace Chat.Web.Infrastructure
     {
         private readonly RequestDelegate _next;
         public CustomAuthenticationMiddleware(RequestDelegate next) => _next = next;
-        public async Task InvokeAsync(HttpContext context, User user, ChatterersDb dbContext, ActiveUsers activeUsers)
+        public async Task InvokeAsync(HttpContext context, User user, ChatterersDb dbContext)
         {
             string token = context.Request.Cookies[StaticData.AuthenticationCookieName];
             if (token != null)
@@ -24,11 +24,9 @@ namespace Chat.Web.Infrastructure
                 }
                 else
                 {
-                    if (activeUsers.Users.Any(u => u.Name == chatterer.Name))
+                    if (StaticData.ActiveUsers.Any(kPair => kPair.Value.Name == chatterer.Name))
                     {
                         context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                        context.Response.ContentType = "text/plain";
-                        await context.Response.WriteAsync("single_connection_only");
                     }
                     else
                     {
@@ -53,8 +51,6 @@ namespace Chat.Web.Infrastructure
                 || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/account/user"), StringComparison.OrdinalIgnoreCase)))
             {
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                context.Response.ContentType = "text/plain";
-                await context.Response.WriteAsync("not_authorized");
             }
             else
                 await _next(context);

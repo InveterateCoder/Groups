@@ -24,7 +24,6 @@ namespace Chat.Web
             {
                 opts.UseSqlServer(Configuration.GetConnectionString("Users"));
             });
-            services.AddSingleton<ActiveUsers>();
             services.AddScoped<User>();
             /*services.AddCors(opts =>
             {
@@ -43,14 +42,10 @@ namespace Chat.Web
         {
             StaticData.RootPath = env.ContentRootPath;
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
             else
-            {
-                app.UseExceptionHandler("/Error");
                 app.UseHsts();
-            }
+            app.UseStatusCodePages();
             //app.UseCors("_allowAll");
             app.UseHttpsRedirection();
             app.UseStaticFiles();

@@ -8,8 +8,12 @@
     <title>Groups</title>
     <link href="https://fonts.googleapis.com/css?family=Concert+One&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Noto+Sans&display=swap" rel="stylesheet">
-    <link asp-href-include="~/css/*" rel="stylesheet" />
-    <script asp-src-include="~/js/*"></script>
+    <link href="~/css/body.css" rel="stylesheet" />
+    <link href="~/css/reg.css" rel="stylesheet" />
+    <link href="~/css/groups.css" rel="stylesheet" />
+    <link href="~/css/ingroup.css" rel="stylesheet" />
+    <script src="~/js/groups.js"></script>
+    <script src="~/aspnet-signalr/signalr.min.js"></script>
 </head>
 <body>
     <div id="reg_panel" class="disable-select" style="display:none">
@@ -256,7 +260,7 @@
         </div>
     </div>
     <div id="ingroup" style="display:none">
-
+        <button onclick="app.groupin.test()">Test</button>
     </div>
     <div id="wait"></div>
     <div id="message" style="display:none">

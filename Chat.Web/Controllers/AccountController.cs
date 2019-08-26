@@ -216,7 +216,7 @@ namespace Chat.Web.Controllers
             return Content(ret, "text/plain");
         }
         [HttpPost("sign")]
-        public async Task<ContentResult> SignIn([FromBody]SignRequest request, [FromServices]ActiveUsers activeUsers)
+        public async Task<ContentResult> SignIn([FromBody]SignRequest request)
         {
             string ret;
             try
@@ -237,7 +237,7 @@ namespace Chat.Web.Controllers
                             ret = "password_incorrect";
                         else
                         {
-                            if (activeUsers.Users.Any(u => u.Name == user.Name))
+                            if (StaticData.ActiveUsers.Any(kPair => kPair.Value.Name == user.Name))
                                 ret = "multiple_signins_forbidden";
                             else
                             {

@@ -536,8 +536,11 @@ class reg_panel_class {
         else if (!app.validatePassword(chatterer.password))
             app.alert(app.message.password("Password"));
         else app.api.signin(chatterer).then(ok => {
-            if (ok)
-                app.goto('groups');
+            if (ok) {
+                if (app.ingroup)
+                    app.goto("ingroup");
+                else app.goto('groups');
+            }
         });
     }
 }
@@ -961,6 +964,17 @@ class groups_class {
     }
 }
 
+class ingroup_class {
+    constructor() {
+        this.groupin = document.getElementById("ingroup");
+        this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
+        this.connection.on("test", (message) => app.alert(message));
+    }
+    test() {
+        this.connection.invoke("Test", "hello");
+    }
+}
+
 class app_class {
     constructor() {
         this.page = null;
@@ -970,12 +984,14 @@ class app_class {
         this.api = new api_class();
         this.reg_panel = new reg_panel_class();
         this.groups = new groups_class();
+        this.groupin = new ingroup_class();
         setTimeout(() => {
             this.api.usr_info().then(ret => {
                 document.body.style.backgroundPosition = 'unset';
                 document.body.style.backgroundRepeat = 'unset';
                 document.body.style.backgroundAttachment = 'unset';
                 if (ret) {
+                    document.body.style.backgroundImage = 'unset';
                     if (this.ingroup)
                         this.goto('ingroup');
                     else
@@ -1024,10 +1040,12 @@ class app_class {
                 this.hide('groups');
                 break;
             case 'ingroup':
-                document.body.style.backgroundColor = 'white';
-                document.body.style.backgroundImage = 'none';
-                document.body.children[2].style.display = 'block';
-                this.hide('ingroup');
+                this.groupin.connection.start().then(() => {
+                    document.body.style.backgroundImage = 'none';
+                    document.body.style.backgroundColor = 'white';
+                    document.body.children[2].style.display = 'block';
+                    this.hide('ingroup');
+                });
                 break;
         }
     }
