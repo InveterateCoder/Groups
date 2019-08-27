@@ -969,9 +969,6 @@ class ingroup_class {
         this.groupin = document.getElementById("ingroup");
         this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
     }
-    test() {
-        app.goto('groups');
-    }
 }
 
 class app_class {
