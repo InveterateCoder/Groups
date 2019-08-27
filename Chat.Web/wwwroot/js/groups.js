@@ -968,10 +968,9 @@ class ingroup_class {
     constructor() {
         this.groupin = document.getElementById("ingroup");
         this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
-        this.connection.on("test", (message) => app.alert(message));
     }
     test() {
-        this.connection.invoke("Test", "hello");
+        app.goto('groups');
     }
 }
 
@@ -1062,7 +1061,9 @@ class app_class {
                 document.body.children[1].style.display = 'none';
                 break;
             case 'ingroup':
-                document.body.children[2].style.display = 'none';
+                this.groupin.connection.stop().then(() => {
+                    document.body.children[2].style.display = 'none';
+                });
                 break;
         }
         this.page = place;

@@ -31,9 +31,12 @@ namespace Chat.Web.Hubs
             var user = GetUser();
             if (user.InGroup == null || user.ConnectionId != null)
                 Context.Abort();
-            user.ConnectionId = Context.ConnectionId;
-            await user.SaveAsync();
-            await Groups.AddToGroupAsync(Context.ConnectionId, user.InGroup);
+            else
+            {
+                user.ConnectionId = Context.ConnectionId;
+                await user.SaveAsync();
+                await Groups.AddToGroupAsync(Context.ConnectionId, user.InGroup);
+            }
         }
         public async override Task OnDisconnectedAsync(Exception exception)
         {

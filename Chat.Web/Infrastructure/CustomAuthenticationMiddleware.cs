@@ -27,17 +27,12 @@ namespace Chat.Web.Infrastructure
                 }
                 else
                 {
-                    if (chatterer.ConnectionId != null)
-                        context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                    else
-                    {
-                        chatterer.LastActive = DateTime.UtcNow.Ticks;
-                        if (chatterer.InGroup != null && chatterer.InGroupPassword != dbContext.Chatterers.Where(c => c.Group == chatterer.InGroup).SingleOrDefault()?.GroupPassword)
-                            chatterer.InGroup = chatterer.InGroupPassword = null;
-                        await dbContext.SaveChangesAsync();
-                        user.Chatterer = chatterer;
-                        await Filter(context, true);
-                    }
+                    chatterer.LastActive = DateTime.UtcNow.Ticks;
+                    if (chatterer.InGroup != null && chatterer.InGroupPassword != dbContext.Chatterers.Where(c => c.Group == chatterer.InGroup).SingleOrDefault()?.GroupPassword)
+                        chatterer.InGroup = chatterer.InGroupPassword = null;
+                    await dbContext.SaveChangesAsync();
+                    user.Chatterer = chatterer;
+                    await Filter(context, true);
                 }
             }
             else
