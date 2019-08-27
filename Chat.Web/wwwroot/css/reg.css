@@ -1,5 +1,14 @@
-﻿#reg_panel {
-    position:fixed;
+﻿#reg {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgb(0, 3, 56);
+    background-image: url(/images/concrete-wall-2.png);
+}
+#reg_panel {
+    position:relative;
     top:50%;
     left:50%;
     transform:translate(-50%,-50%);

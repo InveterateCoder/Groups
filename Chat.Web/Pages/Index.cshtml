@@ -18,93 +18,95 @@
     <script src="~/aspnet-signalr/signalr.min.js"></script>
 </head>
 <body>
-    <div id="reg_panel" class="disable-select" style="display:none">
-        <div id="header">Groups</div>
-        <div id="reg_panel_menu">
-            <div onclick="app.reg_panel.goto('reg')">
-                <img src="~/images/register.svg" style="width:80%" draggable="false" />
-                <div>Register</div>
-            </div>
-            <div onclick="app.reg_panel.goto('sign')">
-                <img src="~/images/signin.svg" style="width:80%" draggable="false" />
-                <div>Sign In</div>
-            </div>
-        </div>
-        <div class="reg_form" style="display:none;">
-            <div class="btn_back">
-                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
-                    <img src="~/images/back.png" draggable="false" title="go back" width="35" />
+    <div id="reg" class="disable-select" style="display:none">
+        <div id="reg_panel">
+            <div id="header">Groups</div>
+            <div id="reg_panel_menu">
+                <div onclick="app.reg_panel.goto('reg')">
+                    <img src="~/images/register.svg" style="width:80%" draggable="false" />
+                    <div>Register</div>
                 </div>
-                <span>Register</span>
-            </div>
-            <div>
-                <span class="title">Name:</span>
-                <input type="text" spellcheck="false" maxlength="64" />
-            </div>
-            <div>
-                <span class="title">Email:</span>
-                <input type="email" spellcheck="false" maxlength="256" />
-            </div>
-            <div>
-                <span class="title">Password:</span>
-                <input type="password" maxlength="32" />
-            </div>
-            <div class="action_panel">
-                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.clear('reg')">
-                    <img src="~/images/clear.svg" draggable="false" title="clear" width="40" />
-                </div>
-                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('numb')">
-                    <img src="~/images/unlock.svg" draggable="false" title="enter code" width="40" />
-                </div>
-                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.register()">
-                    <img src="~/images/register.svg" draggable="false" title="register" width="40" />
+                <div onclick="app.reg_panel.goto('sign')">
+                    <img src="~/images/signin.svg" style="width:80%" draggable="false" />
+                    <div>Sign In</div>
                 </div>
             </div>
-        </div>
-        <div class="reg_form" style="display:none;">
-            <div class="btn_back">
-                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
-                    <img src="~/images/back.png" draggable="false" title="go back" width="35" />
+            <div class="reg_form" style="display:none;">
+                <div class="btn_back">
+                    <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                         onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
+                        <img src="~/images/back.png" draggable="false" title="go back" width="35" />
+                    </div>
+                    <span>Register</span>
                 </div>
-                <span>Sign In</span>
-            </div>
-            <div>
-                <span class="title">Email:</span>
-                <input type="email" spellcheck="false" maxlength="256" />
-            </div>
-            <div>
-                <span class="title">Password:</span>
-                <input type="password" maxlength="32" />
-            </div>
-            <div class="action_panel">
-                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.clear('sign')">
-                    <img src="~/images/clear.svg" draggable="false" title="clear" width="40" />
+                <div>
+                    <span class="title">Name:</span>
+                    <input type="text" spellcheck="false" maxlength="64" />
                 </div>
-                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.signin()">
-                    <img src="~/images/signin.svg" draggable="false" title="sign in" width="40" />
+                <div>
+                    <span class="title">Email:</span>
+                    <input type="email" spellcheck="false" maxlength="256" />
+                </div>
+                <div>
+                    <span class="title">Password:</span>
+                    <input type="password" maxlength="32" />
+                </div>
+                <div class="action_panel">
+                    <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                         onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.clear('reg')">
+                        <img src="~/images/clear.svg" draggable="false" title="clear" width="40" />
+                    </div>
+                    <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                         onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('numb')">
+                        <img src="~/images/unlock.svg" draggable="false" title="enter code" width="40" />
+                    </div>
+                    <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                         onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.register()">
+                        <img src="~/images/register.svg" draggable="false" title="register" width="40" />
+                    </div>
                 </div>
             </div>
-        </div>
-        <div id="reg_panel_verify" style="display:none;">
-            <p style="text-align:center">Enter 4 digit code from your verification email.</p>
-            <div style="text-align:center">
-                <input onkeypress="app.reg_panel.num(event)" oninput="app.reg_panel.pasteFilter(event)" type="text" maxlength="4" spellcheck="false" autocomplete="off" />
-            </div>
-            <div class="action_panel">
-                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
-                    <img src="~/images/home.svg" draggable="false" width="40" title="home" />
+            <div class="reg_form" style="display:none;">
+                <div class="btn_back">
+                    <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                         onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
+                        <img src="~/images/back.png" draggable="false" title="go back" width="35" />
+                    </div>
+                    <span>Sign In</span>
                 </div>
-                <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
-                     onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.validate()">
-                    <img src="~/images/verify.svg" draggable="false" width="40" title="verify" />
+                <div>
+                    <span class="title">Email:</span>
+                    <input type="email" spellcheck="false" maxlength="256" />
+                </div>
+                <div>
+                    <span class="title">Password:</span>
+                    <input type="password" maxlength="32" />
+                </div>
+                <div class="action_panel">
+                    <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                         onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.clear('sign')">
+                        <img src="~/images/clear.svg" draggable="false" title="clear" width="40" />
+                    </div>
+                    <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                         onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.signin()">
+                        <img src="~/images/signin.svg" draggable="false" title="sign in" width="40" />
+                    </div>
+                </div>
+            </div>
+            <div id="reg_panel_verify" style="display:none;">
+                <p style="text-align:center">Enter 4 digit code from your verification email.</p>
+                <div style="text-align:center">
+                    <input onkeypress="app.reg_panel.num(event)" oninput="app.reg_panel.pasteFilter(event)" type="text" maxlength="4" spellcheck="false" autocomplete="off" />
+                </div>
+                <div class="action_panel">
+                    <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                         onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.goto('home')">
+                        <img src="~/images/home.svg" draggable="false" width="40" title="home" />
+                    </div>
+                    <div style="cursor:pointer" onmouseover="app.reg_panel.btn_hover(this)" onmouseout="app.reg_panel.btn_out(this)"
+                         onmousedown="app.reg_panel.btn_down(this)" onmouseup="app.reg_panel.btn_up(this)" onclick="app.reg_panel.validate()">
+                        <img src="~/images/verify.svg" draggable="false" width="40" title="verify" />
+                    </div>
                 </div>
             </div>
         </div>

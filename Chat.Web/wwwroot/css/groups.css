@@ -11,6 +11,8 @@
     justify-content:center;
     left:0; right:0; bottom:0;
     overflow:auto;
+    background-color:#efefef;
+    background-image:url(/images/low-contrast-linen.png);
 }
 #groups > div:first-child > button {
     outline:none;

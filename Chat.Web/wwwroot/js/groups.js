@@ -983,11 +983,7 @@ class app_class {
         this.groupin = new ingroup_class();
         setTimeout(() => {
             this.api.usr_info().then(ret => {
-                document.body.style.backgroundPosition = 'unset';
-                document.body.style.backgroundRepeat = 'unset';
-                document.body.style.backgroundAttachment = 'unset';
                 if (ret) {
-                    document.body.style.backgroundImage = 'unset';
                     if (this.ingroup)
                         this.goto('ingroup');
                     else
@@ -1019,16 +1015,12 @@ class app_class {
             return;
         switch (place) {
             case 'reg':
-                document.body.style.backgroundColor = 'rgb(0, 3, 56)';
-                document.body.style.backgroundImage = 'url("/images/concrete-wall-2.png")';
                 document.body.children[0].style.display = 'block';
                 this.hide('reg');
                 break;
             case 'groups':
                 this.groups.list_clear();
                 this.groups.list_load();
-                document.body.style.backgroundColor = '#efefef';
-                document.body.style.backgroundImage = 'url("/images/low-contrast-linen.png")';
                 this.groups.groups_window.getElementsByTagName('code')[0].textContent = this.name;
                 this.groups.groups_window.getElementsByTagName('code')[0].title = this.name;
                 document.body.children[1].style.display = 'block';
@@ -1037,8 +1029,6 @@ class app_class {
                 break;
             case 'ingroup':
                 this.groupin.connection.start().then(() => {
-                    document.body.style.backgroundImage = 'none';
-                    document.body.style.backgroundColor = 'white';
                     document.body.children[2].style.display = 'block';
                     this.hide('ingroup');
                 });
