@@ -18,21 +18,23 @@ namespace Chat.Web.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private ChatterersDb _dbContext;
         private User _user;
-        public AccountController(ChatterersDb chaDb, User user)
-        {
-            _dbContext = chaDb;
-            _user = user;
-        }
+        public AccountController(User user)
+            => _user = user;
         [HttpGet("seed")]
         public ContentResult Seed() //todo delete seeding
         {
             Random rand = new Random();
             List<ChatterersDb.Chatterer> chatterers = new List<ChatterersDb.Chatterer>();
+            chatterers.Add(new ChatterersDb.Chatterer
+            {
+                Name = "Arthur",
+                Email = "inveterate.coder@outlook.com",
+                Password = "adm3.1415"
+            });
             var chars = Enumerable.Range('A', 'Z' - 'A' + 1).Select(n => (char)n).Concat(Enumerable.Range('a', 'z' - 'a' + 1).Select(n => (char)n)).ToList();
             chars.Add(' ');
-            for (int i = 50; i < 300; i++)
+            for (int i = 0; i < 300; i++)
             {
                 var chatterer = new ChatterersDb.Chatterer();
                 chatterer.Email = $"email{i}@gm.com";
@@ -47,7 +49,7 @@ namespace Chat.Web.Controllers
                     }
                     name = strng.ToString();
                     strng.Clear();
-                } while (_dbContext.Chatterers.Any(c => c.Name == name));
+                } while (_user.Chatterers.Any(c => c.Name == name));
                 chatterer.Name = name;
                 chatterer.Password = $"password{i}";
                 if (i % 5 != 0)
@@ -60,15 +62,15 @@ namespace Chat.Web.Controllers
                         }
                         name = strng.ToString();
                         strng.Clear();
-                    } while (_dbContext.Chatterers.Any(c => c.Group == name));
+                    } while (_user.Chatterers.Any(c => c.Group == name));
                     chatterer.Group = name;
                     if (i % 8 != 0)
                         chatterer.GroupPassword = $"gpassword{i}";
                 }
                 chatterers.Add(chatterer);
             }
-            _dbContext.Chatterers.AddRange(chatterers);
-            _dbContext.SaveChanges();
+            _user.Chatterers.AddRange(chatterers);
+            _user.Database.SaveChanges();
             return Content("OK", "text/plain");
         }
         [HttpPost("reg")]
@@ -85,9 +87,9 @@ namespace Chat.Web.Controllers
                 try
                 {
                     request.Email = request.Email.ToLower();
-                    if (_dbContext.Chatterers.Any(c => c.Email == request.Email))
+                    if (_user.Chatterers.Any(c => c.Email == request.Email))
                         ret = "email_is_taken";
-                    else if (_dbContext.Chatterers.Any(c => c.Name == request.Name))
+                    else if (_user.Chatterers.Any(c => c.Name == request.Name))
                         ret = "name_is_taken";
                     else
                     {
@@ -189,20 +191,19 @@ namespace Chat.Web.Controllers
                             ret = "reg_request_required";
                         else
                         {
-                            if (_dbContext.Chatterers.Any(c => c.Email == request.Email))
+                            if (_user.Chatterers.Any(c => c.Email == request.Email))
                                 ret = "email_is_taken";
-                            else if (_dbContext.Chatterers.Any(c => c.Name == request.Name))
+                            else if (_user.Chatterers.Any(c => c.Name == request.Name))
                                 ret = "name_is_taken";
                             else
                             {
-                                await _dbContext.Chatterers.AddAsync(new ChatterersDb.Chatterer
+                                await _user.Chatterers.AddAsync(new ChatterersDb.Chatterer
                                 {
                                     Name = request.Name,
                                     Email = request.Email,
                                     Password = request.Password,
-                                    LastActive = DateTime.UtcNow.Ticks
                                 });
-                                await _dbContext.SaveChangesAsync();
+                                await _user.SaveAsync();
                                 ret = "added_" + request.Email;
                             }
                         }
@@ -228,7 +229,7 @@ namespace Chat.Web.Controllers
                 }
                 else
                 {
-                    var user = _dbContext.Chatterers.Where(c => c.Email == request.Email.ToLower()).SingleOrDefault();
+                    var user = _user.Chatterers.Where(c => c.Email == request.Email.ToLower()).SingleOrDefault();
                     if (user == null)
                         ret = "user_not_found";
                     else
@@ -237,7 +238,7 @@ namespace Chat.Web.Controllers
                             ret = "password_incorrect";
                         else
                         {
-                            if (StaticData.ActiveUsers.Any(kPair => kPair.Value.Name == user.Name))
+                            if (user.ConnectionId != null)
                                 ret = "multiple_signins_forbidden";
                             else
                             {
@@ -250,12 +251,11 @@ namespace Chat.Web.Controllers
                                     $"{DateTime.UtcNow.ToString()}-{user.Name}-{user.Email}-{user.Password}-{Guid.NewGuid().ToString()}"));
                                     token = Convert.ToBase64String(bytes);
                                 }
-                                while (_dbContext.Chatterers.Where(c => c.Token == token).FirstOrDefault() != null);
+                                while (_user.Chatterers.Where(c => c.Token == token).FirstOrDefault() != null);
                                 user.Token = token;
-                                user.LastActive = DateTime.UtcNow.Ticks;
                                 sha256.Dispose();
                                 bytes = null;
-                                await _dbContext.SaveChangesAsync();
+                                await _user.SaveAsync();
                                 HttpContext.Response.Cookies.Append(StaticData.AuthenticationCookieName, user.Token,
                                     new CookieOptions { Secure = true, SameSite = SameSiteMode.Strict, Expires = DateTimeOffset.Now.AddDays(30) });
                                 ret = "OK";
@@ -281,7 +281,7 @@ namespace Chat.Web.Controllers
                 _user.Token = null;
                 _user.InGroup = null;
                 _user.InGroupPassword = null;
-                await _dbContext.SaveChangesAsync();
+                await _user.SaveAsync();
                 HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
                 ret = "OK";
             }
@@ -304,8 +304,8 @@ namespace Chat.Web.Controllers
                 else
                 {
                     Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                    _dbContext.Chatterers.Remove(_user.Chatterer);
-                    await _dbContext.SaveChangesAsync();
+                    _user.Chatterers.Remove(_user.Chatterer);
+                    await _user.SaveAsync();
                     ret = "deleted";
                 }
             }
@@ -330,31 +330,31 @@ namespace Chat.Web.Controllers
                     if (request.NewName != null && request.NewName != _user.Name
                         && request.NewPassword != null && request.NewPassword != _user.Password)
                     {
-                        if (_dbContext.Chatterers.Any(c => c.Name == request.NewName))
+                        if (_user.Chatterers.Any(c => c.Name == request.NewName))
                             ret = "name_exists";
                         else
                         {
                             _user.Name = request.NewName;
                             _user.Password = request.NewPassword;
-                            await _dbContext.SaveChangesAsync();
+                            await _user.SaveAsync();
                             ret = "name&pass_changed";
                         }
                     }
                     else if (request.NewName != null && request.NewName != _user.Name)
                     {
-                        if (_dbContext.Chatterers.Any(c => c.Name == request.NewName))
+                        if (_user.Chatterers.Any(c => c.Name == request.NewName))
                             ret = "name_exists";
                         else
                         {
                             _user.Name = request.NewName;
-                            await _dbContext.SaveChangesAsync();
+                            await _user.SaveAsync();
                             ret = "name_changed";
                         }
                     }
                     else if (request.NewPassword != null && request.NewPassword != _user.Password)
                     {
                         _user.Password = request.NewPassword;
-                        await _dbContext.SaveChangesAsync();
+                        await _user.SaveAsync();
                         ret = "pass_changed";
                     }
                     else

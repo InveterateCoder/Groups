@@ -25,6 +25,9 @@ namespace Chat.Web.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<string>("ConnectionId")
+                        .HasMaxLength(64);
+
                     b.Property<string>("Email")
                         .HasMaxLength(256);
 

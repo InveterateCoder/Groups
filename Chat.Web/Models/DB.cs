@@ -14,8 +14,6 @@ namespace Chat.Web.Models
             [MaxLength(2040)]
             public string Text { get; set; }
         }
-        public ChatterersDb(DbContextOptions<ChatterersDb> opts) : base(opts) { }
-        public DbSet<Chatterer> Chatterers { get; set; }
         public class Chatterer
         {
             public int Id { get; set; }
@@ -37,6 +35,10 @@ namespace Chat.Web.Models
             public Message[] GroupMessages { get; set; }
             [MaxLength(50)]
             public string Token { get; set; }
+            [MaxLength(64)]
+            public string ConnectionId { get; set; }
         }
+        public ChatterersDb(DbContextOptions<ChatterersDb> opts) : base(opts) { }
+        public DbSet<Chatterer> Chatterers { get; set; }
     }
 }

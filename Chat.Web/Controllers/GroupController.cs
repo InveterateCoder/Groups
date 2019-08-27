@@ -14,11 +14,9 @@ namespace Chat.Web.Controllers
     [ApiController]
     public class GroupsController : ControllerBase
     {
-        private ChatterersDb _dbContext;
         private User _user;
-        public GroupsController(ChatterersDb dbContext, User user)
+        public GroupsController(User user)
         {
-            _dbContext = dbContext;
             _user = user;
         }
         [HttpGet("list/{start:int:min(0)}/{quantity:int:range(1,100)?}/{query:maxlength(64)?}")]
@@ -26,7 +24,7 @@ namespace Chat.Web.Controllers
         {
             try
             {
-                var groups = _dbContext.Chatterers.Select(c => c.Group).Where(g => g != null && g.StartsWith(query, StringComparison.OrdinalIgnoreCase));
+                var groups = _user.Chatterers.Select(c => c.Group).Where(g => g != null && g.StartsWith(query, StringComparison.OrdinalIgnoreCase));
                 var groupsCount = groups.Count();
                 if (groupsCount <= start)
                     return new JsonResult(0);
@@ -46,7 +44,7 @@ namespace Chat.Web.Controllers
         {
             try
             {
-                var members = _dbContext.Chatterers.Where(c => c.InGroup == _user.InGroup).Select(c => c.Name);
+                var members = _user.Chatterers.Where(c => c.InGroup == _user.InGroup).Select(c => c.Name);
                 var membersCount = members.Count();
                 if (membersCount <= start)
                     return new JsonResult(0);
@@ -70,7 +68,7 @@ namespace Chat.Web.Controllers
                 long ticksLimit = DateTime.UtcNow.Date.Ticks - TimeSpan.FromDays(30).Ticks;
                 if (ticks < ticksLimit)
                     return new JsonResult(-1);
-                var messages = _dbContext.Chatterers.Where(c => c.Group == _user.InGroup).SingleOrDefault()?.GroupMessages?.Where(m => m.Date >= ticksLimit && m.Date < ticks).OrderByDescending(m => m.Date);
+                var messages = _user.Chatterers.Where(c => c.Group == _user.InGroup).SingleOrDefault()?.GroupMessages?.Where(m => m.Date >= ticksLimit && m.Date < ticks).OrderByDescending(m => m.Date);
                 if (messages == null)
                     return new JsonResult(0);
                 if (messages.Count() <= max)
@@ -91,7 +89,7 @@ namespace Chat.Web.Controllers
                 long ticksLimit = DateTime.UtcNow.Date.Ticks - TimeSpan.FromDays(30).Ticks;
                 if (ticks < ticksLimit)
                     return new JsonResult(-1);
-                var messages = _dbContext.Chatterers.Where(c => c.Group == _user.InGroup).SingleOrDefault()?.GroupMessages?.Where(m => m.Date > ticks).OrderBy(m => m.Date);
+                var messages = _user.Chatterers.Where(c => c.Group == _user.InGroup).SingleOrDefault()?.GroupMessages?.Where(m => m.Date > ticks).OrderBy(m => m.Date);
                 if (messages == null)
                     return new JsonResult(0);
                 if (messages.Count() <= max)
@@ -111,7 +109,7 @@ namespace Chat.Web.Controllers
             {
                 if (_user.Group != null)
                     ret = "has_group";
-                else if (_dbContext.Chatterers.Any(c => c.Group == request.GroupName))
+                else if (_user.Chatterers.Any(c => c.Group == request.GroupName))
                     ret = "name_taken";
                 else if (request.Password != _user.Password)
                     ret = "wrong_password";
@@ -119,7 +117,7 @@ namespace Chat.Web.Controllers
                 {
                     _user.Group = request.GroupName;
                     _user.GroupPassword = request.GroupPassword;
-                    await _dbContext.SaveChangesAsync();
+                    await _user.SaveAsync();
                     ret = "OK";
                 }
             }
@@ -146,32 +144,32 @@ namespace Chat.Web.Controllers
                     if (request.NewGroupName != null && request.NewGroupName != _user.Group && request.NewGroupPassword != _user.GroupPassword
                             && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
                     {
-                        if (_dbContext.Chatterers.Any(c => c.Group == request.NewGroupName))
+                        if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
                             ret = "group_name_exists";
                         else
                         {
                             _user.Group = request.NewGroupName;
                             _user.GroupPassword = request.NewGroupPassword;
-                            await _dbContext.SaveChangesAsync();
+                            await _user.SaveAsync();
                             ret = "name&pass_changed";
                         }
 
                     }
                     else if (request.NewGroupName != null && request.NewGroupName != _user.Group)
                     {
-                        if (_dbContext.Chatterers.Any(c => c.Group == request.NewGroupName))
+                        if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
                             ret = "group_name_exists";
                         else
                         {
                             _user.Group = request.NewGroupName;
-                            await _dbContext.SaveChangesAsync();
+                            await _user.SaveAsync();
                             ret = "name_changed";
                         }
                     }
                     else if (request.NewGroupPassword != _user.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
                     {
                         _user.GroupPassword = request.NewGroupPassword;
-                        await _dbContext.SaveChangesAsync();
+                        await _user.SaveAsync();
                         ret = "pass_changed";
                     }
                     else
@@ -198,12 +196,12 @@ namespace Chat.Web.Controllers
                     {
                         _user.InGroup = _user.Group;
                         _user.InGroupPassword = _user.GroupPassword;
-                        await _dbContext.SaveChangesAsync();
+                        await _user.SaveAsync();
                         ret = "OK";
                     }
                     else
                     {
-                        var entity = _dbContext.Chatterers.Where(c => c.Group == request.Name).SingleOrDefault();
+                        var entity = _user.Chatterers.Where(c => c.Group == request.Name).SingleOrDefault();
                         if (entity == null)
                             ret = "not_found";
                         else
@@ -214,7 +212,7 @@ namespace Chat.Web.Controllers
                             {
                                 _user.InGroup = request.Name;
                                 _user.InGroupPassword = request.Password;
-                                await _dbContext.SaveChangesAsync();
+                                await _user.SaveAsync();
                                 ret = "OK";
                             }
                         }
@@ -239,7 +237,7 @@ namespace Chat.Web.Controllers
                 {
                     _user.InGroup = null;
                     _user.InGroupPassword = null;
-                    await _dbContext.SaveChangesAsync();
+                    await _user.SaveAsync();
                     ret = "OK";
                 }
             }
@@ -263,7 +261,7 @@ namespace Chat.Web.Controllers
                 {
                     _user.Group = null;
                     _user.GroupPassword = null;
-                    await _dbContext.SaveChangesAsync();
+                    await _user.SaveAsync();
                     ret = "deleted";
                 }
             }

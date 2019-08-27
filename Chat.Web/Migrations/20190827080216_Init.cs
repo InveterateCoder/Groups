@@ -21,7 +21,8 @@ namespace Chat.Web.Migrations
                     GroupPassword = table.Column<string>(maxLength: 32, nullable: true),
                     InGroup = table.Column<string>(maxLength: 64, nullable: true),
                     InGroupPassword = table.Column<string>(maxLength: 32, nullable: true),
-                    Token = table.Column<string>(maxLength: 50, nullable: true)
+                    Token = table.Column<string>(maxLength: 50, nullable: true),
+                    ConnectionId = table.Column<string>(maxLength: 64, nullable: true)
                 },
                 constraints: table =>
                 {

@@ -11,20 +11,35 @@ namespace Chat.Web.Hubs
 {
     public class ChatHub : Hub
     {
+        private User GetUser()
+        {
+            User user = Context.GetHttpContext().RequestServices.GetService(typeof(User)) as User;
+            if (user == null)
+            {
+                Context.Abort();
+                throw new HubException("User wasn not identified");
+            }
+            return user;
+        }
         public async Task Test(string message)
         {
-            await Clients.Group(StaticData.ActiveUsers[Context.ConnectionId].ActiveGroup).SendAsync("test", StaticData.ActiveUsers.Count());
+            var user = GetUser();
+            await Clients.Group(user.InGroup).SendAsync("test", Context.ConnectionId);
         }
         public async override Task OnConnectedAsync()
         {
-            User user = Context.GetHttpContext().RequestServices.GetService(typeof(User)) as User;
-            if (user.InGroup == null || !StaticData.ActiveUsers.TryAdd(Context.ConnectionId, new ActiveUser() { Name = user.Name, ActiveGroup = user.InGroup }))
+            var user = GetUser();
+            if (user.InGroup == null || user.ConnectionId != null)
                 Context.Abort();
+            user.ConnectionId = Context.ConnectionId;
+            await user.SaveAsync();
             await Groups.AddToGroupAsync(Context.ConnectionId, user.InGroup);
         }
         public async override Task OnDisconnectedAsync(Exception exception)
         {
-            for (int i = 300; i > 0 && !StaticData.ActiveUsers.TryRemove(Context.ConnectionId, out _); i--) ;
+            var user = GetUser();
+            user.ConnectionId = null;
+            await user.SaveAsync();
             await base.OnDisconnectedAsync(exception);
         }
     }

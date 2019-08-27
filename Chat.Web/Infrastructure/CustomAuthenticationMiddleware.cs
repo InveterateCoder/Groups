@@ -1,5 +1,7 @@
-﻿using Chat.Web.Models;
+﻿using Chat.Web.Hubs;
+using Chat.Web.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Linq;
 using System.Net;
@@ -13,6 +15,7 @@ namespace Chat.Web.Infrastructure
         public CustomAuthenticationMiddleware(RequestDelegate next) => _next = next;
         public async Task InvokeAsync(HttpContext context, User user, ChatterersDb dbContext)
         {
+            user.Database = dbContext;
             string token = context.Request.Cookies[StaticData.AuthenticationCookieName];
             if (token != null)
             {
@@ -24,18 +27,14 @@ namespace Chat.Web.Infrastructure
                 }
                 else
                 {
-                    if (StaticData.ActiveUsers.Any(kPair => kPair.Value.Name == chatterer.Name))
-                    {
+                    if (chatterer.ConnectionId != null)
                         context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                    }
                     else
                     {
+                        chatterer.LastActive = DateTime.UtcNow.Ticks;
                         if (chatterer.InGroup != null && chatterer.InGroupPassword != dbContext.Chatterers.Where(c => c.Group == chatterer.InGroup).SingleOrDefault()?.GroupPassword)
-                        {
-                            chatterer.InGroup = null;
-                            chatterer.InGroupPassword = null;
-                            await dbContext.SaveChangesAsync();
-                        }
+                            chatterer.InGroup = chatterer.InGroupPassword = null;
+                        await dbContext.SaveChangesAsync();
                         user.Chatterer = chatterer;
                         await Filter(context, true);
                     }
@@ -49,9 +48,7 @@ namespace Chat.Web.Infrastructure
             if (!signed && (context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/hub"), StringComparison.OrdinalIgnoreCase)
                 || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/groups"), StringComparison.OrdinalIgnoreCase)
                 || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/account/user"), StringComparison.OrdinalIgnoreCase)))
-            {
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            }
             else
                 await _next(context);
         }
