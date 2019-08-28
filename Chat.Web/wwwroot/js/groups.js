@@ -586,6 +586,7 @@ class groups_class {
         }
     }
     initialize(group = true) {
+        this.close_all_menus();
         let height = this.groups_window.children[2].offsetHeight;
         this.groups_window.children[0].style.top = height + 'px';
         this.m_acc.style.right = '0px';
@@ -689,7 +690,6 @@ class groups_class {
         }
     }
     groups_resize() {
-        this.close_all_menus();
         this.initialize(false);
         if (this.groups_window.firstElementChild.scrollHeight - this.groups_window.firstElementChild.scrollTop <  window.innerHeight + 300)
             this.list_load();
@@ -966,8 +966,39 @@ class groups_class {
 
 class ingroup_class {
     constructor() {
-        this.groupin = document.getElementById("ingroup");
+        this.msgs_panel = document.getElementById("ingroup").children[0];
+        this.usrs_panel = this.msgs_panel.nextElementSibling;
         this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
+        this.isMobile = false;
+        this.usrs_panel_open = true;
+    }
+    init() {
+        this.config_mobile();
+    }
+    ingroup_resize() {
+        this.config_mobile();
+    }
+    config_mobile() {
+        if (this.isMobile && window.innerWidth > 900) {
+            this.usrs_open();
+            this.isMobile = false;
+        }
+        else if (!this.isMobile && window.innerWidth <= 900) {
+            this.usrs_close();
+            this.isMobile = true;
+        }
+    }
+    usrs_close() {
+        if (this.usrs_panel_open) {
+            this.usrs_panel_open = false;
+            this.usrs_panel.style.transform = `translateX(-${this.usrs_panel.offsetWidth}px)`;
+        }
+    }
+    usrs_open() {
+        if (!this.usrs_panel_open) {
+            this.usrs_panel_open = true;
+            this.usrs_panel.style.transform = `translateX(0)`;
+        }
     }
 }
 
@@ -997,7 +1028,14 @@ class app_class {
         };
     }
     on_resize() {
-        this.groups.groups_resize();
+        switch (this.page) {
+            case 'groups':
+                this.groups.groups_resize();
+                break;
+            case 'ingroup':
+                this.groupin.ingroup_resize();
+                break;
+        }
     }
     wait() {
         document.getElementById('wait').style.visibility = 'visible';
@@ -1029,6 +1067,7 @@ class app_class {
                 break;
             case 'ingroup':
                 this.groupin.connection.start().then(() => {
+                    this.groupin.init();
                     document.body.children[2].style.display = 'block';
                     this.hide('ingroup');
                 });

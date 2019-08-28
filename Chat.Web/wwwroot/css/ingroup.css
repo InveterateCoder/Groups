@@ -9,3 +9,21 @@
     background-color: #E8E8E8;
     /*font-family: 'Allura', cursive;*/
 }
+#ingroup > div:first-child {
+    position:absolute;
+    left:300px;
+    right:0;
+    top:0;
+    bottom:0;
+    transition:left .4s;
+}
+#ingroup > div:nth-child(2) {
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:80%;
+    max-width:300px;
+    transition:transform .4s;
+    border-right:2px solid gray;
+}

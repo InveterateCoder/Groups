@@ -68,3 +68,29 @@ body {
 #message > div > p {
     word-wrap:break-word;
 }
+
+@media screen and (max-width: 900px) {
+    #groups > nav > div:first-child {
+        display: none;
+    }
+    #groups > nav > div:nth-child(3) > div:first-child {
+        display: none;
+    }
+    #groups > nav > div:nth-child(3) {
+        width: auto;
+        margin-left: 20px;
+    }
+    #groups > nav > input {
+        max-width: 275px;
+        width: 100%;
+    }
+    #ingroup > div:first-child {
+        left: 0 !important;
+    }
+}
+
+@media screen and (min-width: 901px) {
+    #hmbrgr {
+        display: none;
+    }
+}
