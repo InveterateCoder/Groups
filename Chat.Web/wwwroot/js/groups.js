@@ -967,7 +967,10 @@ class groups_class {
 class ingroup_class {
     constructor() {
         this.msgs_panel = document.getElementById("ingroup").children[0];
+        this.msgs_panel.addEventListener("click", () => app.groupin.usrs_close(), true);
         this.usrs_panel = this.msgs_panel.nextElementSibling;
+        this.open_btn = this.msgs_panel.firstElementChild.firstElementChild;
+        this.close_btn = this.usrs_panel.firstElementChild.children[1];
         this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
         this.isMobile = false;
         this.usrs_panel_open = true;
@@ -977,21 +980,27 @@ class ingroup_class {
     }
     ingroup_resize() {
         this.config_mobile();
+        this.usrs_close();
     }
     config_mobile() {
         if (this.isMobile && window.innerWidth > 900) {
-            this.usrs_open();
             this.isMobile = false;
+            this.usrs_open();
+            this.open_btn.style.display = this.close_btn.style.display = "none"
+            this.open_btn.style.opacity = this.close_btn.style.opacity = "0";
         }
         else if (!this.isMobile && window.innerWidth <= 900) {
-            this.usrs_close();
             this.isMobile = true;
+            this.usrs_close();
+            this.open_btn.style.display = this.close_btn.style.display = "block"
+            this.open_btn.style.opacity = "1";
+            setTimeout(() => this.close_btn.style.opacity = "1", 400);
         }
     }
     usrs_close() {
-        if (this.usrs_panel_open) {
+        if (this.isMobile && this.usrs_panel_open) {
             this.usrs_panel_open = false;
-            this.usrs_panel.style.transform = `translateX(-${this.usrs_panel.offsetWidth}px)`;
+            this.usrs_panel.style.transform = `translateX(-${this.usrs_panel.offsetWidth || 300}px)`;
         }
     }
     usrs_open() {

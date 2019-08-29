@@ -24,23 +24,26 @@
     width:80%;
     max-width:300px;
     transition:transform .4s;
-    border-right:1px solid gray;
+    border-right:1px solid silver;
+    background-image:url(/images/email-pattern.png);
 }
 #ingroup > div > nav {
     height:40px;
-    border-top:1px solid gray;
-    border-bottom:1px solid gray;
+    border-top:1px solid silver;
+    border-bottom:1px solid silver;
     display:flex;
     align-items:center;
 }
-#ingroup > div:first-child > nav > img {
+#ingroup > div > nav > img {
+    display:none;
     height:100%;
     cursor:pointer;
+    opacity:0;
+}
+#ingroup > div:first-child > nav > img {
     padding:4px 4px 4px 0;
 }
 #ingroup > div:nth-child(2) > nav > img {
-    height:100%;
-    cursor:pointer;
     padding:4px 0 4px 4px;
     margin-left:-20px;
 }
