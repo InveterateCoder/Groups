@@ -1,12 +1,11 @@
-﻿
-#ingroup {
+﻿#ingroup {
     position: fixed;
     left: 0;
     right: 0;
     top: 0;
     bottom: 0;
     font-family: 'Patrick Hand', cursive;
-    background-color: #E8E8E8;
+    background-image: url(/images/email-pattern.png);
     /*font-family: 'Allura', cursive;*/
 }
 #ingroup > div:first-child {
@@ -25,5 +24,51 @@
     width:80%;
     max-width:300px;
     transition:transform .4s;
-    border-right:2px solid gray;
+    border-right:1px solid gray;
+}
+#ingroup > div > nav {
+    height:40px;
+    border-top:1px solid gray;
+    border-bottom:1px solid gray;
+    display:flex;
+    align-items:center;
+}
+#ingroup > div:first-child > nav > img {
+    height:100%;
+    cursor:pointer;
+    padding:4px 4px 4px 0;
+}
+#ingroup > div:nth-child(2) > nav > img {
+    height:100%;
+    cursor:pointer;
+    padding:4px 0 4px 4px;
+    margin-left:-20px;
+}
+#ingroup > div:first-child > nav > img:hover {
+    padding:0 4px 0 0;
+}
+#ingroup > div:nth-child(2) > nav > img:hover {
+    padding:0 0 0 4px;
+}
+#ingroup > div > nav > img:hover {
+    padding:0 0 0 4px;
+}
+#ingroup > div:first-child > nav > img:active {
+    padding:0 0 0 4px;
+}
+#ingroup > div:nth-child(2) > nav > img:active {
+    padding:0 4px 0 0;
+}
+#ingroup > div:nth-child(2) > nav {
+    justify-content:space-between;
+}
+#ingroup > div:nth-child(2) > nav > input {
+    background-color:#e3e3e3;
+    outline:none;
+    border:1px solid silver;
+    border-radius:15px;
+    padding:3px 8px;
+    width:70%;
+    margin:auto;
+    /*try to change font*/
 }
