@@ -75,6 +75,7 @@
     padding:3px 8px;
     width:70%;
     margin:auto;
+    text-align:center;
     /*try to change font*/
 }
 #ingroup > div:first-child > nav > div:nth-child(2) {
@@ -104,7 +105,7 @@
     position:absolute;
     left:0;
     width:100%;
-    bottom:0;
+    bottom:5px;
     height:40px;
     outline:none;
     border:none;

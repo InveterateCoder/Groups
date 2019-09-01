@@ -331,6 +331,7 @@ class api_class {
             let resp = await this.post("api/groups/sign", request);
             switch (resp) {
                 case "OK":
+                    app.ingroup = request.name;
                     ret.success = true;
                     break;
                 case "already_signed":
