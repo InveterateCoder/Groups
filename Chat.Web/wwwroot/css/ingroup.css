@@ -32,7 +32,9 @@
     border-top:1px solid silver;
     border-bottom:1px solid silver;
     display:flex;
+    justify-content:space-between;
     align-items:center;
+    color:#666666;
 }
 #ingroup > div > nav > img {
     display:none;
@@ -66,7 +68,7 @@
     justify-content:space-between;
 }
 #ingroup > div:nth-child(2) > nav > input {
-    background-color:#e3e3e3;
+    background-color:#e6e6e6;
     outline:none;
     border:1px solid silver;
     border-radius:15px;
@@ -74,4 +76,45 @@
     width:70%;
     margin:auto;
     /*try to change font*/
+}
+#ingroup > div:first-child > nav > div:nth-child(2) {
+    width:40%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    margin-left:15px;
+    font-size:23px;
+}
+#ingroup > div:first-child > nav > div:nth-child(3) {
+    margin-right:13px;
+    cursor:pointer;
+    padding:0 7px 3px 7px;
+    outline:thin solid #666666;
+    font-size:17px;
+}
+#ingroup > div:first-child > nav > div:nth-child(3):hover {
+    background-color:#666666;
+    color:#f4f4f4;
+    box-shadow:0 0 5px #666666;
+    outline:thin solid #f4f4f4;
+}
+#ingroup > div:first-child > nav > div:nth-child(3):active {
+    transform:scale(0.967);
+}
+#ingroup > div:first-child > input {
+    position:absolute;
+    left:0;
+    width:100%;
+    bottom:0;
+    height:40px;
+    outline:none;
+    border:none;
+    border-top:thin solid silver;
+    background-color:#f4f4f4;
+    padding:0 15px;
+}
+#ingroup > div:first-child > div:nth-child(2) {
+    height:100%;
+    padding:15px;
+    overflow:auto;
+    word-break:break-word;
 }

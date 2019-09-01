@@ -1077,6 +1077,8 @@ class app_class {
             case 'ingroup':
                 this.groupin.connection.start().then(() => {
                     this.groupin.init();
+                    this.groupin.open_btn.nextElementSibling.textContent = this.ingroup;
+                    this.groupin.open_btn.nextElementSibling.title = 'In Group: ' + this.ingroup;
                     document.body.children[2].style.display = 'block';
                     this.hide('ingroup');
                 });

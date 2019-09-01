@@ -87,6 +87,9 @@ body {
     #ingroup > div:first-child {
         left: 0 !important;
     }
+    #ingroup > div:first-child > nav > div:nth-child(2) {
+        text-align: center;
+    }
 }
 
 @media screen and (min-width: 901px) {
