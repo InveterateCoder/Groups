@@ -34,7 +34,6 @@
     display:flex;
     justify-content:space-between;
     align-items:center;
-    color:#666666;
 }
 #ingroup > div > nav > img {
     display:none;
@@ -76,7 +75,9 @@
     width:70%;
     margin:auto;
     text-align:center;
-    /*try to change font*/
+}
+#ingroup > div:nth-child(2) > nav > input:focus {
+    background-color:white;
 }
 #ingroup > div:first-child > nav > div:nth-child(2) {
     width:40%;
@@ -105,7 +106,7 @@
     position:absolute;
     left:0;
     width:100%;
-    bottom:5px;
+    bottom:0;
     height:40px;
     outline:none;
     border:none;
@@ -113,9 +114,91 @@
     background-color:#f4f4f4;
     padding:0 15px;
 }
+#ingroup > div:first-child > input:focus {
+    background-color:white;
+}
 #ingroup > div:first-child > div:nth-child(2) {
     height:100%;
     padding:15px;
     overflow:auto;
     word-break:break-word;
+}
+#ingroup > div:nth-child(2) > div:nth-child(2) {
+    position:absolute;
+    top:40px;
+    left:0;
+    right:0;
+    height:40px;
+    padding:6px 20px 0 20px;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    color:#666666;
+    font-size:18px;
+}
+#ingroup > div:nth-child(2) > div:nth-child(3) {
+    position:absolute;
+    top:80px;
+    left:0;
+    right:0;
+    height:40px;
+    display:flex;
+    justify-content:space-around;
+    align-items:start;
+    padding-top:5px;
+    border-bottom:thin solid silver;
+}
+#ingroup > div:nth-child(2) > div:nth-child(3) > img {
+    height:20px;
+    width:auto;
+    cursor:pointer;
+    opacity:0.6;
+}
+#ingroup > div:nth-child(2) > div:nth-child(3) > img:hover:not(.disabled) {
+    opacity:1;
+    transform:scale(1.1);
+}
+#ingroup > div:nth-child(2) > div:nth-child(3) > img:active:not(.disabled) {
+    transform:scale(0.9);
+}
+#ingroup > div:nth-child(2) > div:nth-child(3) > img.disabled {
+    opacity:0.3;
+    cursor:default;
+}
+#ingroup > div:nth-child(2) > div:nth-child(4) {
+    position:absolute;
+    top:120px;
+    bottom:0;
+    right:0;
+    left:0;
+    overflow:auto;
+    word-break:break-all;
+    font-size:20px;
+}
+#ingroup > div:nth-child(2) > div:nth-child(4) > div:nth-child(2) {
+    text-align:center;
+    margin:40px 0;
+    color:#666666;
+}
+#online_usrs {
+    color:black;
+}
+#offline_usrs {
+    color:silver;
+}
+#online_usrs > div, #offline_usrs > div {
+    padding:6px 20px;
+    border-radius:5px;
+    margin:0 5px;
+}
+#online_usrs > div:hover:not(.selected), #online_usrs > div.selected {
+    background-color:silver;
+    text-shadow:0 0 7px white;
+    text-align:center;
+}
+#offline_usrs > div:hover:not(.selected), #offline_usrs > div.selected {
+    background-color:silver;
+    color:gray;
+    text-align:center;
 }

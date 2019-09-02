@@ -268,16 +268,48 @@
             <nav>
                 <img src="~/images/slide_right.svg" draggable="false" onclick="app.groupin.usrs_open()" />
                 <div></div>
-                <div>Sign Out</div>
+                <div title="Sign out back to group selection">Sign Out</div>
             </nav>
             <div></div>
-            <input type="text" placeholder="Type a message..." />
+            <input type="text" placeholder="Type a message..." title="Press Enter to send the message" />
         </div>
         <div>
             <nav>
                 <input type="password" maxlength="64" tabindex="-1" placeholder="Secret Word or Phrase" title="The content will be used to encrypt and decrypt traffic" />
                 <img src="~/images/slide_left.svg" draggable="false" onclick="app.groupin.usrs_close()" />
             </nav>
+            <div>
+                Enjoy chatting
+            </div>
+            <div>
+                <img src="~/images/clear_select.svg" draggable="false" class="disabled" />
+                <img src="~/images/group.svg" draggable="false" class="disabled" />
+                <img src="~/images/notify.svg" draggable="false" class="disabled" />
+            </div>
+            <div>
+                <div id="online_usrs">
+                    <div class="selected">User</div>
+                    <div>User</div>
+                    <div class="selected">User</div>
+                    <div>User</div>
+                    <div>User</div>
+                    <div>User</div>
+                    <div>User</div>
+                </div>
+                <div>Offline</div>
+                <div id="offline_usrs">
+                    <div>User</div>
+                    <div>User</div>
+                    <div>User</div>
+                    <div>User</div>
+                    <div>User</div>
+                    <div>User</div>
+                    <div>User</div>
+                    <div>User</div>
+                    <div>User</div>
+                    <div>User</div>
+                </div>
+            </div>
         </div>
     </div>
     <div id="wait"></div>
