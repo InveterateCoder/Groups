@@ -6,7 +6,6 @@
     bottom: 0;
     font-family: 'Patrick Hand', cursive;
     background-image: url(/images/email-pattern.png);
-    /*font-family: 'Allura', cursive;*/
 }
 #ingroup > div:first-child {
     position:absolute;
@@ -118,10 +117,53 @@
     background-color:white;
 }
 #ingroup > div:first-child > div:nth-child(2) {
-    height:100%;
-    padding:15px;
+    position:absolute;
+    left:0;
+    top:40px;
+    right:0;
+    bottom:40px;
+    padding:35px 35px 0 35px;
     overflow:auto;
+}
+#ingroup > div:first-child > div:nth-child(2) > div {
+    width:80%;
+    font-size:18px;
+    border:thin solid silver;
+    margin-bottom:35px;
+    border-radius:30px;
+    box-shadow:0 0 10px #666666;
+}
+#ingroup > div:first-child > div:nth-child(2) > div > div:first-child {
+    border-bottom:thin solid silver;
+    border-top-left-radius:30px;
+    border-top-right-radius:30px;
+    padding:10px 20px;
+}
+#ingroup > div:first-child > div:nth-child(2) > div > div:nth-child(2) {
+    background-color:rgba(255,255,255,.5);
+    font-family: 'EB Garamond', serif;
+    border-bottom-left-radius:30px;
+    border-bottom-right-radius:30px;
     word-break:break-word;
+    padding:10px 20px;
+    word-break:break-word;
+    text-align:justify;
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+}
+.msg_rcvd {
+    float:right;
+}
+.msg_sent {
+    clear:both;
+}
+.msg_rcvd > div:first-child {
+    background-color: rgba(250, 205, 205,.5);
+}
+.msg_sent > div:first-child {
+    background-color: rgba(250,235,215,.5);
 }
 #ingroup > div:nth-child(2) > div:nth-child(2) {
     position:absolute;
@@ -189,16 +231,24 @@
 }
 #online_usrs > div, #offline_usrs > div {
     padding:6px 20px;
+    border:thin dashed #666666;
     border-radius:5px;
-    margin:0 5px;
+    margin:3px 5px 5px 5px;
 }
 #online_usrs > div:hover:not(.selected), #online_usrs > div.selected {
-    background-color:silver;
+    background-color:rgba(221,221,221,.7);
     text-shadow:0 0 7px white;
     text-align:center;
+    border:thin solid #666666;
 }
 #offline_usrs > div:hover:not(.selected), #offline_usrs > div.selected {
-    background-color:silver;
+    background-color:rgba(221,221,221,.7);
     color:gray;
     text-align:center;
+    border:thin solid #666666;
+}
+@media only screen and (max-width:600px){
+    #ingroup > div:first-child > div:nth-child(2) > div{
+        width:100%;
+    }
 }
