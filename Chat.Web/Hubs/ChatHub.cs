@@ -29,7 +29,7 @@ namespace Chat.Web.Hubs
         public async override Task OnConnectedAsync()
         {
             var user = GetUser();
-            if (user.InGroup == null || user.ConnectionId != null)
+            if (user.InGroup == null || user.ConnectionId != null) //todo (doesn't work) fix connection individuality
                 Context.Abort();
             else
             {

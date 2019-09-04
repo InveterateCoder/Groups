@@ -106,7 +106,7 @@
     left:0;
     width:100%;
     bottom:0;
-    height:40px;
+    height:50px;
     outline:none;
     border:none;
     border-top:thin solid silver;
@@ -121,29 +121,48 @@
     left:0;
     top:40px;
     right:0;
-    bottom:40px;
+    bottom:50px;
     padding:35px 35px 0 35px;
     overflow:auto;
 }
-#ingroup > div:first-child > div:nth-child(2) > div {
+.msg_rcvd, .msg_sent {
     width:80%;
+    margin-bottom:35px;
+}
+.msg_rcvd {
+    text-align:end;
+}
+.msg_rcvd > div, .msg_sent > div {
+    display:inline-block;
+    min-width:63%;
+}
+.msg_rcvd > div {
+    text-align:start;
+}
+.msg_sent > div {
+    text-align:end;
+}
+.sticker {
     font-size:18px;
     border:thin solid silver;
-    margin-bottom:35px;
-    border-radius:30px;
+    border-radius:20px;
     box-shadow:0 0 10px #666666;
+    display:inline-block;
 }
-#ingroup > div:first-child > div:nth-child(2) > div > div:first-child {
+.sticker > div:first-child {
     border-bottom:thin solid silver;
-    border-top-left-radius:30px;
-    border-top-right-radius:30px;
+    border-top-left-radius:20px;
+    border-top-right-radius:20px;
     padding:10px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
-#ingroup > div:first-child > div:nth-child(2) > div > div:nth-child(2) {
+.sticker > div:nth-child(2) {
     background-color:rgba(255,255,255,.5);
     font-family: 'EB Garamond', serif;
-    border-bottom-left-radius:30px;
-    border-bottom-right-radius:30px;
+    border-bottom-left-radius:20px;
+    border-bottom-right-radius:20px;
     word-break:break-word;
     padding:10px 20px;
     word-break:break-word;
@@ -154,15 +173,16 @@
     -ms-user-select: text;
 }
 .msg_rcvd {
+    clear:both;
     float:right;
 }
 .msg_sent {
     clear:both;
 }
-.msg_rcvd > div:first-child {
+.msg_rcvd .sticker > div:first-child {
     background-color: rgba(250, 205, 205,.5);
 }
-.msg_sent > div:first-child {
+.msg_sent .sticker > div:first-child {
     background-color: rgba(250,235,215,.5);
 }
 #ingroup > div:nth-child(2) > div:nth-child(2) {
@@ -248,7 +268,17 @@
     border:thin solid #666666;
 }
 @media only screen and (max-width:600px){
-    #ingroup > div:first-child > div:nth-child(2) > div{
-        width:100%;
+    #ingroup > div:first-child > div:nth-child(2) {
+        padding: 15px;
+    }
+    .msg_rcvd, .msg_sent {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    .msg_rcvd > div, .msg_sent > div {
+        display:block;
+    }
+    .sticker {
+        display:block;
     }
 }
