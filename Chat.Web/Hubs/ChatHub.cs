@@ -30,7 +30,7 @@ namespace Chat.Web.Hubs
         {
             var user = GetUser();
             if (user.InGroup == null || user.ConnectionId != null) //todo (doesn't work) fix connection individuality
-                Context.Abort();
+                Context.Abort();    //todo implement ip identification too
             else
             {
                 user.ConnectionId = Context.ConnectionId;

@@ -110,11 +110,13 @@
     outline:none;
     border:none;
     border-top:thin solid silver;
-    background-color:#f4f4f4;
+    box-shadow:0 0 7px 2px silver;
+    background-color:transparent;
     padding:0 15px;
 }
 #ingroup > div:first-child > input:focus {
     background-color:white;
+    box-shadow:0 0 7px 2px gray;
 }
 #ingroup > div:first-child > div:nth-child(2) {
     position:absolute;
@@ -124,67 +126,38 @@
     bottom:50px;
     padding:35px 35px 0 35px;
     overflow:auto;
-}
-.msg_rcvd, .msg_sent {
-    width:80%;
-    margin-bottom:35px;
-}
-.msg_rcvd {
-    text-align:end;
-}
-.msg_rcvd > div, .msg_sent > div {
-    display:inline-block;
-    min-width:63%;
-}
-.msg_rcvd > div {
-    text-align:start;
-}
-.msg_sent > div {
-    text-align:end;
-}
-.sticker {
-    font-size:18px;
-    border:thin solid silver;
-    border-radius:20px;
-    box-shadow:0 0 10px #666666;
-    display:inline-block;
-}
-.sticker > div:first-child {
-    border-bottom:thin solid silver;
-    border-top-left-radius:20px;
-    border-top-right-radius:20px;
-    padding:10px 20px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-.sticker > div:nth-child(2) {
-    background-color:rgba(255,255,255,.5);
-    font-family: 'EB Garamond', serif;
-    border-bottom-left-radius:20px;
-    border-bottom-right-radius:20px;
-    word-break:break-word;
-    padding:10px 20px;
-    word-break:break-word;
-    text-align:justify;
-    user-select: text;
+     user-select: text;
     -webkit-user-select: text;
     -moz-user-select: text;
     -ms-user-select: text;
 }
-.msg_rcvd {
-    clear:both;
-    float:right;
+
+.message {
+    border: thin solid gray;
+    box-shadow:0 0 10px 3px silver;
+    margin-bottom:35px;
 }
-.msg_sent {
-    clear:both;
+.message > div:first-child {
+    max-width:850px;
+    float:left;
+    background-color:rgba(221,221,221,.4);
+    padding:2px 10px;
+    margin:10px 10px 0 10px;
+    border-radius:9px;
+    font-size:17px;
+    box-shadow:0 0 3px 1px gray;
 }
-.msg_rcvd .sticker > div:first-child {
-    background-color: rgba(250, 205, 205,.5);
+.message > div:nth-child(2) {
+    background-color:rgba(255,255,255,.4);
+    padding:10px;
+    font-family: 'EB Garamond', serif;
+    font-size:18px;
 }
-.msg_sent .sticker > div:first-child {
-    background-color: rgba(250,235,215,.5);
+.message > div:nth-child(2):first-line {
+    line-height:1.6;
 }
+
+
 #ingroup > div:nth-child(2) > div:nth-child(2) {
     position:absolute;
     top:40px;
@@ -268,17 +241,21 @@
     border:thin solid #666666;
 }
 @media only screen and (max-width:600px){
-    #ingroup > div:first-child > div:nth-child(2) {
-        padding: 15px;
+    #ingroup > div:first-child > div:nth-child(2){
+        padding:15px;
     }
-    .msg_rcvd, .msg_sent {
+    .message {
+        margin-bottom:15px;
+    }
+    .message > div:first-child {
         width: 100%;
-        margin-bottom: 15px;
+        padding: 10px;
+        margin: 0;
+        border-radius: unset;
+        box-shadow:none;
+        border-bottom:thin solid gray;
     }
-    .msg_rcvd > div, .msg_sent > div {
-        display:block;
-    }
-    .sticker {
-        display:block;
+    .message > div:nth-child(2):first-line {
+        line-height: unset;
     }
 }
