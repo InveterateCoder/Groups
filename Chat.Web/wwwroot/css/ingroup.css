@@ -131,7 +131,6 @@
     -moz-user-select: text;
     -ms-user-select: text;
 }
-
 .message {
     border: thin solid gray;
     box-shadow:0 0 10px 3px silver;
@@ -196,8 +195,6 @@
 .message > div:nth-child(2):first-line {
     line-height:1.6;
 }
-
-
 #ingroup > div:nth-child(2) > div:nth-child(2) {
     position:absolute;
     top:40px;
