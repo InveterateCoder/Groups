@@ -355,6 +355,26 @@ class api_class {
             return false;
         }
     }
+    async grp_singout() {
+        let ret = false;
+        try {
+            let resp = await this.post("api/groups/sign/out");
+            switch (resp) {
+                case "OK":
+                case "not_signed":
+                    app.ingroup = null;
+                    ret = true;
+                    break;
+                default:
+                    app.alert(resp);
+            }
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
     async post(addr, obj) {
         app.wait();
         let ret;
@@ -975,6 +995,13 @@ class ingroup_class {
         this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
         this.isMobile = false;
         this.usrs_panel_open = true;
+        this.offl_usr = null;
+        this.onl_usrs = new Set();
+        this.btn_swtch = this.usrs_panel.children[2].firstElementChild;
+        this.btn_notif = this.btn_swtch.nextElementSibling;
+        this.is_cleared = false;
+        this.onl_usr_panel = this.usrs_panel.children[3].firstElementChild;
+        this.ofl_usr_panel = this.usrs_panel.children[3].children[2];
     }
     init() {
         this.config_mobile();
@@ -1008,6 +1035,74 @@ class ingroup_class {
         if (!this.usrs_panel_open) {
             this.usrs_panel_open = true;
             this.usrs_panel.style.transform = `translateX(0)`;
+        }
+    }
+    signout() {
+        app.api.grp_singout().then(ret => {
+            if (ret) {
+                app.goto('groups');
+            }
+        });
+    }
+    offl_usr_select(el) {
+        if (this.offl_usr == null) {
+            this.offl_usr = el;
+            el.classList.add("selected");
+            this.btn_notif.classList.remove("disabled");
+        }
+        else {
+            if (this.offl_usr == el) {
+                this.offl_usr = null;
+                el.classList.remove("selected");
+                this.btn_notif.classList.add("disabled");
+            }
+            else {
+                this.offl_usr.classList.remove("selected");
+                this.offl_usr = el;
+                el.classList.add("selected");
+            }
+        }
+    }
+    onl_usr_select(el) {
+        if (this.is_cleared) {
+            this.onl_usrs.clear();
+            this.btn_swtch.firstElementChild.src = "/images/cancel_sel.svg";
+            this.onl_usrs.add(el);
+            el.classList.add("selected");
+            this.is_cleared = false;
+        }
+        else if (this.onl_usrs.has(el)) {
+            this.onl_usrs.delete(el);
+            el.classList.remove("selected");
+            if (this.onl_usrs.size == 0)
+                this.btn_swtch.classList.add("disabled");
+        }
+        else {
+            if (this.onl_usrs.size == 0)
+                this.btn_swtch.classList.remove("disabled");
+            if (this.onl_usr_panel.children.length == this.onl_usrs.size + 1) {
+                this.onl_usrs.forEach(el => el.classList.remove("selected"));
+                this.onl_usrs.clear();
+                this.btn_swtch.classList.add("disabled");
+            }
+            else {
+                this.onl_usrs.add(el);
+                el.classList.add("selected");
+            }
+        }
+    }
+    switch_click() {
+        if (this.onl_usrs.size != 0) {
+            if (this.is_cleared) {
+                this.onl_usrs.forEach(el => el.classList.add("selected"));
+                this.is_cleared = false;
+                this.btn_swtch.firstElementChild.src = "/images/cancel_sel.svg";
+            }
+            else {
+                this.onl_usrs.forEach(el => el.classList.remove("selected"));
+                this.is_cleared = true;
+                this.btn_swtch.firstElementChild.src = "/images/selective.svg";
+            }
         }
     }
 }

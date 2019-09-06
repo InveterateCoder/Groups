@@ -40,6 +40,7 @@ namespace Chat.Web.Hubs
         }
         public async override Task OnDisconnectedAsync(Exception exception)
         {
+            //todo inform group about this peer's disconnection, check whether signed out or lost connection
             var user = GetUser();
             user.ConnectionId = null;
             await user.SaveAsync();

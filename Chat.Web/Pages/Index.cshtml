@@ -268,7 +268,7 @@
             <nav>
                 <img src="~/images/slide_right.svg" draggable="false" onclick="app.groupin.usrs_open()" />
                 <div></div>
-                <div title="Sign out back to group selection">Sign Out</div>
+                <div title="Sign out back to group selection" onclick="app.groupin.signout()">Sign Out</div>
             </nav>
             <div>
                 <div class="message">
@@ -303,32 +303,35 @@
                 Enjoy chatting
             </div>
             <div>
-                <img src="~/images/clear_select.svg" draggable="false" class="disabled" />
-                <img src="~/images/group.svg" draggable="false" class="disabled" />
-                <img src="~/images/notify.svg" draggable="false" class="disabled" />
+                <div onclick="app.groupin.switch_click()" class="disabled">
+                    <img src="~/images/cancel_sel.svg" draggable="false" />
+                </div>
+                <div class="disabled">
+                    <img src="~/images/notify.svg" draggable="false" />
+                </div>
             </div>
             <div>
                 <div id="online_usrs">
-                    <div>User</div>
-                    <div>User</div>
-                    <div class="selected">User</div>
-                    <div>User</div>
-                    <div>User</div>
-                    <div>User</div>
-                    <div>User</div>
+                    <div onclick="app.groupin.onl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.onl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.onl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.onl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.onl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.onl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.onl_usr_select(this)">User</div>
                 </div>
                 <div>Offline</div>
                 <div id="offline_usrs">
-                    <div>User</div>
-                    <div>User</div>
-                    <div>User</div>
-                    <div>User</div>
-                    <div>User</div>
-                    <div>User</div>
-                    <div>User</div>
-                    <div>User</div>
-                    <div>User</div>
-                    <div>User</div>
+                    <div onclick="app.groupin.offl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.offl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.offl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.offl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.offl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.offl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.offl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.offl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.offl_usr_select(this)">User</div>
+                    <div onclick="app.groupin.offl_usr_select(this)">User</div>
                 </div>
             </div>
         </div>
