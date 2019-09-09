@@ -989,6 +989,7 @@ class ingroup_class {
     constructor() {
         this.msgs_panel = document.getElementById("ingroup").children[0];
         this.msgs_panel.addEventListener("click", () => app.groupin.usrs_close(), true);
+        this.msgs_cont = this.msgs_panel.children[1];
         this.usrs_panel = this.msgs_panel.nextElementSibling;
         this.open_btn = this.msgs_panel.firstElementChild.firstElementChild;
         this.close_btn = this.usrs_panel.firstElementChild.children[1];
@@ -1005,6 +1006,20 @@ class ingroup_class {
     }
     init() {
         this.config_mobile();
+    }
+    leave() {
+        this.offl_usr = null;
+        this.onl_usrs.clear();
+        this.is_cleared = false;
+        while (this.onl_usr_panel.firstElementChild)
+            this.onl_usr_panel.firstElementChild.remove();
+        while (this.ofl_usr_panel.firstElementChild)
+            this.ofl_usr_panel.firstElementChild.remove();
+        while (this.msgs_cont.firstElementChild)
+            this.msgs_cont.firstElementChild.remove();
+        this.btn_swtch.firstElementChild.src = "/images/cancel_sel.svg";
+        this.btn_swtch.classList.add("disabled");
+        this.btn_notif.classList.add("disabled");
     }
     ingroup_resize() {
         this.config_mobile();
@@ -1196,6 +1211,7 @@ class app_class {
             case 'ingroup':
                 this.groupin.connection.stop().then(() => {
                     document.body.children[2].style.display = 'none';
+                    this.groupin.leave();
                 });
                 break;
         }
