@@ -1003,6 +1003,7 @@ class ingroup_class {
         this.is_cleared = false;
         this.onl_usr_panel = this.usrs_panel.children[3].firstElementChild;
         this.ofl_usr_panel = this.usrs_panel.children[3].children[2];
+        this.timeoutHandle = null;
     }
     init() {
         this.config_mobile();
@@ -1058,6 +1059,16 @@ class ingroup_class {
                 app.goto('groups');
             }
         });
+    }
+    display_msg(txt) {
+        clearTimeout(this.timeoutHandle);
+        let disp = this.usrs_panel.children[1];
+        disp.textContent = txt;
+        disp.classList.add("inform");
+        this.timeoutHandle = setTimeout(() => {
+            disp.textContent = "Enjoy chatting";
+            disp.classList.remove("inform");
+        }, 5000);
     }
     offl_usr_select(el) {
         if (this.offl_usr == null) {

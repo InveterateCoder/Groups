@@ -76,10 +76,14 @@
     text-align:center;
 }
 #ingroup > div:nth-child(2) > nav > input:focus {
+    background-color:white;
     text-align:start;
 }
-#ingroup > div:nth-child(2) > nav > input:focus {
+#ingroup > div:nth-child(2) .inform {
+    color:black !important;
     background-color:white;
+    font-size:17px !important;
+    box-shadow:0 0 4px 1px black;
 }
 #ingroup > div:first-child > nav > div:nth-child(2) {
     width:40%;
