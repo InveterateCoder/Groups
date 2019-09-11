@@ -79,12 +79,6 @@
     background-color:white;
     text-align:start;
 }
-#ingroup > div:nth-child(2) .inform {
-    color:black !important;
-    background-color:white;
-    font-size:17px !important;
-    box-shadow:0 0 4px 1px black;
-}
 #ingroup > div:first-child > nav > div:nth-child(2) {
     width:40%;
     overflow:hidden;
@@ -214,8 +208,8 @@
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    color:#666666;
-    font-size:18px;
+    font-size:19px;
+    text-decoration:underline;
 }
 #ingroup > div:nth-child(2) > div:nth-child(3) {
     position:absolute;

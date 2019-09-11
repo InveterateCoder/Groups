@@ -122,6 +122,7 @@ class api_class {
                     break;
                 case "name_exists":
                     app.alert("The name is already taken, choose another one");
+                    break;
                 case "no_change_requested":
                     app.alert("Empty request");
                     break;
@@ -369,6 +370,15 @@ class api_class {
                     app.alert(resp);
             }
             return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
+    async get_members() {
+        try {
+            return await this.get("api/groups/members");
         }
         catch (err) {
             app.alert(err.message);
@@ -994,6 +1004,9 @@ class ingroup_class {
         this.open_btn = this.msgs_panel.firstElementChild.firstElementChild;
         this.close_btn = this.usrs_panel.firstElementChild.children[1];
         this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
+        this.connection.on("signed_out", name => this.member_signout(name));
+        this.connection.on("go_off", name => this.usr_switch_off(name));
+        this.connection.on("go_on", name => this.usr_joined(name));
         this.isMobile = false;
         this.usrs_panel_open = true;
         this.offl_usr = null;
@@ -1003,10 +1016,30 @@ class ingroup_class {
         this.is_cleared = false;
         this.onl_usr_panel = this.usrs_panel.children[3].firstElementChild;
         this.ofl_usr_panel = this.usrs_panel.children[3].children[2];
-        this.timeoutHandle = null;
+        this.arr_onl_usrs = null;
+        this.arr_ofl_usrs = null;
+        this.signingout = false;
     }
     init() {
         this.config_mobile();
+        app.api.get_members().then(ret => {
+            if (!Array.isArray(ret.online) || !Array.isArray(ret.offline)) {
+                this.signout();
+                app.alert("Something went terribly wrong: " + ret);
+            }
+            else {
+                this.usrs_panel.children[1].textContent = app.name;
+                this.arr_onl_usrs = ret.online;
+                this.arr_ofl_usrs = ret.offline;
+                this.arr_onl_usrs.splice(this.arr_onl_usrs.indexOf(app.name), 1);
+                this.arr_onl_usrs.sort();
+                this.arr_onl_usrs.forEach(name => this.onl_usr_panel.appendChild(this.create_name(name, true)));
+                this.arr_ofl_usrs.sort();
+                this.arr_ofl_usrs.forEach(name => {
+                    this.ofl_usr_panel.appendChild(this.create_name(name, false));
+                });
+            }
+        });
     }
     leave() {
         this.offl_usr = null;
@@ -1056,19 +1089,12 @@ class ingroup_class {
     signout() {
         app.api.grp_singout().then(ret => {
             if (ret) {
-                app.goto('groups');
+                this.connection.invoke("SignOut").then(() => app.goto('groups')).catch(err => {
+                    app.goto('groups');
+                    app.alert(err.message);
+                });
             }
         });
-    }
-    display_msg(txt) {
-        clearTimeout(this.timeoutHandle);
-        let disp = this.usrs_panel.children[1];
-        disp.textContent = txt;
-        disp.classList.add("inform");
-        this.timeoutHandle = setTimeout(() => {
-            disp.textContent = "Enjoy chatting";
-            disp.classList.remove("inform");
-        }, 5000);
     }
     offl_usr_select(el) {
         if (this.offl_usr == null) {
@@ -1100,21 +1126,16 @@ class ingroup_class {
         else if (this.onl_usrs.has(el)) {
             this.onl_usrs.delete(el);
             el.classList.remove("selected");
-            if (this.onl_usrs.size == 0)
+            if (this.onl_usrs.size == 0) {
                 this.btn_swtch.classList.add("disabled");
+            }
         }
         else {
-            if (this.onl_usrs.size == 0)
+            if (this.onl_usrs.size == 0) {
                 this.btn_swtch.classList.remove("disabled");
-            if (this.onl_usr_panel.children.length == this.onl_usrs.size + 1) {
-                this.onl_usrs.forEach(el => el.classList.remove("selected"));
-                this.onl_usrs.clear();
-                this.btn_swtch.classList.add("disabled");
             }
-            else {
-                this.onl_usrs.add(el);
-                el.classList.add("selected");
-            }
+            this.onl_usrs.add(el);
+            el.classList.add("selected");
         }
     }
     switch_click() {
@@ -1130,6 +1151,72 @@ class ingroup_class {
                 this.btn_swtch.firstElementChild.src = "/images/selective.svg";
             }
         }
+    }
+    create_name(name, online) {
+        let div = document.createElement("div");
+        div.textContent = name;
+        div.setAttribute("onclick", online ? "app.groupin.onl_usr_select(this)" : "app.groupin.offl_usr_select(this)");
+        return div;
+    }
+    usr_joined(member) {
+        let index = this.arr_onl_usrs.indexOf(member);
+        if (index > -1)
+            return;
+        index = this.arr_ofl_usrs.indexOf(member);
+        if (index > -1) {
+            if (this.offl_usr && member == this.offl_usr.textContent) {
+                this.offl_usr = null;
+                this.btn_notif.classList.add("disabled");
+            }
+            this.arr_ofl_usrs.splice(index, 1);
+            this.ofl_usr_panel.children[index].remove();
+        }
+        this.arr_onl_usrs.push(member);
+        this.arr_onl_usrs.sort(function (a, b) {
+            if (a.toLowerCase() < b.toLowerCase()) return -1;
+            if (a.toLowerCase() > b.toLowerCase()) return 1;
+            return 0;
+        });
+        index = this.arr_onl_usrs.indexOf(member);
+        this.onl_usr_panel.insertBefore(this.create_name(member, true), this.onl_usr_panel.children[index]);
+    }
+    usr_switch_off(member) {
+        if (this.signingout) {
+            this.signingout = false;
+            return;
+        }
+        let index = this.arr_onl_usrs.indexOf(member);
+        this.arr_onl_usrs.splice(index, 1);
+        this.remove_el(this.onl_usr_panel.children[index]);
+        this.arr_ofl_usrs.push(member);
+        this.arr_ofl_usrs.sort(function (a, b) {
+            if (a.toLowerCase() < b.toLowerCase()) return -1;
+            if (a.toLowerCase() > b.toLowerCase()) return 1;
+            return 0;
+        });
+        index = this.arr_ofl_usrs.indexOf(member);
+        this.ofl_usr_panel.insertBefore(this.create_name(member, false), this.ofl_usr_panel.children[index]);
+    }
+    member_signout(member) {
+        let index = this.arr_onl_usrs.indexOf(member);
+        if (index > -1) {
+            this.arr_onl_usrs.splice(index, 1);
+            this.remove_el(this.onl_usr_panel.children[index]);
+        }
+        this.signingout = true;
+    }
+    remove_el(el) {
+        if (this.onl_usrs.has(el)) {
+            if (this.onl_usrs.size == 1) {
+                this.is_cleared = false;
+                this.btn_swtch.firstElementChild.src = "/images/cancel_sel.svg";
+                this.btn_swtch.classList.add("disabled");
+                this.onl_usrs.clear();
+            }
+            else
+                this.onl_usrs.delete(el);
+        }
+        el.remove();
     }
 }
 
@@ -1218,6 +1305,8 @@ class app_class {
                 break;
             case 'groups':
                 document.body.children[1].style.display = 'none';
+                this.groups.groups_window.children[2].children[1].value = null;
+                this.groups.query = '';
                 break;
             case 'ingroup':
                 this.groupin.connection.stop().then(() => {

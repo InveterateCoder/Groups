@@ -17,14 +17,15 @@ namespace Chat.Web.Hubs
             if (user == null)
             {
                 Context.Abort();
-                throw new HubException("User wasn not identified");
+                throw new HubException("User was not identified");
             }
             return user;
         }
-        public async Task Test(string message)
+        public async Task SignOut()
         {
             var user = GetUser();
-            await Clients.Group(user.InGroup).SendAsync("test", Context.ConnectionId);
+            await Clients.OthersInGroup(user.InGroup).SendAsync("signed_out", user.Name);
+            await Groups.RemoveFromGroupAsync(user.ConnectionId, user.InGroup);
         }
         public async override Task OnConnectedAsync()
         {
@@ -36,12 +37,18 @@ namespace Chat.Web.Hubs
                 user.ConnectionId = Context.ConnectionId;
                 await user.SaveAsync();
                 await Groups.AddToGroupAsync(Context.ConnectionId, user.InGroup);
+                await Clients.OthersInGroup(user.InGroup).SendAsync("go_on", user.Name);
             }
         }
         public async override Task OnDisconnectedAsync(Exception exception)
         {
             //todo inform group about this peer's disconnection, check whether signed out or lost connection
             var user = GetUser();
+            if (user.InGroup != null)
+            {
+                await Clients.OthersInGroup(user.InGroup).SendAsync("go_off", user.Name);
+                await Groups.RemoveFromGroupAsync(user.ConnectionId, user.InGroup);
+            }
             user.ConnectionId = null;
             await user.SaveAsync();
             await base.OnDisconnectedAsync(exception);

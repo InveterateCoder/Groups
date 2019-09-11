@@ -18,10 +18,7 @@ namespace Chat.Console
     {
         static void Main(string[] args)
         {
-            string[] arr = { "hello", "this", "me", "time", "Timeless", "creep", "Cardholder", "apple", "Cartoon", "boom", "Vietnam", "Bottom", "cartoon" };
-            foreach(var i in arr.OrderBy(o => o, StringComparer.OrdinalIgnoreCase)){
-                console.WriteLine(i);
-            }
+            console.WriteLine("Firefox"=="Firefox");
         }
     }
 }

@@ -39,20 +39,15 @@ namespace Chat.Web.Controllers
                 return new JsonResult(e.Message);
             }
         }
-        [HttpGet("members/{start:int:min(0)}/{quantity:int:range(1,100)?}")]
-        public JsonResult GroupMembers(int start, int quantity)
+        [HttpGet("members")]
+        public JsonResult GroupMembers()
         {
             try
             {
-                var members = _user.Chatterers.Where(c => c.InGroup == _user.InGroup).Select(c => c.Name);
-                var membersCount = members.Count();
-                if (membersCount <= start)
-                    return new JsonResult(0);
-                if (quantity == 0)
-                    return new JsonResult(membersCount - start);
-                if (start + quantity > membersCount)
-                    quantity = membersCount - start;
-                return new JsonResult(members.OrderBy(o => o, StringComparer.OrdinalIgnoreCase).TakeLast(membersCount - start).Take(quantity));
+                var members = _user.Chatterers.Where(c => c.InGroup == _user.InGroup);
+                var onl = members.Where(c => c.ConnectionId != null).Select(c => c.Name).ToArray();
+                var ofl = members.Where(c => c.ConnectionId == null).Select(c => c.Name).ToArray();
+                return new JsonResult(new { online = onl, offline = ofl });
             }
             catch(Exception e)
             {
