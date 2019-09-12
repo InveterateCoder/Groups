@@ -273,7 +273,7 @@
             <div>
                 <div class="message">
                     <div>
-                        <img src="~/images/message.svg" title="Reply" draggable="false" />
+                        <img src="~/images/message.svg" draggable="false" />
                         <div>09-05/11:24</div>
                         <div>Public</div>
                         <div>John John</div>
@@ -284,16 +284,20 @@
                 </div>
                 <div class="message">
                     <div>
-                        <img src="~/images/reply.svg" title="Reply" draggable="false" class="reply" />
+                        <img src="~/images/reply.svg" draggable="false" class="reply" />
                         <div>09-05/11:24</div>
                         <div>Secret</div>
                         <div>Arthur Grigoryan</div>
                     </div>
                     <div>hi</div>
+                    <ul>
+                        <li>Firefox</li>
+                        <li>Ms Edge</li>
+                    </ul>
                 </div>
                 <div class="message">
                     <div>
-                        <img src="~/images/message.svg" title="Reply" draggable="false" />
+                        <img src="~/images/message.svg" draggable="false" />
                         <div>09-05/11:24</div>
                         <div>Public</div>
                         <div>John John</div>
@@ -303,7 +307,7 @@
                     </div>
                 </div>
             </div>
-            <input type="text" placeholder="Type a message..." title="Press Enter to send the message" />
+            <input type="text" placeholder="Type a message..." title="Press Enter to send the message" onkeypress="app.groupin.onkey_input(event, this)" />
         </div>
         <div>
             <nav>

@@ -197,6 +197,9 @@
 .message > div:nth-child(2):first-line {
     line-height:1.6;
 }
+.message > ul {
+    display:none;
+}
 #ingroup > div:nth-child(2) > div:nth-child(2) {
     position:absolute;
     top:40px;

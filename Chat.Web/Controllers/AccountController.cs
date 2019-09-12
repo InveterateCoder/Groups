@@ -271,7 +271,7 @@ namespace Chat.Web.Controllers
             return Content(ret, "text/plain");
         }
         [HttpGet("user/info")]
-        public JsonResult Info() => new JsonResult(new { name = _user.Name, group = _user.Group, ingroup = _user.InGroup });
+        public async Task<JsonResult> Info() => new JsonResult(new { name = _user.Name, group = _user.Group, ingroup = (await _user.Chatterers.FindAsync(_user.InGroupId))?.Group });
         [HttpPost("user/signout")]
         public async Task<ContentResult> SignOut()
         {
@@ -279,7 +279,7 @@ namespace Chat.Web.Controllers
             try
             {
                 _user.Token = null;
-                _user.InGroup = null;
+                _user.InGroupId = 0;
                 _user.InGroupPassword = null;
                 await _user.SaveAsync();
                 HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);

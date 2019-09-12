@@ -27,9 +27,17 @@ namespace Chat.Web.Infrastructure
                 }
                 else
                 {
+                    //todo make possible to sign in from another application - switch tokens
                     chatterer.LastActive = DateTime.UtcNow.Ticks;
-                    if (chatterer.InGroup != null && chatterer.InGroupPassword != dbContext.Chatterers.Where(c => c.Group == chatterer.InGroup).SingleOrDefault()?.GroupPassword)
-                        chatterer.InGroup = chatterer.InGroupPassword = null;
+                    if (chatterer.InGroupId != 0)
+                    {
+                        var group = await dbContext.Chatterers.FindAsync(chatterer.InGroupId);
+                        if (group == null || chatterer.InGroupPassword != group.GroupPassword)
+                        {
+                            chatterer.InGroupId = 0;
+                            chatterer.InGroupPassword = null;
+                        }
+                    }   
                     await dbContext.SaveChangesAsync();
                     user.Chatterer = chatterer;
                     await Filter(context, true);

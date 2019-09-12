@@ -1007,6 +1007,7 @@ class ingroup_class {
         this.connection.on("signed_out", name => this.member_signout(name));
         this.connection.on("go_off", name => this.usr_switch_off(name));
         this.connection.on("go_on", name => this.usr_joined(name));
+        this.connection.on("message_client", msg => this.recieve_msg(msg));
         this.isMobile = false;
         this.usrs_panel_open = true;
         this.offl_usr = null;
@@ -1217,6 +1218,78 @@ class ingroup_class {
                 this.onl_usrs.delete(el);
         }
         el.remove();
+    }
+    form_msg(msg) {
+        let time = new Date(msg.time);
+        let div = document.createElement("div");
+        div.classList.add("message");
+        div.appendChild(document.createElement("div"));
+        div.appendChild(document.createElement("div"));
+        div.firstElementChild.appendChild(document.createElement("img"));
+        div.firstElementChild.appendChild(document.createElement("div"));
+        div.firstElementChild.appendChild(document.createElement("div"));
+        div.firstElementChild.appendChild(document.createElement("div"));
+        let month = time.getMonth().toString();
+        if (month.length < 2)
+            month = '0' + month;
+        let day = time.getDay().toString();
+        if (day.length < 2)
+            day = '0' + day;
+        let hours = time.getHours().toString();
+        if (hours.length < 2)
+            hours = '0' + hours;
+        let minutes = time.getMinutes().toString();
+        if (minutes.length < 2)
+            minutes = '0' + minutes;
+        div.firstElementChild.children[1].textContent = month + '-' + day + '/' + hours + ':' + minutes;
+        if (msg.peers) {
+            div.firstElementChild.firstElementChild.src = "/images/reply.svg";
+            div.firstElementChild.firstElementChild.setAttribute("draggable", "false");
+            div.firstElementChild.firstElementChild.classList.add("reply");
+            div.firstElementChild.children[2].textContent = "Secret";
+            let ul = document.createElement("ul");
+            msg.peers.forEach(peer => {
+                let li = document.createElement("li");
+                li.textContent = peer;
+                ul.appendChild(li);
+            });
+            div.appendChild(ul);
+        }
+        else {
+            div.firstElementChild.firstElementChild.src = "/images/message.svg";
+            div.firstElementChild.firstElementChild.setAttribute("draggable", "false");
+            div.firstElementChild.children[2].textContent = "Public";
+        }
+        div.firstElementChild.children[3].textContent = msg.from;
+        div.children[1].textContent = msg.text;
+        return div;
+    }
+    recieve_msg(msg) {
+        this.msgs_cont.appendChild(this.form_msg(msg));
+    }
+    onkey_input(ev, el) {
+        if (ev.keyCode == 13 && el.value) {
+            var msg = null;
+            if (this.onl_usrs.size == 0 || this.is_cleared == true) {
+                msg = {
+                    to: null,
+                    text: el.value
+                };
+            }
+            else {
+                //todo private
+            }
+            el.value = null;
+            this.connection.invoke("MessageServer", msg).then(() => {
+                let msgLoc = {
+                    time: Date.now(),
+                    from: app.name,
+                    peers: msg.to,
+                    text: msg.text
+                };
+                this.recieve_msg(msgLoc);
+            }).catch(err => app.alert(err));
+        }
     }
 }
 

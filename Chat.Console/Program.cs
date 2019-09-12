@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Net;
 using System.Linq;
 using System.Collections.Generic;
+using Chat.Web;
 
 namespace Chat.Console
 {
@@ -18,7 +19,10 @@ namespace Chat.Console
     {
         static void Main(string[] args)
         {
-            console.WriteLine("Firefox"=="Firefox");
+            console.WriteLine(1568277275355);
+            long ticks = StaticData.JsMsToTicks(1568277275355);
+            console.WriteLine(ticks);
+            console.WriteLine(StaticData.TicksToJsMs(ticks));
         }
     }
 }

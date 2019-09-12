@@ -44,7 +44,7 @@ namespace Chat.Web.Controllers
         {
             try
             {
-                var members = _user.Chatterers.Where(c => c.InGroup == _user.InGroup);
+                var members = _user.Chatterers.Where(c => c.InGroupId == _user.InGroupId);
                 var onl = members.Where(c => c.ConnectionId != null).Select(c => c.Name).ToArray();
                 var ofl = members.Where(c => c.ConnectionId == null).Select(c => c.Name).ToArray();
                 return new JsonResult(new { online = onl, offline = ofl });
@@ -54,7 +54,7 @@ namespace Chat.Web.Controllers
                 return new JsonResult(e.Message);
             }
         }
-        [HttpGet("msgs/before/{jsdate:long:min(0)}/{max:int:range(1,100)}")]
+        /*[HttpGet("msgs/before/{jsdate:long:min(0)}/{max:int:range(1,100)}")]
         public JsonResult MessagesBefore(long jsdate, int max)
         {
             try
@@ -74,8 +74,8 @@ namespace Chat.Web.Controllers
             {
                 return new JsonResult(e.Message);
             }
-        }
-        [HttpGet("msgs/after/{jsdate:long:min(0)}/{max:int:range(1,100)}")]
+        }*/
+        /*[HttpGet("msgs/after/{jsdate:long:min(0)}/{max:int:range(1,100)}")]
         public JsonResult MessagesAfter(long jsdate, int max)
         {
             try
@@ -95,7 +95,7 @@ namespace Chat.Web.Controllers
             {
                 return new JsonResult(e.Message);
             }
-        }
+        }*/
         [HttpPost("reg")]
         public async Task<ContentResult> Register([FromBody]GroupRegRequest request)
         {
@@ -181,7 +181,7 @@ namespace Chat.Web.Controllers
         public async Task<ContentResult> Sign([FromBody]GroupSignRequest request)
         {
             string ret;
-            if (_user.InGroup != null)
+            if (_user.InGroupId != 0)
                 ret = "already_signed";
             else
             {
@@ -189,14 +189,14 @@ namespace Chat.Web.Controllers
                 {
                     if(request.Name == _user.Group)
                     {
-                        _user.InGroup = _user.Group;
+                        _user.InGroupId = _user.Chatterer.Id;
                         _user.InGroupPassword = _user.GroupPassword;
                         await _user.SaveAsync();
                         ret = "OK";
                     }
                     else
                     {
-                        var entity = _user.Chatterers.Where(c => c.Group == request.Name).SingleOrDefault();
+                        var entity = _user.Chatterers.FirstOrDefault(c => c.Group == request.Name);
                         if (entity == null)
                             ret = "not_found";
                         else
@@ -205,7 +205,7 @@ namespace Chat.Web.Controllers
                                 ret = "wrong_password";
                             else
                             {
-                                _user.InGroup = request.Name;
+                                _user.InGroupId = entity.Id;
                                 _user.InGroupPassword = request.Password;
                                 await _user.SaveAsync();
                                 ret = "OK";
@@ -226,11 +226,11 @@ namespace Chat.Web.Controllers
             string ret;
             try
             {
-                if (_user.InGroup == null)
+                if (_user.InGroupId == 0)
                     ret = "not_signed";
                 else
                 {
-                    _user.InGroup = null;
+                    _user.InGroupId = 0;
                     _user.InGroupPassword = null;
                     await _user.SaveAsync();
                     ret = "OK";
@@ -254,6 +254,7 @@ namespace Chat.Web.Controllers
                     ret = "wrong_password";
                 else
                 {
+                    _user.Database.Messages.RemoveRange(_user.Database.Messages.Where(m => m.GroupId == _user.Chatterer.Id));
                     _user.Group = null;
                     _user.GroupPassword = null;
                     await _user.SaveAsync();

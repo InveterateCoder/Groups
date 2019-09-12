@@ -13,7 +13,7 @@ namespace Chat.Web.Models
         public string Password { get => Chatterer?.Password; set { if (Chatterer != null) Chatterer.Password = value; else Throw(); } }
         public string Group { get => Chatterer?.Group; set { if (Chatterer != null) Chatterer.Group = value; else Throw(); } }
         public string GroupPassword { get => Chatterer?.GroupPassword; set { if (Chatterer != null) Chatterer.GroupPassword = value; else Throw(); } }
-        public string InGroup { get => Chatterer?.InGroup; set { if (Chatterer != null) Chatterer.InGroup = value; else Throw(); } }
+        public int InGroupId { get => Chatterer.InGroupId; set { if (Chatterer != null) Chatterer.InGroupId = value; else Throw(); } }
         public string InGroupPassword { get => Chatterer?.InGroupPassword; set { if (Chatterer != null) Chatterer.InGroupPassword = value; else Throw(); } }
         public string Token { get => Chatterer?.Token; set { if (Chatterer != null) Chatterer.Token = value; else Throw(); } }
         public string ConnectionId { get => Chatterer?.ConnectionId; set { if (Chatterer != null) Chatterer.ConnectionId = value; else Throw(); } }
