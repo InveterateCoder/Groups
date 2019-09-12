@@ -828,7 +828,9 @@ class groups_class {
             app.api.grp_reg(info).then(ret => {
                 if (ret) {
                     this.group_conf();
+                    this.list_clear();
                     this.form_close(3);
+                    this.list_load();
                 }
             });
         }
@@ -873,7 +875,9 @@ class groups_class {
         else app.api.grp_del(pass).then(ret => {
             if (ret) {
                 this.group_conf();
+                this.list_clear();
                 this.form_close(5);
+                this.list_load();
             }
         });
     }
@@ -1245,13 +1249,16 @@ class ingroup_class {
         if (msg.peers) {
             div.firstElementChild.firstElementChild.src = "/images/reply.svg";
             div.firstElementChild.firstElementChild.setAttribute("draggable", "false");
+            div.firstElementChild.firstElementChild.setAttribute("onclick", "app.groupin.reply_click(this)");
             div.firstElementChild.firstElementChild.classList.add("reply");
             div.firstElementChild.children[2].textContent = "Secret";
             let ul = document.createElement("ul");
             msg.peers.forEach(peer => {
-                let li = document.createElement("li");
-                li.textContent = peer;
-                ul.appendChild(li);
+                if (peer != app.name) {
+                    let li = document.createElement("li");
+                    li.textContent = peer;
+                    ul.appendChild(li);
+                }
             });
             div.appendChild(ul);
         }
@@ -1277,7 +1284,12 @@ class ingroup_class {
                 };
             }
             else {
-                //todo private
+                let arr = [];
+                this.onl_usrs.forEach(user => arr.push(user.textContent));
+                msg = {
+                    to: arr,
+                    text: el.value
+                };
             }
             el.value = null;
             this.connection.invoke("MessageServer", msg).then(() => {
@@ -1290,6 +1302,9 @@ class ingroup_class {
                 this.recieve_msg(msgLoc);
             }).catch(err => app.alert(err));
         }
+    }
+    reply_click(el) {
+        //todo implement secret reply, don't forget to include 'From' into the list
     }
 }
 

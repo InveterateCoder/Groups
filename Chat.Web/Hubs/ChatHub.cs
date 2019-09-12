@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,7 +12,9 @@ namespace Chat.Web.Hubs
 {
     public class MessageFromClient
     {
+        [MessageToArrayCheck]
         public string[] To { get; set; }
+        [Required, MaxLength(2048)]
         public string Text { get; set; }
     }
     public class MessageToClient
@@ -79,7 +82,14 @@ namespace Chat.Web.Hubs
                 }
                 else
                 {
-
+                    var retMsg = new MessageToClient
+                    {
+                        Time = StaticData.TicksToJsMs(ticksNow),
+                        From = user.Name,
+                        Peers = msg.To,
+                        Text = msg.Text
+                    };
+                    await Clients.Clients(user.Chatterers.Where(c => msg.To.Contains(c.Name)).Select(c => c.ConnectionId).ToArray()).SendAsync("message_client", retMsg);
                 }
             }
         }
@@ -96,6 +106,7 @@ namespace Chat.Web.Hubs
                 await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("go_on", user.Name);
             }
         }
+        //todo need to html encode all traffic
         public async override Task OnDisconnectedAsync(Exception exception)
         {
             //todo inform group about this peer's disconnection, check whether signed out or lost connection
@@ -108,6 +119,22 @@ namespace Chat.Web.Hubs
             user.ConnectionId = null;
             await user.SaveAsync();
             await base.OnDisconnectedAsync(exception);
+        }
+    }
+    public class MessageToArrayCheck : ValidationAttribute
+    {
+        public override bool IsValid(object value)
+        {
+            var toArray = value as string[];
+            if (toArray != null)
+            {
+                if (toArray.Length > 128)
+                    return false;
+                foreach (var str in toArray)
+                    if (str.Length > 64 || str.Length < 5)
+                        return false;
+            }
+            return true;
         }
     }
 }
