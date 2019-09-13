@@ -1001,13 +1001,15 @@ class groups_class {
 
 class ingroup_class {
     constructor() {
+        this.dicon_cover = document.querySelector("#ingroup > #disconnected");
         this.msgs_panel = document.getElementById("ingroup").children[0];
         this.msgs_panel.addEventListener("click", () => app.groupin.usrs_close(), true);
         this.msgs_cont = this.msgs_panel.children[1];
         this.usrs_panel = this.msgs_panel.nextElementSibling;
         this.open_btn = this.msgs_panel.firstElementChild.firstElementChild;
         this.close_btn = this.usrs_panel.firstElementChild.children[1];
-        this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
+        this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").configureLogging(signalR.LogLevel.Error).build();
+        this.connection.onclose(() => this.leave());
         this.connection.on("signed_out", name => this.member_signout(name));
         this.connection.on("go_off", name => this.usr_switch_off(name));
         this.connection.on("go_on", name => this.usr_joined(name));
@@ -1024,6 +1026,7 @@ class ingroup_class {
         this.arr_onl_usrs = null;
         this.arr_ofl_usrs = null;
         this.signingout = false;
+        this.open_peers = null;
     }
     init() {
         this.config_mobile();
@@ -1047,6 +1050,7 @@ class ingroup_class {
         });
     }
     leave() {
+        this.dicon_cover.style.display = "block";
         this.offl_usr = null;
         this.onl_usrs.clear();
         this.is_cleared = false;
@@ -1252,13 +1256,13 @@ class ingroup_class {
             div.firstElementChild.firstElementChild.setAttribute("onclick", "app.groupin.reply_click(this)");
             div.firstElementChild.firstElementChild.classList.add("reply");
             div.firstElementChild.children[2].textContent = "Secret";
+            div.firstElementChild.children[2].classList.add("secret");
+            div.firstElementChild.children[2].setAttribute("onclick", "app.groupin.show_peers(this)");
             let ul = document.createElement("ul");
             msg.peers.forEach(peer => {
-                if (peer != app.name) {
-                    let li = document.createElement("li");
-                    li.textContent = peer;
-                    ul.appendChild(li);
-                }
+                let li = document.createElement("li");
+                li.textContent = peer;
+                ul.appendChild(li);
             });
             div.appendChild(ul);
         }
@@ -1300,8 +1304,25 @@ class ingroup_class {
                     text: msg.text
                 };
                 this.recieve_msg(msgLoc);
-            }).catch(err => app.alert(err));
+            }).catch(err => {
+                let msg = err.message;
+                let index = msg.indexOf("HubException:");
+                if (index > -1)
+                    msg = msg.substring(index + 14);
+                app.alert(msg);
+            });
         }
+    }
+    show_peers(el) {
+        let msg_shell = el.parentElement.parentElement;
+        if (this.open_peers != null)
+            this.open_peers.classList.remove("showpeers");
+        if (this.open_peers != msg_shell) {
+            this.open_peers = msg_shell;
+            this.open_peers.classList.add("showpeers");
+        }
+        else
+            this.open_peers = null;
     }
     reply_click(el) {
         //todo implement secret reply, don't forget to include 'From' into the list
@@ -1376,6 +1397,7 @@ class app_class {
                     this.groupin.init();
                     this.groupin.open_btn.nextElementSibling.textContent = this.ingroup;
                     this.groupin.open_btn.nextElementSibling.title = 'In Group: ' + this.ingroup;
+                    this.groupin.dicon_cover.style.display = "none";
                     document.body.children[2].style.display = 'block';
                     this.hide('ingroup');
                 });
@@ -1397,10 +1419,7 @@ class app_class {
                 this.groups.query = '';
                 break;
             case 'ingroup':
-                this.groupin.connection.stop().then(() => {
-                    document.body.children[2].style.display = 'none';
-                    this.groupin.leave();
-                });
+                this.groupin.connection.stop().then(() => document.body.children[2].style.display = 'none');
                 break;
         }
         this.page = place;

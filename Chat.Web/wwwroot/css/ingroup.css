@@ -177,25 +177,47 @@
 }
 .message > div:first-child > div:nth-child(3) {
     margin-left:10px;
-    text-decoration:underline;
     color: teal;
-    flex-grow:1;
-    text-align:center;
+}
+.message > div:first-child > div:nth-child(3).secret {
+    text-decoration:underline;
+    cursor:pointer;
+}
+.message > div:first-child > div:nth-child(3).secret:hover {
+    color:navy;
+}
+.message > div:first-child > div:nth-child(3).secret:active {
+    color:chocolate;
 }
 .message > div:first-child > div:nth-child(4) {
     margin-left:10px;
     font-weight:bold;
     overflow:hidden;
     text-overflow:ellipsis;
+    flex-grow:1;
+    text-align:end;
 }
 .message > div:nth-child(2) {
     background-color:rgba(255,255,255,.4);
     padding:10px;
     font-family: 'EB Garamond', serif;
     font-size:18px;
+    word-break:break-word;
 }
 .message > div:nth-child(2):first-line {
     line-height:1.6;
+}
+.message.showpeers > div:first-child > div:nth-child(3).secret {
+    color:chocolate;
+}
+.message.showpeers > div:nth-child(2){
+    display:none;
+}
+.message.showpeers > ul {
+    clear:both;
+    display:block;
+    padding-bottom:10px;
+    padding-top:10px;
 }
 .message > ul {
     display:none;
@@ -278,21 +300,21 @@
     background-color:rgba(221,221,221,.7);
     text-shadow:0 0 7px white;
     text-align:center;
-    border:thin solid #666666;
 }
 #offline_usrs > div:hover:not(.selected), #offline_usrs > div.selected {
     background-color:rgba(221,221,221,.7);
     color:gray;
     text-align:center;
-    border:thin solid #666666;
+}
+#offline_usrs > div.selected, #online_usrs > div.selected {
+        border:thin solid #666666;
 }
 #online_usrs > div.selected:active, #offline_usrs > div.selected:active {
     background-color:transparent;
     border:thin dashed #666666;
 }
 #online_usrs > div:active:not(.selected), #offline_usrs > div:active:not(.selected) {
-    background-color:#aaa !important;
-    color:white !important;
+    border:thin solid #666666;
 }
 @media only screen and (max-width:600px){
     #ingroup > div:first-child > div:nth-child(2){
@@ -314,4 +336,26 @@
     .message > div:nth-child(2):first-line {
         line-height: unset;
     }
+    .message.showpeers > ul {
+        padding-top:0;
+    }
+}
+#disconnected {
+    position:absolute;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+    background-color:rgba(0,0,0,0.5);
+}
+#disconnected > div {
+    position:absolute;
+    top:50%;
+    left:50%;
+    max-width:500px;
+    width:100%;
+    transform:translate(-50%, -50%);
+    text-align:center;
+    font-size:96px;
+    color:white;
 }

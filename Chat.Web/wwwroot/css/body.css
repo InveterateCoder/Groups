@@ -90,6 +90,9 @@ body {
     #ingroup > div:first-child > nav > div:nth-child(2) {
         text-align: center;
     }
+    #disconnected > div {
+        font-size:10.7vw !important;
+    }
 }
 
 @media screen and (min-width: 901px) {

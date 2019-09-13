@@ -12,9 +12,7 @@ namespace Chat.Web.Hubs
 {
     public class MessageFromClient
     {
-        [MessageToArrayCheck]
         public string[] To { get; set; }
-        [Required, MaxLength(2048)]
         public string Text { get; set; }
     }
     public class MessageToClient
@@ -44,53 +42,55 @@ namespace Chat.Web.Hubs
         }
         public async Task MessageServer(MessageFromClient msg)
         {
+            if (string.IsNullOrEmpty(msg.Text) || msg.Text.Length > 2048)
+                throw new HubException("Message cannot be empty or exceed 2048 characters");
             var ticksNow = DateTime.UtcNow.Ticks;
             var user = GetUser();
-            if (string.IsNullOrEmpty(msg.Text))
-                throw new HubException("Message cannot be empty");
-            else
+            if (msg.To == null)
             {
-                if(msg.To == null)
-                {
-                    ChatterersDb.Chatterer group;
-                    if (user.InGroupId == user.Chatterer.Id)
-                        group = user.Chatterer;
-                    else
-                        group = await user.Chatterers.FindAsync(user.InGroupId);
-                    if (group == null)
-                        throw new HubException("Internal error, try again later");
-                    else
-                    {
-                        var retMsg = new MessageToClient
-                        {
-                            Time = StaticData.TicksToJsMs(ticksNow),
-                            From = user.Name,
-                            Peers = null,
-                            Text = msg.Text
-                        };
-                        Task sendTask = Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("message_client", retMsg);
-                        await user.Database.Messages.AddAsync(new ChatterersDb.Message
-                        {
-                            Date = ticksNow,
-                            From = user.Name,
-                            Text = msg.Text,
-                            GroupId = group.Id
-                        });
-                        Task saveTask =  user.SaveAsync();
-                        await Task.WhenAll(sendTask, saveTask);
-                    }
-                }
+                ChatterersDb.Chatterer group;
+                if (user.InGroupId == user.Chatterer.Id)
+                    group = user.Chatterer;
+                else
+                    group = await user.Chatterers.FindAsync(user.InGroupId);
+                if (group == null)
+                    throw new HubException("Internal error, try again later");
                 else
                 {
                     var retMsg = new MessageToClient
                     {
                         Time = StaticData.TicksToJsMs(ticksNow),
                         From = user.Name,
-                        Peers = msg.To,
+                        Peers = null,
                         Text = msg.Text
                     };
-                    await Clients.Clients(user.Chatterers.Where(c => msg.To.Contains(c.Name)).Select(c => c.ConnectionId).ToArray()).SendAsync("message_client", retMsg);
+                    Task sendTask = Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("message_client", retMsg);
+                    await user.Database.Messages.AddAsync(new ChatterersDb.Message
+                    {
+                        Date = ticksNow,
+                        From = user.Name,
+                        Text = msg.Text,
+                        GroupId = group.Id
+                    });
+                    Task saveTask = user.SaveAsync();
+                    await Task.WhenAll(sendTask, saveTask);
                 }
+            }
+            else
+            {
+                if (msg.To.Length > 50)
+                    throw new HubException("You can't select more than 50 peers");
+                foreach (var p in msg.To)
+                    if (p.Length > 64)
+                        throw new HubException("Corrupted data detected");
+                var retMsg = new MessageToClient
+                {
+                    Time = StaticData.TicksToJsMs(ticksNow),
+                    From = user.Name,
+                    Peers = msg.To,
+                    Text = msg.Text
+                };
+                await Clients.Clients(user.Chatterers.Where(c => msg.To.Contains(c.Name)).Select(c => c.ConnectionId).ToArray()).SendAsync("message_client", retMsg);
             }
         }
         public async override Task OnConnectedAsync()
@@ -119,22 +119,6 @@ namespace Chat.Web.Hubs
             user.ConnectionId = null;
             await user.SaveAsync();
             await base.OnDisconnectedAsync(exception);
-        }
-    }
-    public class MessageToArrayCheck : ValidationAttribute
-    {
-        public override bool IsValid(object value)
-        {
-            var toArray = value as string[];
-            if (toArray != null)
-            {
-                if (toArray.Length > 128)
-                    return false;
-                foreach (var str in toArray)
-                    if (str.Length > 64 || str.Length < 5)
-                        return false;
-            }
-            return true;
         }
     }
 }
