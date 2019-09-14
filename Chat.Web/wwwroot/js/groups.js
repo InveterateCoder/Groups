@@ -1367,7 +1367,7 @@ class ingroup_class {
     //todo implement loading messages from server
     //todo implement scrolling on messages
     //edge doesn't show arrow pointer on some elements
-    //implement encryption word or sentence (maybe only word by trimming spaces)
+    //implement encryption word or sentence (maybe only word by trimming spaces) testing
 }
 
 class app_class {
