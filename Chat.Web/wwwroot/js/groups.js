@@ -1217,8 +1217,10 @@ class ingroup_class {
     remove_el(el) {
         if (this.onl_usrs.has(el)) {
             if (this.onl_usrs.size == 1) {
-                this.is_cleared = false;
-                this.btn_swtch.firstElementChild.src = "/images/cancel_sel.svg";
+                if (this.is_cleared == true) {
+                    this.is_cleared = false;
+                    this.btn_swtch.firstElementChild.src = "/images/cancel_sel.svg";
+                }
                 this.btn_swtch.classList.add("disabled");
                 this.onl_usrs.clear();
             }
@@ -1325,8 +1327,47 @@ class ingroup_class {
             this.open_peers = null;
     }
     reply_click(el) {
-        //todo implement secret reply, don't forget to include 'From' into the list
+        let msg_shell = el.parentElement.parentElement;
+        let list = [];
+        for (let i = 0; i < msg_shell.children[2].children.length; i++) {
+            if (msg_shell.children[2].children[i].textContent != app.name)
+                list.push(msg_shell.children[2].children[i].textContent);
+        }
+        if (msg_shell.firstElementChild.children[3].textContent != app.name)
+            list.push(msg_shell.firstElementChild.children[3].textContent);
+        let cleared = false;
+        if (list.length > 0) {
+            for (let i = 0; i < this.onl_usr_panel.children.length; i++) {
+                let index = list.indexOf(this.onl_usr_panel.children[i].textContent);
+                if (index > -1) {
+                    if (!cleared) {
+                        cleared = true;
+                        if (this.onl_usrs.size > 0) {
+                            if (this.is_cleared == true) {
+                                this.is_cleared = false;
+                                this.btn_swtch.firstElementChild.src = "/images/cancel_sel.svg";
+                            }
+                            this.onl_usrs.clear();
+                        }
+                        else {
+                            this.btn_swtch.classList.remove("disabled");
+                        }
+                        for (let i = 0; i < this.onl_usr_panel.children.length; i++)
+                            this.onl_usr_panel.children[i].classList.remove("selected");
+                    }
+                    this.onl_usr_panel.children[i].classList.add("selected");
+                    this.onl_usrs.add(this.onl_usr_panel.children[i]);
+                    list.splice(index, 1);
+                }
+            }
+        }
+        if (cleared)
+            this.msgs_panel.children[2].focus();
     }
+    //todo implement loading messages from server
+    //todo implement scrolling on messages
+    //edge doesn't show arrow pointer on some elements
+    //implement encryption word or sentence (maybe only word by trimming spaces)
 }
 
 class app_class {
