@@ -40,7 +40,7 @@ namespace Chat.Web.Hubs
             await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("signed_out", user.Name);
             await Groups.RemoveFromGroupAsync(user.ConnectionId, user.InGroupId.ToString());
         }
-        public async Task MessageServer(MessageFromClient msg)
+        public async Task<long> MessageServer(MessageFromClient msg)
         {
             if (string.IsNullOrEmpty(msg.Text) || msg.Text.Length > 2048)
                 throw new HubException("Message cannot be empty or exceed 2048 characters");
@@ -59,7 +59,7 @@ namespace Chat.Web.Hubs
                 {
                     var retMsg = new MessageToClient
                     {
-                        Time = StaticData.TicksToJsMs(ticksNow),
+                        Time = ticksNow,
                         From = user.Name,
                         Peers = null,
                         Text = msg.Text
@@ -67,7 +67,7 @@ namespace Chat.Web.Hubs
                     Task sendTask = Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("message_client", retMsg);
                     await user.Database.Messages.AddAsync(new ChatterersDb.Message
                     {
-                        Date = ticksNow,
+                        Time = ticksNow,
                         From = user.Name,
                         Text = msg.Text,
                         GroupId = group.Id
@@ -85,13 +85,14 @@ namespace Chat.Web.Hubs
                         throw new HubException("Corrupted data detected");
                 var retMsg = new MessageToClient
                 {
-                    Time = StaticData.TicksToJsMs(ticksNow),
+                    Time = ticksNow,
                     From = user.Name,
                     Peers = msg.To,
                     Text = msg.Text
                 };
                 await Clients.Clients(user.Chatterers.Where(c => msg.To.Contains(c.Name)).Select(c => c.ConnectionId).ToArray()).SendAsync("message_client", retMsg);
             }
+            return ticksNow;
         }
         public async override Task OnConnectedAsync()
         {

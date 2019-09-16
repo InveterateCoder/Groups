@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Chat.Web.Migrations
 {
-    public partial class Initial : Migration
+    public partial class Init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -18,7 +18,8 @@ namespace Chat.Web.Migrations
                     Password = table.Column<string>(maxLength: 32, nullable: true),
                     LastActive = table.Column<long>(nullable: false),
                     Group = table.Column<string>(maxLength: 64, nullable: true),
-                    GroupPassword = table.Column<string>(maxLength: 32, nullable: true),
+                    GroupLastCleaned = table.Column<long>(maxLength: 32, nullable: false),
+                    GroupPassword = table.Column<string>(nullable: true),
                     InGroupId = table.Column<int>(nullable: false),
                     InGroupPassword = table.Column<string>(maxLength: 32, nullable: true),
                     Token = table.Column<string>(maxLength: 50, nullable: true),
@@ -35,7 +36,7 @@ namespace Chat.Web.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Date = table.Column<long>(nullable: false),
+                    Time = table.Column<long>(nullable: false),
                     From = table.Column<string>(maxLength: 64, nullable: true),
                     Text = table.Column<string>(maxLength: 2048, nullable: true),
                     GroupId = table.Column<int>(nullable: false)

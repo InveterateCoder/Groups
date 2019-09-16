@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
         app.on_resize();
     });
 });
-
 class api_class {
     constructor() { }
     async register(chatterer) {
@@ -385,6 +384,19 @@ class api_class {
             return false;
         }
     }
+    async get_grp_msgs(ticks, quantity) {
+        let date_now = new Date(Date.now());
+        date_now.setDate(date_now.getDate() - 15);
+        if (ticks != 0 && ticks < app.groupin.jsMsToTicks(date_now.getTime()))
+            return null;
+        else {
+            if (quantity < 1 || quantity > 100)
+                return null;
+            else {
+                return await this.get(`api/groups/msgs/${ticks}/${quantity}`);
+            }
+        }
+    }
     async post(addr, obj) {
         app.wait();
         let ret;
@@ -397,6 +409,7 @@ class api_class {
                 body: JSON.stringify(obj || '')
             });
             if (resp.status != 200) {
+                document.cookie = "Auth_Tok=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                 app.name = null;
                 app.group = null;
                 app.goto('reg');
@@ -421,6 +434,7 @@ class api_class {
                 }
             });
             if (resp.status != 200) {
+                document.cookie = "Auth_Tok=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                 app.name = null;
                 app.group = null;
                 app.goto('reg');
@@ -1027,8 +1041,11 @@ class ingroup_class {
         this.arr_ofl_usrs = null;
         this.signingout = false;
         this.open_peers = null;
+        this.last_sent_message = null;
     }
     init() {
+        this.dicon_cover.style.display = "none";
+        this.load_msgs();
         this.config_mobile();
         app.api.get_members().then(ret => {
             if (!Array.isArray(ret.online) || !Array.isArray(ret.offline)) {
@@ -1229,8 +1246,38 @@ class ingroup_class {
         }
         el.remove();
     }
+    jsMsToTicks(jsMs) {
+        return 621355968000000000 + jsMs * 10000;
+    }
+    ticksToJsMs(ticks) {
+        return (ticks - 621355968000000000) / 10000;
+    }
+    form_time(ticks) {
+        let time;
+        let month;
+        let day;
+        let hours;
+        let minutes;
+        if (ticks != 0) {
+            time = new Date(this.ticksToJsMs(ticks));
+            month = time.getMonth().toString();
+            if (month.length < 2)
+                month = '0' + month;
+            day = time.getDay().toString();
+            if (day.length < 2)
+                day = '0' + day;
+            hours = time.getHours().toString();
+            if (hours.length < 2)
+                hours = '0' + hours;
+            minutes = time.getMinutes().toString();
+            if (minutes.length < 2)
+                minutes = '0' + minutes;
+        }
+        else
+            month = day = hours = minutes = "--";
+        return month + '-' + day + '/' + hours + ':' + minutes;
+    }
     form_msg(msg) {
-        let time = new Date(msg.time);
         let div = document.createElement("div");
         div.classList.add("message");
         div.appendChild(document.createElement("div"));
@@ -1239,19 +1286,7 @@ class ingroup_class {
         div.firstElementChild.appendChild(document.createElement("div"));
         div.firstElementChild.appendChild(document.createElement("div"));
         div.firstElementChild.appendChild(document.createElement("div"));
-        let month = time.getMonth().toString();
-        if (month.length < 2)
-            month = '0' + month;
-        let day = time.getDay().toString();
-        if (day.length < 2)
-            day = '0' + day;
-        let hours = time.getHours().toString();
-        if (hours.length < 2)
-            hours = '0' + hours;
-        let minutes = time.getMinutes().toString();
-        if (minutes.length < 2)
-            minutes = '0' + minutes;
-        div.firstElementChild.children[1].textContent = month + '-' + day + '/' + hours + ':' + minutes;
+        div.firstElementChild.children[1].textContent = this.form_time(msg.time);
         if (msg.peers) {
             div.firstElementChild.firstElementChild.src = "/images/reply.svg";
             div.firstElementChild.firstElementChild.setAttribute("draggable", "false");
@@ -1298,15 +1333,18 @@ class ingroup_class {
                 };
             }
             el.value = null;
-            this.connection.invoke("MessageServer", msg).then(() => {
-                let msgLoc = {
-                    time: Date.now(),
-                    from: app.name,
-                    peers: msg.to,
-                    text: msg.text
-                };
-                this.recieve_msg(msgLoc);
+            let msgLoc = {
+                time: 0,
+                from: app.name,
+                peers: msg.to,
+                text: msg.text
+            };
+            this.last_sent_message = this.form_msg(msgLoc);
+            this.msgs_cont.appendChild(this.last_sent_message);
+            this.connection.invoke("MessageServer", msg).then(time => {
+                this.last_sent_message.firstElementChild.children[1].textContent = this.form_time(time);
             }).catch(err => {
+                this.last_sent_message.children[1].style.color = "red";
                 let msg = err.message;
                 let index = msg.indexOf("HubException:");
                 if (index > -1)
@@ -1363,6 +1401,25 @@ class ingroup_class {
         }
         if (cleared)
             this.msgs_panel.children[2].focus();
+    }
+    load_msgs() {
+        app.api.get_grp_msgs(0, 100).then(ret => {
+            if (ret) {
+                if (isNaN(ret)) {
+                    if (Array.isArray(ret)) { //save first's date
+                        ret.forEach(msg => {
+                            this.recieve_msg(msg);
+                        });
+                    }
+                    else {
+                        //not an array, not a number
+                    }
+                }
+                else {
+                    //number
+                }
+            }
+        });
     }
     //todo implement loading messages from server
     //todo implement scrolling on messages
@@ -1438,8 +1495,8 @@ class app_class {
                     this.groupin.init();
                     this.groupin.open_btn.nextElementSibling.textContent = this.ingroup;
                     this.groupin.open_btn.nextElementSibling.title = 'In Group: ' + this.ingroup;
-                    this.groupin.dicon_cover.style.display = "none";
                     document.body.children[2].style.display = 'block';
+                    document.addEventListener("visibilitychange", this.visib_change);
                     this.hide('ingroup');
                 });
                 break;
@@ -1460,7 +1517,10 @@ class app_class {
                 this.groups.query = '';
                 break;
             case 'ingroup':
-                this.groupin.connection.stop().then(() => document.body.children[2].style.display = 'none');
+                this.groupin.connection.stop().then(() => {
+                    document.body.children[2].style.display = 'none';
+                    document.removeEventListener("visibilitychange", this.visib_change);
+                });
                 break;
         }
         this.page = place;
@@ -1476,5 +1536,15 @@ class app_class {
             return false;
         else
             return true;
+    }
+    visib_change() {
+        switch (document.visibilityState) {
+            case "hidden":
+                app.groupin.connection.stop().catch(err => alert(err));
+                break;
+            case "visible":
+                app.groupin.connection.start().then(() => app.groupin.init()).catch(err => app.alert(err));
+                break;
+        }
     }
 }

@@ -28,6 +28,7 @@ namespace Chat.Web.Infrastructure
                 else
                 {
                     //todo make possible to sign in from another application - switch tokens
+                    //todo clean old (15 days) group messages
                     chatterer.LastActive = DateTime.UtcNow.Ticks;
                     if (chatterer.InGroupId != 0)
                     {

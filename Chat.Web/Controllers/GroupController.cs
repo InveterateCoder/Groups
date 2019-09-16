@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Chat.Web.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -54,48 +52,29 @@ namespace Chat.Web.Controllers
                 return new JsonResult(e.Message);
             }
         }
-        /*[HttpGet("msgs/before/{jsdate:long:min(0)}/{max:int:range(1,100)}")]
-        public JsonResult MessagesBefore(long jsdate, int max)
+        [HttpGet("msgs/{ticks:long:min(0)}/{quantity:int:range(1,100)}")]
+        public JsonResult Messages(long ticks, int quantity)
         {
             try
             {
-                long ticks = StaticData.JsMsToTicks(jsdate);
-                long ticksLimit = DateTime.UtcNow.Date.Ticks - TimeSpan.FromDays(30).Ticks;
-                if (ticks < ticksLimit)
+                var limit = DateTime.UtcNow.Subtract(TimeSpan.FromDays(15)).Ticks;
+                if (ticks == 0) ticks = DateTime.UtcNow.Ticks;
+                else if (ticks < limit)
                     return new JsonResult(-1);
-                var messages = _user.Chatterers.Where(c => c.Group == _user.InGroup).SingleOrDefault()?.GroupMessages?.Where(m => m.Date >= ticksLimit && m.Date < ticks).OrderByDescending(m => m.Date);
-                if (messages == null)
+                IQueryable<ChatterersDb.Message> messages;
+                messages = _user.Database.Messages.Where(m => m.GroupId == _user.InGroupId && m.Time < ticks && m.Time >= limit).OrderBy(m => m.Time);
+                if (messages.Count() <= 0)
                     return new JsonResult(0);
-                if (messages.Count() <= max)
+                if (messages.Count() <= quantity)
                     return new JsonResult(messages);
-                return new JsonResult(messages.Take(max));
+                else
+                    return new JsonResult(messages.Skip(messages.Count() - quantity));
             }
             catch(Exception e)
             {
                 return new JsonResult(e.Message);
             }
-        }*/
-        /*[HttpGet("msgs/after/{jsdate:long:min(0)}/{max:int:range(1,100)}")]
-        public JsonResult MessagesAfter(long jsdate, int max)
-        {
-            try
-            {
-                long ticks = StaticData.JsMsToTicks(jsdate);
-                long ticksLimit = DateTime.UtcNow.Date.Ticks - TimeSpan.FromDays(30).Ticks;
-                if (ticks < ticksLimit)
-                    return new JsonResult(-1);
-                var messages = _user.Chatterers.Where(c => c.Group == _user.InGroup).SingleOrDefault()?.GroupMessages?.Where(m => m.Date > ticks).OrderBy(m => m.Date);
-                if (messages == null)
-                    return new JsonResult(0);
-                if (messages.Count() <= max)
-                    return new JsonResult(messages);
-                return new JsonResult(messages.Take(max));
-            }
-            catch(Exception e)
-            {
-                return new JsonResult(e.Message);
-            }
-        }*/
+        }
         [HttpPost("reg")]
         public async Task<ContentResult> Register([FromBody]GroupRegRequest request)
         {
@@ -112,6 +91,7 @@ namespace Chat.Web.Controllers
                 {
                     _user.Group = request.GroupName;
                     _user.GroupPassword = request.GroupPassword;
+                    _user.Chatterer.GroupLastCleaned = DateTime.UtcNow.Ticks;
                     await _user.SaveAsync();
                     ret = "OK";
                 }

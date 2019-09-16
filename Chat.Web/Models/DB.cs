@@ -19,6 +19,7 @@ namespace Chat.Web.Models
             [StringLength(64, MinimumLength = 5)]
             public string Group { get; set; }
             [StringLength(32, MinimumLength = 8)]
+            public long GroupLastCleaned { get; set; }
             public string GroupPassword { get; set; }
             public int InGroupId { get; set; }
             [StringLength(32, MinimumLength = 8)]
@@ -31,7 +32,7 @@ namespace Chat.Web.Models
         public class Message
         {
             public int Id { get; set; }
-            public long Date { get; set; }
+            public long Time { get; set; }
             [StringLength(64, MinimumLength = 5)]
             public string From { get; set; }
             [MaxLength(2048)]

@@ -19,10 +19,15 @@ namespace Chat.Console
     {
         static void Main(string[] args)
         {
-            console.WriteLine(1568277275355);
-            long ticks = StaticData.JsMsToTicks(1568277275355);
-            console.WriteLine(ticks);
-            console.WriteLine(StaticData.TicksToJsMs(ticks));
+            Dictionary<string, long> test = new Dictionary<string, long>()
+            {
+                ["Third"] = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3)).Ticks,
+                ["Forth"] = DateTime.UtcNow.Subtract(TimeSpan.FromDays(4)).Ticks,
+                ["First"] = DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).Ticks,
+                ["Second"] = DateTime.UtcNow.Subtract(TimeSpan.FromDays(2)).Ticks
+            };
+            foreach(var i in test.OrderBy(i => i.Value))
+                console.WriteLine(i);
         }
     }
 }

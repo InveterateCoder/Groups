@@ -76,6 +76,7 @@ namespace Chat.Web.Controllers
         [HttpPost("reg")]
         public async Task<ContentResult> RequestRegister([FromBody]RegRequest request)
         {
+            //todo delete inactive users and group's messages
             string ret;
             if (_user.Chatterer != null)
             {
