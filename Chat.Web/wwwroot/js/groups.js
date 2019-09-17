@@ -1338,7 +1338,7 @@ class ingroup_class {
         return div;
     }
     recieve_msg(msg) {
-        this.last_msg_time = msg.stringTime;
+        this.last_msg_time = msg.time.stringTime;
         this.msgs_cont.appendChild(this.form_msg(msg));
         if (this.isdown)
             this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
