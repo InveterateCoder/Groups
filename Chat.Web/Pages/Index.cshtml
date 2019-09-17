@@ -270,10 +270,10 @@
                 <div></div>
                 <div title="Sign out back to group selection" onclick="app.groupin.signout()">Sign Out</div>
             </nav>
-            <div>
+            <div onscroll="app.groupin.scroll()">
                 <!--Messages-->
             </div>
-            <input type="text" maxlength="2048" placeholder="Type a message..." title="Press Enter to send the message" onkeypress="app.groupin.onkey_input(event, this)" />
+            <input type="text" maxlength="2048" placeholder="Type a message..." onkeypress="app.groupin.onkey_input(event, this)" />
         </div>
         <div>
             <nav>

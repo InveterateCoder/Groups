@@ -384,17 +384,34 @@ class api_class {
             return false;
         }
     }
-    async get_grp_msgs(ticks, quantity) {
-        let date_now = new Date(Date.now());
-        date_now.setDate(date_now.getDate() - 15);
-        if (ticks != 0 && ticks < app.groupin.jsMsToTicks(date_now.getTime()))
-            return null;
-        else {
-            if (quantity < 1 || quantity > 100)
+    async get_grp_msgs(ticks_str, quantity) {
+        try {
+            let ticks = Number(ticks_str);
+            if (ticks != 0 && ticks < app.groupin.jsMsToTicks(Date.now() - 1296000000))
                 return null;
             else {
-                return await this.get(`api/groups/msgs/${ticks}/${quantity}`);
+                if (quantity < 1 || quantity > 100)
+                    return null;
+                else {
+                    return await this.get(`api/groups/msgs/${ticks_str}/${quantity}`);
+                }
             }
+        }
+        catch (err) {
+            app.alert(err);
+            return null;
+        }
+    }
+    async get_missed_msgs(ticks_str) {
+        try {
+            let ticks = Number(ticks_str);
+            if (ticks < app.groupin.jsMsToTicks(Date.now() - 86400000))
+                return null;
+            else return await this.get(`api/groups/msgs/missed/${ticks_str}`);
+        }
+        catch (err) {
+            app.alert(err);
+            return null;
         }
     }
     async post(addr, obj) {
@@ -1041,11 +1058,16 @@ class ingroup_class {
         this.arr_ofl_usrs = null;
         this.signingout = false;
         this.open_peers = null;
-        this.last_sent_message = null;
+        this.upper_msg_el = null;
+        this.upper_msg_time = "0";
+        this.last_msg_time = null;
+        this.end_reached = false;
+        this.msgs_quantity = 20;
+        this.isdown = false;
+        this.scroll_handle = null;
     }
     init() {
         this.dicon_cover.style.display = "none";
-        this.load_msgs();
         this.config_mobile();
         app.api.get_members().then(ret => {
             if (!Array.isArray(ret.online) || !Array.isArray(ret.offline)) {
@@ -1065,6 +1087,9 @@ class ingroup_class {
                 });
             }
         });
+        if (!this.last_msg_time)
+            this.get_msgs(true);
+        else this.get_missed_msgs(this.last_msg_time);
     }
     leave() {
         this.dicon_cover.style.display = "block";
@@ -1075,8 +1100,6 @@ class ingroup_class {
             this.onl_usr_panel.firstElementChild.remove();
         while (this.ofl_usr_panel.firstElementChild)
             this.ofl_usr_panel.firstElementChild.remove();
-        while (this.msgs_cont.firstElementChild)
-            this.msgs_cont.firstElementChild.remove();
         this.btn_swtch.firstElementChild.src = "/images/cancel_sel.svg";
         this.btn_swtch.classList.add("disabled");
         this.btn_notif.classList.add("disabled");
@@ -1084,6 +1107,8 @@ class ingroup_class {
     ingroup_resize() {
         this.config_mobile();
         this.usrs_close();
+        if (this.isdown)
+            this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
     }
     config_mobile() {
         if (this.isMobile && window.innerWidth > 900) {
@@ -1252,14 +1277,14 @@ class ingroup_class {
     ticksToJsMs(ticks) {
         return (ticks - 621355968000000000) / 10000;
     }
-    form_time(ticks) {
+    form_time(jsMs) {
         let time;
         let month;
         let day;
         let hours;
         let minutes;
-        if (ticks != 0) {
-            time = new Date(this.ticksToJsMs(ticks));
+        if (jsMs != 0) {
+            time = new Date(jsMs);
             month = time.getMonth().toString();
             if (month.length < 2)
                 month = '0' + month;
@@ -1286,7 +1311,7 @@ class ingroup_class {
         div.firstElementChild.appendChild(document.createElement("div"));
         div.firstElementChild.appendChild(document.createElement("div"));
         div.firstElementChild.appendChild(document.createElement("div"));
-        div.firstElementChild.children[1].textContent = this.form_time(msg.time);
+        div.firstElementChild.children[1].textContent = this.form_time(msg.jsTime);
         if (msg.peers) {
             div.firstElementChild.firstElementChild.src = "/images/reply.svg";
             div.firstElementChild.firstElementChild.setAttribute("draggable", "false");
@@ -1313,7 +1338,10 @@ class ingroup_class {
         return div;
     }
     recieve_msg(msg) {
+        this.last_msg_time = msg.stringTime;
         this.msgs_cont.appendChild(this.form_msg(msg));
+        if (this.isdown)
+            this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
     }
     onkey_input(ev, el) {
         if (ev.keyCode == 13 && el.value) {
@@ -1341,8 +1369,10 @@ class ingroup_class {
             };
             this.last_sent_message = this.form_msg(msgLoc);
             this.msgs_cont.appendChild(this.last_sent_message);
+            this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
             this.connection.invoke("MessageServer", msg).then(time => {
-                this.last_sent_message.firstElementChild.children[1].textContent = this.form_time(time);
+                this.last_msg_time = time.stringTime;
+                this.last_sent_message.firstElementChild.children[1].textContent = this.form_time(time.jsTime);
             }).catch(err => {
                 this.last_sent_message.children[1].style.color = "red";
                 let msg = err.message;
@@ -1402,24 +1432,74 @@ class ingroup_class {
         if (cleared)
             this.msgs_panel.children[2].focus();
     }
-    load_msgs() {
-        app.api.get_grp_msgs(0, 100).then(ret => {
-            if (ret) {
-                if (isNaN(ret)) {
-                    if (Array.isArray(ret)) { //save first's date
-                        ret.forEach(msg => {
-                            this.recieve_msg(msg);
-                        });
+    get_msgs(scroll = false) {
+        if (!this.end_reached) {
+            app.api.get_grp_msgs(this.upper_msg_time, this.msgs_quantity).then(ret => {
+                if (ret) {
+                    if (isNaN(ret)) {
+                        if (Array.isArray(ret)) {
+                            if (ret.length < this.msgs_quantity)
+                                this.end_reached = true;
+                            let initiated = false;
+                            if (!this.end_reached)
+                                this.upper_msg_time = ret[0].stringTime;
+                            if (!this.upper_msg_el)
+                                this.last_msg_time = ret[ret.length - 1].stringTime;
+                            let Previous = this.upper_msg_el;
+                            ret.forEach(msg => {
+                                let div = this.form_msg(msg);
+                                if (!initiated && !this.end_reached) {
+                                    this.upper_msg_el = div;
+                                    initiated = true;
+                                }
+                                if (Previous)
+                                    this.msgs_cont.insertBefore(div, Previous);
+                                else this.msgs_cont.appendChild(div);
+                            });
+                            if (scroll)
+                                clearTimeout(this.scroll_handle);
+                                this.scroll_handle = setTimeout(() => {
+                                    app.groupin.msgs_cont.scrollTop = app.groupin.msgs_cont.scrollHeight;
+                                    app.groupin.msgs_cont.style.opacity = "1";
+                                    app.groupin.msgs_cont.style.scrollBehavior = "smooth";
+                                }, 150);
+                            if (this.msgs_cont.scrollHeight < this.msgs_cont.offsetHeight * 3)
+                                this.get_msgs(scroll);
+                        }
+                        else {
+                            app.alert("Error. Server returned: " + ret);
+                        }
                     }
                     else {
-                        //not an array, not a number
+                        if (ret == 0)
+                            this.end_reached = true;
+                        else
+                            app.alert("Something went wrong, try to reload the page");
+                    }
+                }
+            });
+        }
+    }
+    get_missed_msgs() {
+        app.api.get_missed_msgs(this.last_msg_time).then(ret => {
+            if (ret) {
+                if (isNaN(ret)) {
+                    if (Array.isArray(ret)) {
+                        ret.forEach(msg => this.msgs_cont.appendChild(this.form_msg(msg)));
+                        this.last_msg_time = ret[ret.length - 1].stringTime;
+                        if (this.isdown)
+                            this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
                     }
                 }
                 else {
-                    //number
+                    if (ret == -1)
+                        app.alert("Limit exceeded. Try to reload the page.");
                 }
             }
         });
+    }
+    scroll() {
+        //isdown when down
     }
     //todo implement loading messages from server
     //todo implement scrolling on messages
@@ -1470,6 +1550,7 @@ class app_class {
     }
     alert(message) {
         let el = document.getElementById('message');
+        el.children[0].children[1].focus();
         el.children[0].children[0].textContent = message;
         el.style.display = 'block';
     }

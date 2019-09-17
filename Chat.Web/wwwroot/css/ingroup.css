@@ -131,6 +131,8 @@
     -webkit-user-select: text;
     -moz-user-select: text;
     -ms-user-select: text;
+    opacity:0;
+    transition: opacity .3s ease-out;
 }
 .message {
     box-shadow:0 0 5px 1px silver;

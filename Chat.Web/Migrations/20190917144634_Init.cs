@@ -18,8 +18,8 @@ namespace Chat.Web.Migrations
                     Password = table.Column<string>(maxLength: 32, nullable: true),
                     LastActive = table.Column<long>(nullable: false),
                     Group = table.Column<string>(maxLength: 64, nullable: true),
-                    GroupLastCleaned = table.Column<long>(maxLength: 32, nullable: false),
-                    GroupPassword = table.Column<string>(nullable: true),
+                    GroupLastCleaned = table.Column<long>(nullable: false),
+                    GroupPassword = table.Column<string>(maxLength: 32, nullable: true),
                     InGroupId = table.Column<int>(nullable: false),
                     InGroupPassword = table.Column<string>(maxLength: 32, nullable: true),
                     Token = table.Column<string>(maxLength: 50, nullable: true),
@@ -36,7 +36,9 @@ namespace Chat.Web.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Time = table.Column<long>(nullable: false),
+                    SharpTime = table.Column<long>(nullable: false),
+                    JsTime = table.Column<long>(nullable: false),
+                    StringTime = table.Column<string>(maxLength: 64, nullable: true),
                     From = table.Column<string>(maxLength: 64, nullable: true),
                     Text = table.Column<string>(maxLength: 2048, nullable: true),
                     GroupId = table.Column<int>(nullable: false)

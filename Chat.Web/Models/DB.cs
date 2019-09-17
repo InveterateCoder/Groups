@@ -9,20 +9,20 @@ namespace Chat.Web.Models
         public class Chatterer
         {
             public int Id { get; set; }
-            [StringLength(64, MinimumLength = 5)]
+            [MaxLength(64)]
             public string Name { get; set; }
-            [StringLength(256, MinimumLength = 6)]
+            [MaxLength(256)]
             public string Email { get; set; }
-            [StringLength(32, MinimumLength = 8)]
+            [MaxLength(32)]
             public string Password { get; set; }
             public long LastActive { get; set; }
-            [StringLength(64, MinimumLength = 5)]
+            [MaxLength(64)]
             public string Group { get; set; }
-            [StringLength(32, MinimumLength = 8)]
             public long GroupLastCleaned { get; set; }
+            [MaxLength(32)]
             public string GroupPassword { get; set; }
             public int InGroupId { get; set; }
-            [StringLength(32, MinimumLength = 8)]
+            [MaxLength(32)]
             public string InGroupPassword { get; set; }
             [MaxLength(50)]
             public string Token { get; set; }
@@ -32,8 +32,11 @@ namespace Chat.Web.Models
         public class Message
         {
             public int Id { get; set; }
-            public long Time { get; set; }
-            [StringLength(64, MinimumLength = 5)]
+            public long SharpTime { get; set; }
+            public long JsTime { get; set; }
+            [MaxLength(64)]
+            public string StringTime { get; set; }
+            [MaxLength(64)]
             public string From { get; set; }
             [MaxLength(2048)]
             public string Text { get; set; }

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chat.Web.Migrations
 {
     [DbContext(typeof(ChatterersDb))]
-    [Migration("20190916111511_Init")]
+    [Migration("20190917144634_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,10 +35,10 @@ namespace Chat.Web.Migrations
                     b.Property<string>("Group")
                         .HasMaxLength(64);
 
-                    b.Property<long>("GroupLastCleaned")
-                        .HasMaxLength(32);
+                    b.Property<long>("GroupLastCleaned");
 
-                    b.Property<string>("GroupPassword");
+                    b.Property<string>("GroupPassword")
+                        .HasMaxLength(32);
 
                     b.Property<int>("InGroupId");
 
@@ -72,10 +72,15 @@ namespace Chat.Web.Migrations
 
                     b.Property<int>("GroupId");
 
+                    b.Property<long>("JsTime");
+
+                    b.Property<long>("SharpTime");
+
+                    b.Property<string>("StringTime")
+                        .HasMaxLength(64);
+
                     b.Property<string>("Text")
                         .HasMaxLength(2048);
-
-                    b.Property<long>("Time");
 
                     b.HasKey("Id");
 

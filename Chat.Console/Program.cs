@@ -26,7 +26,7 @@ namespace Chat.Console
                 ["First"] = DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).Ticks,
                 ["Second"] = DateTime.UtcNow.Subtract(TimeSpan.FromDays(2)).Ticks
             };
-            foreach(var i in test.OrderBy(i => i.Value))
+            foreach(var i in test.OrderBy(i => i.Value).Skip(2))
                 console.WriteLine(i);
         }
     }

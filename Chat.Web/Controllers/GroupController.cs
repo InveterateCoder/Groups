@@ -52,23 +52,46 @@ namespace Chat.Web.Controllers
                 return new JsonResult(e.Message);
             }
         }
-        [HttpGet("msgs/{ticks:long:min(0)}/{quantity:int:range(1,100)}")]
-        public JsonResult Messages(long ticks, int quantity)
+        [HttpGet("msgs/{ticks}/{quantity:int:range(1,100)}")]
+        public JsonResult Messages(string ticks, int quantity)
         {
             try
             {
+                long lticks = long.Parse(ticks);
                 var limit = DateTime.UtcNow.Subtract(TimeSpan.FromDays(15)).Ticks;
-                if (ticks == 0) ticks = DateTime.UtcNow.Ticks;
-                else if (ticks < limit)
+                if (lticks == 0) lticks = DateTime.UtcNow.Ticks;
+                else if (lticks < limit)
                     return new JsonResult(-1);
                 IQueryable<ChatterersDb.Message> messages;
-                messages = _user.Database.Messages.Where(m => m.GroupId == _user.InGroupId && m.Time < ticks && m.Time >= limit).OrderBy(m => m.Time);
+                messages = _user.Database.Messages.Where(m => m.GroupId == _user.InGroupId && m.SharpTime < lticks && m.SharpTime >= limit).OrderBy(m => m.SharpTime);
                 if (messages.Count() <= 0)
                     return new JsonResult(0);
                 if (messages.Count() <= quantity)
                     return new JsonResult(messages);
                 else
                     return new JsonResult(messages.Skip(messages.Count() - quantity));
+            }
+            catch(Exception e)
+            {
+                return new JsonResult(e.Message);
+            }
+        }
+        [HttpGet("msgs/missed/{ticks}")]
+        public JsonResult MessagesMissed(string ticks)
+        {
+            try
+            {
+                long lticks = long.Parse(ticks);
+                if (lticks < DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).Ticks)
+                    return new JsonResult(-1);
+                else
+                {
+                    var messages = _user.Database.Messages.Where(m => m.GroupId == _user.InGroupId && m.SharpTime > lticks).OrderBy(m => m.SharpTime);
+                    if (messages.Count() <= 0)
+                        return new JsonResult(0);
+                    else
+                        return new JsonResult(messages);
+                }
             }
             catch(Exception e)
             {
