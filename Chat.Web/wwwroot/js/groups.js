@@ -442,6 +442,7 @@ class api_class {
         }
     }
     async get(addr) {
+        app.wait();
         let ret;
         try {
             let resp = await fetch(addr, {
@@ -464,6 +465,7 @@ class api_class {
             ret.response = err.message;
         }
         finally {
+            app.resume();
             return ret;
         }
     }
@@ -1036,6 +1038,7 @@ class ingroup_class {
         this.msgs_panel = document.getElementById("ingroup").children[0];
         this.msgs_panel.addEventListener("click", () => app.groupin.usrs_close(), true);
         this.msgs_cont = this.msgs_panel.children[1];
+        this.msg_input = document.querySelector("#ingroup > div:first-child > input");
         this.usrs_panel = this.msgs_panel.nextElementSibling;
         this.open_btn = this.msgs_panel.firstElementChild.firstElementChild;
         this.close_btn = this.usrs_panel.firstElementChild.children[1];
@@ -1062,12 +1065,15 @@ class ingroup_class {
         this.upper_msg_time = "0";
         this.last_msg_time = null;
         this.end_reached = false;
-        this.msgs_quantity = 20;
-        this.isdown = false;
+        this.msgs_quantity = 30;
+        this.isdown = true;
         this.scroll_handle = null;
+        this.block_scroll = false;
+        this.resize_handle = null;
     }
     init() {
-        this.dicon_cover.style.display = "none";
+        this.dicon_cover.style.opacity = "0";
+        setTimeout(() => app.groupin.dicon_cover.style.display = "none", 500);
         this.config_mobile();
         app.api.get_members().then(ret => {
             if (!Array.isArray(ret.online) || !Array.isArray(ret.offline)) {
@@ -1091,8 +1097,10 @@ class ingroup_class {
             this.get_msgs(true);
         else this.get_missed_msgs(this.last_msg_time);
     }
-    leave() {
+    leave(page = false) {
+        this.msg_input.blur();
         this.dicon_cover.style.display = "block";
+        this.dicon_cover.style.opacity = "1";
         this.offl_usr = null;
         this.onl_usrs.clear();
         this.is_cleared = false;
@@ -1103,12 +1111,38 @@ class ingroup_class {
         this.btn_swtch.firstElementChild.src = "/images/cancel_sel.svg";
         this.btn_swtch.classList.add("disabled");
         this.btn_notif.classList.add("disabled");
+        if (page) {
+            while (this.msgs_cont.firstElementChild)
+                this.msgs_cont.firstElementChild.remove();
+            this.end_reached = false;
+            this.last_msg_time = null;
+            this.upper_msg_time = "0";
+            this.upper_msg_el = null;
+            this.msgs_cont.style.opacity = "0";
+        }
     }
     ingroup_resize() {
+        this.msgs_cont.style.visibility = "hidden";
+        this.msgs_cont.style.opacity = "0";
         this.config_mobile();
         this.usrs_close();
-        if (this.isdown)
-            this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
+        if (this.isdown) {
+            this.block_scroll = true;
+            clearTimeout(this.resize_handle);
+            this.resize_handle = setTimeout(() => {
+                app.groupin.block_scroll = false;
+                app.groupin.msgs_cont.scrollTop = app.groupin.msgs_cont.scrollHeight;
+                this.msgs_cont.style.visibility = "visible";
+                app.groupin.msgs_cont.style.opacity = "1";
+            }, 300);
+        }
+        else {
+            clearTimeout(this.resize_handle);
+            this.resize_handle = setTimeout(() => {
+                this.msgs_cont.style.visibility = "visible";
+                app.groupin.msgs_cont.style.opacity = "1";
+            }, 300);
+        }
     }
     config_mobile() {
         if (this.isMobile && window.innerWidth > 900) {
@@ -1338,18 +1372,19 @@ class ingroup_class {
         return div;
     }
     recieve_msg(msg) {
-        this.last_msg_time = msg.time.stringTime;
+        if (!msg.peers)
+            this.last_msg_time = msg.time.stringTime;
         this.msgs_cont.appendChild(this.form_msg(msg));
         if (this.isdown)
             this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
     }
-    onkey_input(ev, el) {
-        if (ev.keyCode == 13 && el.value) {
+    onkey_input(ev) {
+        if (ev.keyCode == 13 && this.msg_input.value) {
             var msg = null;
             if (this.onl_usrs.size == 0 || this.is_cleared == true) {
                 msg = {
                     to: null,
-                    text: el.value
+                    text: this.msg_input.value
                 };
             }
             else {
@@ -1357,12 +1392,12 @@ class ingroup_class {
                 this.onl_usrs.forEach(user => arr.push(user.textContent));
                 msg = {
                     to: arr,
-                    text: el.value
+                    text: this.msg_input.value
                 };
             }
-            el.value = null;
+            this.msg_input.value = null;
             let msgLoc = {
-                time: 0,
+                jsTime: 0,
                 from: app.name,
                 peers: msg.to,
                 text: msg.text
@@ -1393,6 +1428,8 @@ class ingroup_class {
         }
         else
             this.open_peers = null;
+        if (this.isdown)
+            setTimeout(() => app.groupin.msgs_cont.scrollTop = app.groupin.msgs_cont.scrollHeight, 20);
     }
     reply_click(el) {
         let msg_shell = el.parentElement.parentElement;
@@ -1435,7 +1472,7 @@ class ingroup_class {
     get_msgs(scroll = false) {
         if (!this.end_reached) {
             app.api.get_grp_msgs(this.upper_msg_time, this.msgs_quantity).then(ret => {
-                if (ret) {
+                if (ret != null) {
                     if (isNaN(ret)) {
                         if (Array.isArray(ret)) {
                             if (ret.length < this.msgs_quantity)
@@ -1446,6 +1483,7 @@ class ingroup_class {
                             if (!this.upper_msg_el)
                                 this.last_msg_time = ret[ret.length - 1].stringTime;
                             let Previous = this.upper_msg_el;
+                            let scrl_height = this.msgs_cont.scrollHeight;
                             ret.forEach(msg => {
                                 let div = this.form_msg(msg);
                                 if (!initiated && !this.end_reached) {
@@ -1456,13 +1494,17 @@ class ingroup_class {
                                     this.msgs_cont.insertBefore(div, Previous);
                                 else this.msgs_cont.appendChild(div);
                             });
-                            if (scroll)
+                            if (scroll) {
                                 clearTimeout(this.scroll_handle);
                                 this.scroll_handle = setTimeout(() => {
                                     app.groupin.msgs_cont.scrollTop = app.groupin.msgs_cont.scrollHeight;
                                     app.groupin.msgs_cont.style.opacity = "1";
-                                    app.groupin.msgs_cont.style.scrollBehavior = "smooth";
                                 }, 150);
+                            }
+                            else {
+                                if (scrl_height < this.msgs_cont.scrollHeight)
+                                    this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight - scrl_height;
+                            }
                             if (this.msgs_cont.scrollHeight < this.msgs_cont.offsetHeight * 3)
                                 this.get_msgs(scroll);
                         }
@@ -1471,8 +1513,10 @@ class ingroup_class {
                         }
                     }
                     else {
-                        if (ret == 0)
+                        if (ret == 0) {
                             this.end_reached = true;
+                            this.msgs_cont.style.opacity = "1";
+                        }
                         else
                             app.alert("Something went wrong, try to reload the page");
                     }
@@ -1499,16 +1543,30 @@ class ingroup_class {
         });
     }
     scroll() {
-        //isdown when down
+        if (!this.block_scroll) {
+            if (this.msgs_cont.clientHeight + this.msgs_cont.scrollTop < this.msgs_cont.scrollHeight - 50) {
+                this.isdown = false;
+                this.msgs_cont.style.backgroundColor = "white";
+                if (this.msgs_cont.scrollTop == 0)
+                    this.get_msgs();
+            }
+            else {
+                this.isdown = true;
+                this.msgs_cont.style.backgroundColor = "transparent";
+            }
+        }
     }
-    //todo implement loading messages from server
-    //todo implement scrolling on messages
+    //todo lose focus waiting and page change
     //edge doesn't show arrow pointer on some elements
     //implement encryption word or sentence (maybe only word by trimming spaces) testing
+    //implement notification of users
 }
 
 class app_class {
     constructor() {
+        this.wait_count = 0;
+        this.wait_handle = null;
+        this.wait_el = document.getElementById('wait');
         this.page = null;
         this.name = null;
         this.group = null;
@@ -1543,10 +1601,16 @@ class app_class {
         }
     }
     wait() {
-        document.getElementById('wait').style.visibility = 'visible';
+        if (this.wait_count == 0)
+            this.wait_handle = setTimeout(() => app.wait_el.style.display = 'block', 1000);
+        this.wait_count++;
     }
     resume() {
-        document.getElementById('wait').style.visibility = 'hidden';
+        this.wait_count--;
+        if (this.wait_count == 0) {
+            clearTimeout(this.wait_handle);
+            this.wait_el.style.display = 'none';
+        }
     }
     alert(message) {
         let el = document.getElementById('message');
@@ -1599,6 +1663,7 @@ class app_class {
                 break;
             case 'ingroup':
                 this.groupin.connection.stop().then(() => {
+                    app.groupin.leave(true);
                     document.body.children[2].style.display = 'none';
                     document.removeEventListener("visibilitychange", this.visib_change);
                 });
@@ -1621,7 +1686,7 @@ class app_class {
     visib_change() {
         switch (document.visibilityState) {
             case "hidden":
-                app.groupin.connection.stop().catch(err => alert(err));
+                app.groupin.connection.stop().catch(err => app.alert(err));
                 break;
             case "visible":
                 app.groupin.connection.start().then(() => app.groupin.init()).catch(err => app.alert(err));

@@ -17,7 +17,24 @@ namespace Chat.Web.Hubs
     }
     public class MessageToClient
     {
-        public Time Time { get; set; }
+        public Time Time
+        {
+            get => new Time
+            {
+                SharpTime = SharpTime,
+                JsTime = JsTime,
+                StringTime = StringTime
+            };
+            set
+            {
+                SharpTime = value.SharpTime;
+                JsTime = value.JsTime;
+                StringTime = value.StringTime;
+            }
+        }
+        public long SharpTime { get; set; }
+        public long JsTime { get; set; }
+        public string StringTime { get; set; }
         public string From { get; set; }
         public string[] Peers { get; set; }
         public string Text { get; set; }
