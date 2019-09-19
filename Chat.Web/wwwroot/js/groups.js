@@ -1089,8 +1089,10 @@ class ingroup_class {
         this.usr_state_changed = false;
         this.clear_usrs();
         this.msgs_loaded = false;
-        if (page)
+        if (page) {
+            this.msg_input.value = null;
             this.clear_msgs();
+        }
     }
     async members_get() {
         let ret = await app.api.get_members();
@@ -1644,7 +1646,6 @@ class ingroup_class {
             }
         }
     }
-    //todo lose focus waiting and page change
     //edge doesn't show arrow pointer on some elements
     //implement encryption word or sentence (maybe only word by trimming spaces) testing
     //implement notification of users
@@ -1691,7 +1692,10 @@ class app_class {
     }
     wait() {
         if (this.wait_count == 0)
-            this.wait_handle = setTimeout(() => app.wait_el.style.display = 'block', 1000);
+            this.wait_handle = setTimeout(() => {
+                app.wait_el.style.display = 'block';
+                app.wait_el.focus();
+            }, 1000);
         this.wait_count++;
     }
     resume() {
@@ -1713,6 +1717,7 @@ class app_class {
         switch (place) {
             case 'reg':
                 document.body.children[0].style.display = 'block';
+                document.body.children[0].focus();
                 this.hide('reg');
                 break;
             case 'groups':
@@ -1721,6 +1726,7 @@ class app_class {
                 this.groups.groups_window.getElementsByTagName('code')[0].textContent = this.name;
                 this.groups.groups_window.getElementsByTagName('code')[0].title = this.name;
                 document.body.children[1].style.display = 'block';
+                document.body.children[1].focus();
                 this.groups.initialize();
                 this.hide('groups');
                 break;
@@ -1731,6 +1737,7 @@ class app_class {
                     this.groupin.open_btn.nextElementSibling.textContent = this.ingroup;
                     this.groupin.open_btn.nextElementSibling.title = 'In Group: ' + this.ingroup;
                     document.body.children[2].style.display = 'block';
+                    document.body.children[2].focus();
                     document.addEventListener("visibilitychange", this.visib_change);
                     this.hide('ingroup');
                 });

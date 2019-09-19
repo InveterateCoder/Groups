@@ -18,7 +18,7 @@
     <script src="~/aspnet-signalr/signalr.min.js"></script>
 </head>
 <body>
-    <div id="reg" class="disable-select" style="display:none">
+    <div id="reg" class="disable-select" style="display:none"  tabindex="-1">
         <div id="reg_panel">
             <div id="header">Groups</div>
             <div id="reg_panel_menu">
@@ -111,7 +111,7 @@
             </div>
         </div>
     </div>
-    <div id="groups" class="disable-select" style="display:none">
+    <div id="groups" class="disable-select" style="display:none"  tabindex="-1">
         <div onscroll="app.groups.on_scroll(this)">
             <!--buttons-->
         </div>
@@ -263,7 +263,7 @@
             </div>
         </div>
     </div>
-    <div id="ingroup" class="disable-select" style="display:none">
+    <div id="ingroup" class="disable-select" style="display:none"  tabindex="-1">
         <div>
             <nav>
                 <img src="~/images/slide_right.svg" draggable="false" onclick="app.groupin.usrs_open()" />
@@ -302,12 +302,12 @@
             <div>Disconnected</div>
         </div>
     </div>
-        <div id="wait"></div>
-        <div id="message" style="display:none">
-            <div class="disable-select">
-                <p></p>
-                <button onclick="document.getElementById('message').style.display = 'none'">OK</button>
-            </div>
+    <div id="wait" tabindex="-1"></div>
+    <div id="message" style="display:none">
+        <div class="disable-select">
+            <p></p>
+            <button onclick="document.getElementById('message').style.display = 'none'">OK</button>
         </div>
+    </div>
 </body>
 </html>
