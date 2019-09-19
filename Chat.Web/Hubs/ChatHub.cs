@@ -17,21 +17,6 @@ namespace Chat.Web.Hubs
     }
     public class MessageToClient
     {
-        public Time Time
-        {
-            get => new Time
-            {
-                SharpTime = SharpTime,
-                JsTime = JsTime,
-                StringTime = StringTime
-            };
-            set
-            {
-                SharpTime = value.SharpTime;
-                JsTime = value.JsTime;
-                StringTime = value.StringTime;
-            }
-        }
         public long SharpTime { get; set; }
         public long JsTime { get; set; }
         public string StringTime { get; set; }
@@ -85,7 +70,9 @@ namespace Chat.Web.Hubs
                 {
                     var retMsg = new MessageToClient
                     {
-                        Time = time,
+                        SharpTime = time.SharpTime,
+                        JsTime = time.JsTime,
+                        StringTime = time.StringTime,
                         From = user.Name,
                         Peers = null,
                         Text = msg.Text
@@ -113,7 +100,9 @@ namespace Chat.Web.Hubs
                         throw new HubException("Corrupted data detected");
                 var retMsg = new MessageToClient
                 {
-                    Time = time,
+                    SharpTime = time.SharpTime,
+                    JsTime = time.JsTime,
+                    StringTime = time.StringTime,
                     From = user.Name,
                     Peers = msg.To,
                     Text = msg.Text

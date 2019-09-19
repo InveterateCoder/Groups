@@ -1,10 +1,6 @@
 ﻿var app;
-document.addEventListener('DOMContentLoaded', () => {
-    app = new app_class();
-    window.addEventListener('resize', () => {
-        app.on_resize();
-    });
-});
+document.addEventListener('DOMContentLoaded', () => app = new app_class());
+
 class api_class {
     constructor() { }
     async register(chatterer) {
@@ -1070,56 +1066,86 @@ class ingroup_class {
         this.scroll_handle = null;
         this.block_scroll = false;
         this.resize_handle = null;
+        this.usr_state_changed = false;
+        this.msgs_loaded = false;
+        this.msg_pipe_handle = null;
+        this.msg_pipe = [];
+        this.msg_time = new Set();
     }
     init() {
         this.dicon_cover.style.opacity = "0";
         setTimeout(() => app.groupin.dicon_cover.style.display = "none", 500);
         this.config_mobile();
-        app.api.get_members().then(ret => {
-            if (!Array.isArray(ret.online) || !Array.isArray(ret.offline)) {
-                this.signout();
-                app.alert("Something went terribly wrong: " + ret);
-            }
-            else {
-                this.usrs_panel.children[1].textContent = app.name;
-                this.arr_onl_usrs = ret.online;
-                this.arr_ofl_usrs = ret.offline;
-                this.arr_onl_usrs.splice(this.arr_onl_usrs.indexOf(app.name), 1);
-                this.arr_onl_usrs.sort();
-                this.arr_onl_usrs.forEach(name => this.onl_usr_panel.appendChild(this.create_name(name, true)));
-                this.arr_ofl_usrs.sort();
-                this.arr_ofl_usrs.forEach(name => {
-                    this.ofl_usr_panel.appendChild(this.create_name(name, false));
-                });
-            }
-        });
+        this.members_get();
         if (!this.last_msg_time)
             this.get_msgs(true);
         else this.get_missed_msgs(this.last_msg_time);
     }
     leave(page = false) {
-        this.msg_input.blur();
+        this.msg_input.setAttribute("disabled", "");
+        this.msg_time.clear();
         this.dicon_cover.style.display = "block";
         this.dicon_cover.style.opacity = "1";
+        this.usr_state_changed = false;
+        this.clear_usrs();
+        this.msgs_loaded = false;
+        if (page)
+            this.clear_msgs();
+    }
+    async members_get() {
+        let ret = await app.api.get_members();
+        if (!Array.isArray(ret.online) || !Array.isArray(ret.offline)) {
+            this.signout();
+            app.alert("Something went terribly wrong: " + ret);
+        }
+        else {
+            this.arr_onl_usrs = ret.online;
+            this.arr_ofl_usrs = ret.offline;
+            this.arr_onl_usrs.splice(this.arr_onl_usrs.indexOf(app.name), 1);
+            this.arr_onl_usrs.sort();
+            this.arr_onl_usrs.forEach(name => this.onl_usr_panel.appendChild(this.create_name(name, true)));
+            this.arr_ofl_usrs.sort();
+            this.arr_ofl_usrs.forEach(name => {
+                this.ofl_usr_panel.appendChild(this.create_name(name, false));
+            });
+            if (this.usr_state_changed) {
+                this.usr_state_changed = false;
+                this.clear_usrs();
+                this.members_get();
+            }
+        }
+    }
+    clear_usrs() {
+        this.arr_onl_usrs = null;
+        this.arr_ofl_usrs = null;
         this.offl_usr = null;
         this.onl_usrs.clear();
         this.is_cleared = false;
-        while (this.onl_usr_panel.firstElementChild)
-            this.onl_usr_panel.firstElementChild.remove();
-        while (this.ofl_usr_panel.firstElementChild)
-            this.ofl_usr_panel.firstElementChild.remove();
+        let remove_div = this.onl_usr_panel;
+        this.onl_usr_panel = document.createElement("div");
+        this.onl_usr_panel.setAttribute("id", "online_usrs");
+        remove_div.parentElement.replaceChild(this.onl_usr_panel, remove_div);
+        remove_div.remove();
+        remove_div = this.ofl_usr_panel;
+        this.ofl_usr_panel = document.createElement("div");
+        this.ofl_usr_panel.setAttribute("id", "offline_usrs");
+        remove_div.parentElement.replaceChild(this.ofl_usr_panel, remove_div);
+        remove_div.remove();
         this.btn_swtch.firstElementChild.src = "/images/cancel_sel.svg";
         this.btn_swtch.classList.add("disabled");
         this.btn_notif.classList.add("disabled");
-        if (page) {
-            while (this.msgs_cont.firstElementChild)
-                this.msgs_cont.firstElementChild.remove();
-            this.end_reached = false;
-            this.last_msg_time = null;
-            this.upper_msg_time = "0";
-            this.upper_msg_el = null;
-            this.msgs_cont.style.opacity = "0";
-        }
+    }
+    clear_msgs() {
+        let remove_div = this.msgs_cont;
+        this.msgs_cont = document.createElement("div");
+        this.msgs_cont.setAttribute("onscroll", "app.groupin.scroll()");
+        remove_div.parentElement.replaceChild(this.msgs_cont, remove_div);
+        remove_div.remove();
+        this.end_reached = false;
+        this.last_msg_time = null;
+        this.upper_msg_time = "0";
+        this.upper_msg_el = null;
+        this.msgs_cont.style.opacity = "0";
     }
     ingroup_resize() {
         this.msgs_cont.style.visibility = "hidden";
@@ -1244,6 +1270,9 @@ class ingroup_class {
         return div;
     }
     usr_joined(member) {
+        this.usr_state_changed = true;
+        if (!this.arr_onl_usrs)
+            return;
         let index = this.arr_onl_usrs.indexOf(member);
         if (index > -1)
             return;
@@ -1266,6 +1295,9 @@ class ingroup_class {
         this.onl_usr_panel.insertBefore(this.create_name(member, true), this.onl_usr_panel.children[index]);
     }
     usr_switch_off(member) {
+        this.usr_state_changed = true;
+        if (!this.arr_onl_usrs)
+            return;
         if (this.signingout) {
             this.signingout = false;
             return;
@@ -1283,6 +1315,9 @@ class ingroup_class {
         this.ofl_usr_panel.insertBefore(this.create_name(member, false), this.ofl_usr_panel.children[index]);
     }
     member_signout(member) {
+        this.usr_state_changed = true;
+        if (!this.arr_onl_usrs)
+            return;
         let index = this.arr_onl_usrs.indexOf(member);
         if (index > -1) {
             this.arr_onl_usrs.splice(index, 1);
@@ -1372,11 +1407,30 @@ class ingroup_class {
         return div;
     }
     recieve_msg(msg) {
-        if (!msg.peers)
-            this.last_msg_time = msg.time.stringTime;
-        this.msgs_cont.appendChild(this.form_msg(msg));
-        if (this.isdown)
-            this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
+        if (!this.msgs_loaded) {
+            this.msg_pipe.push(msg);
+            this.proc_pipe_msgs();
+        }
+        else {
+            if (!msg.peers)
+                this.last_msg_time = msg.stringTime;
+            this.msgs_cont.appendChild(this.form_msg(msg));
+            if (this.isdown)
+                this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
+        }
+    }
+    proc_pipe_msgs() {
+        if (!app.groupin.msgs_loaded) {
+            clearTimeout(app.groupin.msg_pipe_handle);
+            app.groupin.msg_pipe_handle = setTimeout(app.groupin.proc_pipe_msgs, 50);
+        }
+        else {
+            app.groupin.msg_pipe.forEach(msg => {
+                if (!app.groupin.msg_time.has(msg.stringTime)) app.groupin.recieve_msg(msg);
+            });
+            app.groupin.msg_pipe.length = 0;
+            app.groupin.msg_input.removeAttribute("disabled");
+        }
     }
     onkey_input(ev) {
         if (ev.keyCode == 13 && this.msg_input.value) {
@@ -1402,6 +1456,7 @@ class ingroup_class {
                 peers: msg.to,
                 text: msg.text
             };
+            //todo use pipe
             this.last_sent_message = this.form_msg(msgLoc);
             this.msgs_cont.appendChild(this.last_sent_message);
             this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
@@ -1469,7 +1524,7 @@ class ingroup_class {
         if (cleared)
             this.msgs_panel.children[2].focus();
     }
-    get_msgs(scroll = false) {
+    get_msgs(initial = false) {
         if (!this.end_reached) {
             app.api.get_grp_msgs(this.upper_msg_time, this.msgs_quantity).then(ret => {
                 if (ret != null) {
@@ -1492,34 +1547,56 @@ class ingroup_class {
                                 }
                                 if (Previous)
                                     this.msgs_cont.insertBefore(div, Previous);
-                                else this.msgs_cont.appendChild(div);
+                                else {
+                                    this.msg_time.add(msg.stringTime);
+                                    this.msgs_cont.appendChild(div);
+                                }
                             });
-                            if (scroll) {
+                            if (initial) {
                                 clearTimeout(this.scroll_handle);
                                 this.scroll_handle = setTimeout(() => {
                                     app.groupin.msgs_cont.scrollTop = app.groupin.msgs_cont.scrollHeight;
                                     app.groupin.msgs_cont.style.opacity = "1";
-                                }, 150);
+                                }, 200);
+                                if (this.msgs_cont.scrollHeight < this.msgs_cont.offsetHeight * 3)
+                                    this.get_msgs(initial);
+                                else {
+                                    this.msgs_loaded = true;
+                                    if (this.msg_pipe.length == 0)
+                                        this.msg_input.removeAttribute("disabled");
+                                }
                             }
-                            else {
+                            else
                                 if (scrl_height < this.msgs_cont.scrollHeight)
                                     this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight - scrl_height;
-                            }
-                            if (this.msgs_cont.scrollHeight < this.msgs_cont.offsetHeight * 3)
-                                this.get_msgs(scroll);
                         }
                         else {
                             app.alert("Error. Server returned: " + ret);
+                            this.msgs_loaded = true;
+                            if (this.msg_pipe.length == 0)
+                                this.msg_input.removeAttribute("disabled");
                         }
                     }
                     else {
                         if (ret == 0) {
                             this.end_reached = true;
                             this.msgs_cont.style.opacity = "1";
+                            this.msgs_loaded = true;
+                            if (this.msg_pipe.length == 0)
+                                this.msg_input.removeAttribute("disabled");
                         }
-                        else
+                        else {
+                            this.msgs_loaded = true;
+                            if (this.msg_pipe.length == 0)
+                                this.msg_input.removeAttribute("disabled");
                             app.alert("Something went wrong, try to reload the page");
+                        }
                     }
+                }
+                else {
+                    this.msgs_loaded = true;
+                    if (this.msg_pipe.length == 0)
+                        this.msg_input.removeAttribute("disabled");
                 }
             });
         }
@@ -1529,7 +1606,10 @@ class ingroup_class {
             if (ret) {
                 if (isNaN(ret)) {
                     if (Array.isArray(ret)) {
-                        ret.forEach(msg => this.msgs_cont.appendChild(this.form_msg(msg)));
+                        ret.forEach(msg => {
+                            this.msg_time.add(msg.stringTime);
+                            this.msgs_cont.appendChild(this.form_msg(msg));
+                        });
                         this.last_msg_time = ret[ret.length - 1].stringTime;
                         if (this.isdown)
                             this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
@@ -1539,6 +1619,14 @@ class ingroup_class {
                     if (ret == -1)
                         app.alert("Limit exceeded. Try to reload the page.");
                 }
+                this.msgs_loaded = true;
+                if (this.msg_pipe.length == 0)
+                    this.msg_input.removeAttribute("disabled");
+            }
+            else {
+                this.msgs_loaded = true;
+                if (this.msg_pipe.length == 0)
+                    this.msg_input.removeAttribute("disabled");
             }
         });
     }
@@ -1564,6 +1652,7 @@ class ingroup_class {
 
 class app_class {
     constructor() {
+        window.addEventListener('resize', () => this.on_resize());
         this.wait_count = 0;
         this.wait_handle = null;
         this.wait_el = document.getElementById('wait');
@@ -1638,6 +1727,7 @@ class app_class {
             case 'ingroup':
                 this.groupin.connection.start().then(() => {
                     this.groupin.init();
+                    this.groupin.usrs_panel.children[1].textContent = app.name;
                     this.groupin.open_btn.nextElementSibling.textContent = this.ingroup;
                     this.groupin.open_btn.nextElementSibling.title = 'In Group: ' + this.ingroup;
                     document.body.children[2].style.display = 'block';
