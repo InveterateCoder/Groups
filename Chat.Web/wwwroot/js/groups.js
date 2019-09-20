@@ -1073,7 +1073,6 @@ class ingroup_class {
         this.msg_time = new Set();
         this.secret = "";
         this.key = null;
-        this.textEncoder = new TextEncoder();
         this.recieve_msg_mutex = false;
     }
     init() {
@@ -1674,13 +1673,14 @@ class ingroup_class {
         }
     }
     secret_onfocus(el) {
-        el.type = "text";
+        el.value = this.secret;
         el.placeholder = "";
     }
     secret_onblur(el) {
-        el.type = "password";
         el.placeholder = "Secret Word or Phrase";
-        el.value = this.secret;
+        el.value = '';
+        for (let i = 0; i < this.secret.length; i++)
+            el.value += '-';
     }
     secret_onkey(e, el) {
         if (e.key == "Escape")
@@ -1704,36 +1704,27 @@ class ingroup_class {
         await this.get_msgs(true);
     }
     async toCryptoKey(txt_key) {
-        let byte_arr = this.textEncoder.encode(txt_key);
-        let hash_buffer = await crypto.subtle.digest('SHA-256', byte_arr);
+        let byte_arr = this.textToArr(txt_key);
+        let hash_buffer = await crypto.subtle.digest('SHA-256', new Uint8Array(byte_arr));
         return await crypto.subtle.importKey(
             "raw", new Uint8Array(hash_buffer), "AES-CTR", false, ["encrypt", "decrypt"]);
+    }
+    textToArr(text) {
+        return text.split('').map(c => c.charCodeAt(0));
     }
     async encrypt(text) {
         if (!this.key)
             return;
-        let buf = await crypto.subtle.encrypt({ name: "AES-CTR", counter: new Uint8Array(16), length: 128 }, this.key, this.textEncoder.encode(text));
-        let array = Array.from(new Uint8Array(buf));
-        return array.map(b => b.toString(16).padStart(2, '0')).join('');
+        let buf = await crypto.subtle.encrypt({ name: "AES-CTR", counter: new Uint8Array(16), length: 128 }, this.key, new Uint8Array(this.textToArr(text)));
+        return String.fromCharCode.apply(null, new Uint8Array(buf));
     }
     async decrypt(text) {
         if (!this.key)
             return;
-        let bytes = [];
-        for (let c = 0; c < text.length; c += 2) {
-            let num = parseInt(text.substring(c, c + 2), 16);
-            if (isNaN(num))
-                return "Corrupted. Try to remove secret.";
-            else
-                bytes.push(num);
-        }
-        let uint8arr = new Uint8Array(bytes);
-        let buf = await crypto.subtle.decrypt({ name: "AES-CTR", counter: new Uint8Array(16), length: 128 }, this.key, uint8arr);
-        let array = Array.from(new Uint8Array(buf));
-        return array.map(c => String.fromCharCode(c)).join('');
+        let buf = await crypto.subtle.decrypt({ name: "AES-CTR", counter: new Uint8Array(16), length: 128 }, this.key, new Uint8Array(this.textToArr(text)));
+        return String.fromCharCode.apply(null, new Uint8Array(buf));
     }
-    //implement encryption word or sentence (maybe only word by trimming spaces) testing
-    //implement notification of users
+    //todo implement notification of users
 }
 
 class app_class {
