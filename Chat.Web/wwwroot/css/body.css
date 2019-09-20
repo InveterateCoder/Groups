@@ -7,6 +7,9 @@
 ::-webkit-search-results-decoration {
     display: none;
 }
+input::-ms-clear, input::-ms-reveal{
+    display:none;
+}
 body {
     margin: 0;
     padding: 0;

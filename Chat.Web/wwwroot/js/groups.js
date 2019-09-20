@@ -1031,7 +1031,7 @@ class groups_class {
 class ingroup_class {
     constructor() {
         this.dicon_cover = document.querySelector("#ingroup > #disconnected");
-        this.msgs_panel = document.getElementById("ingroup").children[0];
+        this.msgs_panel = document.getElementById("ingroup").firstElementChild;
         this.msgs_panel.addEventListener("click", () => app.groupin.usrs_close(), true);
         this.msgs_cont = this.msgs_panel.children[1];
         this.msg_input = document.querySelector("#ingroup > div:first-child > input");
@@ -1071,6 +1071,10 @@ class ingroup_class {
         this.msg_pipe_handle = null;
         this.msg_pipe = [];
         this.msg_time = new Set();
+        this.secret = "";
+        this.key = null;
+        this.textEncoder = new TextEncoder();
+        this.recieve_msg_mutex = false;
     }
     init() {
         this.dicon_cover.style.opacity = "0";
@@ -1083,7 +1087,6 @@ class ingroup_class {
     }
     leave(page = false) {
         this.msg_input.setAttribute("disabled", "");
-        this.msg_time.clear();
         this.dicon_cover.style.display = "block";
         this.dicon_cover.style.opacity = "1";
         this.usr_state_changed = false;
@@ -1371,7 +1374,7 @@ class ingroup_class {
         }
         else
             month = day = hours = minutes = "--";
-        return month + '-' + day + '/' + hours + ':' + minutes;
+        return day + '/' + month + ' ' + hours + ':' + minutes;
     }
     form_msg(msg) {
         let div = document.createElement("div");
@@ -1408,34 +1411,45 @@ class ingroup_class {
         div.children[1].textContent = msg.text;
         return div;
     }
-    recieve_msg(msg) {
-        if (!this.msgs_loaded) {
-            this.msg_pipe.push(msg);
-            this.proc_pipe_msgs();
-        }
+    async recieve_msg(msg) {
+        if (this.recieve_msg_mutex)
+            setTimeout(() => app.groupin.recieve_msg(msg), 10);
         else {
-            if (!msg.peers)
-                this.last_msg_time = msg.stringTime;
-            this.msgs_cont.appendChild(this.form_msg(msg));
-            if (this.isdown)
-                this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
+            this.recieve_msg_mutex = true;
+            if (!this.msgs_loaded) {
+                this.msg_pipe.push(msg);
+                this.recieve_msg_mutex = false;
+                this.proc_pipe_msgs();
+            }
+            else {
+                if (!msg.peers)
+                    this.last_msg_time = msg.stringTime;
+                if (this.key)
+                    msg.text = await this.decrypt(msg.text);
+                this.msgs_cont.appendChild(this.form_msg(msg));
+                this.recieve_msg_mutex = false;
+                if (this.isdown)
+                    this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
+            }
         }
     }
-    proc_pipe_msgs() {
+    async proc_pipe_msgs() {
         if (!app.groupin.msgs_loaded) {
             clearTimeout(app.groupin.msg_pipe_handle);
             app.groupin.msg_pipe_handle = setTimeout(app.groupin.proc_pipe_msgs, 50);
         }
         else {
-            app.groupin.msg_pipe.forEach(msg => {
-                if (!app.groupin.msg_time.has(msg.stringTime)) app.groupin.recieve_msg(msg);
-            });
+            for (let i = 0; i < app.groupin.msg_pipe.length; i++) {
+                let msg = app.groupin.msg_pipe[i];
+                if (!app.groupin.msg_time.has(msg.stringTime)) await app.groupin.recieve_msg(msg);
+            }
             app.groupin.msg_pipe.length = 0;
+            app.groupin.msg_time.clear();
             app.groupin.msg_input.removeAttribute("disabled");
         }
     }
     onkey_input(ev) {
-        if (ev.keyCode == 13 && this.msg_input.value) {
+        if (ev.key == "Enter" && this.msg_input.value) {
             var msg = null;
             if (this.onl_usrs.size == 0 || this.is_cleared == true) {
                 msg = {
@@ -1458,22 +1472,33 @@ class ingroup_class {
                 peers: msg.to,
                 text: msg.text
             };
-            //todo use pipe
             this.last_sent_message = this.form_msg(msgLoc);
             this.msgs_cont.appendChild(this.last_sent_message);
             this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
-            this.connection.invoke("MessageServer", msg).then(time => {
-                this.last_msg_time = time.stringTime;
-                this.last_sent_message.firstElementChild.children[1].textContent = this.form_time(time.jsTime);
-            }).catch(err => {
-                this.last_sent_message.children[1].style.color = "red";
-                let msg = err.message;
-                let index = msg.indexOf("HubException:");
-                if (index > -1)
-                    msg = msg.substring(index + 14);
-                app.alert(msg);
-            });
+            if (this.key) {
+                this.encrypt(msg.text).then(enc_text => {
+                    msg.text = enc_text;
+                    this.send_msg(msg);
+                });
+            }
+            else
+                this.send_msg(msg);
         }
+        else if (ev.key == "Escape")
+            this.msg_input.blur();
+    }
+    send_msg(msg) {
+        this.connection.invoke("MessageServer", msg).then(time => {
+            this.last_msg_time = time.stringTime;
+            this.last_sent_message.firstElementChild.children[1].textContent = this.form_time(time.jsTime);
+        }).catch(err => {
+            this.last_sent_message.children[1].style.color = "red";
+            let msg = err.message;
+            let index = msg.indexOf("HubException:");
+            if (index > -1)
+                msg = msg.substring(index + 14);
+            app.alert(msg);
+        });
     }
     show_peers(el) {
         let msg_shell = el.parentElement.parentElement;
@@ -1526,111 +1551,113 @@ class ingroup_class {
         if (cleared)
             this.msgs_panel.children[2].focus();
     }
-    get_msgs(initial = false) {
+    async get_msgs(initial = false) {
         if (!this.end_reached) {
-            app.api.get_grp_msgs(this.upper_msg_time, this.msgs_quantity).then(ret => {
-                if (ret != null) {
-                    if (isNaN(ret)) {
-                        if (Array.isArray(ret)) {
-                            if (ret.length < this.msgs_quantity)
-                                this.end_reached = true;
-                            let initiated = false;
-                            if (!this.end_reached)
-                                this.upper_msg_time = ret[0].stringTime;
-                            if (!this.upper_msg_el)
-                                this.last_msg_time = ret[ret.length - 1].stringTime;
-                            let Previous = this.upper_msg_el;
-                            let scrl_height = this.msgs_cont.scrollHeight;
-                            ret.forEach(msg => {
-                                let div = this.form_msg(msg);
-                                if (!initiated && !this.end_reached) {
-                                    this.upper_msg_el = div;
-                                    initiated = true;
-                                }
-                                if (Previous)
-                                    this.msgs_cont.insertBefore(div, Previous);
-                                else {
-                                    this.msg_time.add(msg.stringTime);
-                                    this.msgs_cont.appendChild(div);
-                                }
-                            });
-                            if (initial) {
-                                clearTimeout(this.scroll_handle);
-                                this.scroll_handle = setTimeout(() => {
-                                    app.groupin.msgs_cont.scrollTop = app.groupin.msgs_cont.scrollHeight;
-                                    app.groupin.msgs_cont.style.opacity = "1";
-                                }, 200);
-                                if (this.msgs_cont.scrollHeight < this.msgs_cont.offsetHeight * 3)
-                                    this.get_msgs(initial);
-                                else {
-                                    this.msgs_loaded = true;
-                                    if (this.msg_pipe.length == 0)
-                                        this.msg_input.removeAttribute("disabled");
-                                }
-                            }
-                            else
-                                if (scrl_height < this.msgs_cont.scrollHeight)
-                                    this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight - scrl_height;
-                        }
-                        else {
-                            app.alert("Error. Server returned: " + ret);
-                            this.msgs_loaded = true;
-                            if (this.msg_pipe.length == 0)
-                                this.msg_input.removeAttribute("disabled");
-                        }
-                    }
-                    else {
-                        if (ret == 0) {
-                            this.end_reached = true;
-                            this.msgs_cont.style.opacity = "1";
-                            this.msgs_loaded = true;
-                            if (this.msg_pipe.length == 0)
-                                this.msg_input.removeAttribute("disabled");
-                        }
-                        else {
-                            this.msgs_loaded = true;
-                            if (this.msg_pipe.length == 0)
-                                this.msg_input.removeAttribute("disabled");
-                            app.alert("Something went wrong, try to reload the page");
-                        }
-                    }
-                }
-                else {
-                    this.msgs_loaded = true;
-                    if (this.msg_pipe.length == 0)
-                        this.msg_input.removeAttribute("disabled");
-                }
-            });
-        }
-    }
-    get_missed_msgs() {
-        app.api.get_missed_msgs(this.last_msg_time).then(ret => {
-            if (ret) {
+            let ret = await app.api.get_grp_msgs(this.upper_msg_time, this.msgs_quantity);
+            if (ret != null) {
                 if (isNaN(ret)) {
                     if (Array.isArray(ret)) {
-                        ret.forEach(msg => {
-                            this.msg_time.add(msg.stringTime);
-                            this.msgs_cont.appendChild(this.form_msg(msg));
-                        });
-                        this.last_msg_time = ret[ret.length - 1].stringTime;
-                        if (this.isdown)
-                            this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
+                        if (ret.length < this.msgs_quantity)
+                            this.end_reached = true;
+                        let initiated = false;
+                        if (!this.end_reached)
+                            this.upper_msg_time = ret[0].stringTime;
+                        if (!this.upper_msg_el)
+                            this.last_msg_time = ret[ret.length - 1].stringTime;
+                        let Previous = this.upper_msg_el;
+                        let scrl_height = this.msgs_cont.scrollHeight;
+                        for (let i = 0; i < ret.length; i++) {
+                            let msg = ret[i];
+                            if (this.key)
+                                msg.text = await this.decrypt(msg.text);
+                            let div = this.form_msg(msg);
+                            if (!initiated && !this.end_reached) {
+                                this.upper_msg_el = div;
+                                initiated = true;
+                            }
+                            if (Previous)
+                                this.msgs_cont.insertBefore(div, Previous);
+                            else {
+                                this.msg_time.add(msg.stringTime);
+                                this.msgs_cont.appendChild(div);
+                            }
+                        }
+                        if (initial) {
+                            clearTimeout(this.scroll_handle);
+                            this.scroll_handle = setTimeout(() => {
+                                app.groupin.msgs_cont.scrollTop = app.groupin.msgs_cont.scrollHeight;
+                                app.groupin.msgs_cont.style.opacity = "1";
+                            }, 200);
+                            if (this.msgs_cont.scrollHeight < this.msgs_cont.offsetHeight * 3)
+                                await this.get_msgs(initial);
+                            this.msgs_loaded = true;
+                            if (this.msg_pipe.length == 0)
+                                this.msg_input.removeAttribute("disabled");
+                        }
+                        else
+                            if (scrl_height < this.msgs_cont.scrollHeight)
+                                this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight - scrl_height;
+                    }
+                    else {
+                        app.alert("Error. Server returned: " + ret);
+                        this.msgs_loaded = true;
+                        if (this.msg_pipe.length == 0)
+                            this.msg_input.removeAttribute("disabled");
                     }
                 }
                 else {
-                    if (ret == -1)
-                        app.alert("Limit exceeded. Try to reload the page.");
+                    if (ret == 0) {
+                        this.end_reached = true;
+                        this.msgs_cont.style.opacity = "1";
+                        this.msgs_loaded = true;
+                        if (this.msg_pipe.length == 0)
+                            this.msg_input.removeAttribute("disabled");
+                    }
+                    else {
+                        this.msgs_loaded = true;
+                        if (this.msg_pipe.length == 0)
+                            this.msg_input.removeAttribute("disabled");
+                        app.alert("Something went wrong, try to reload the page");
+                    }
                 }
-                this.msgs_loaded = true;
-                if (this.msg_pipe.length == 0)
-                    this.msg_input.removeAttribute("disabled");
             }
             else {
                 this.msgs_loaded = true;
                 if (this.msg_pipe.length == 0)
                     this.msg_input.removeAttribute("disabled");
             }
-        });
+        }
+    }
+    async get_missed_msgs() {
+        let ret = await app.api.get_missed_msgs(this.last_msg_time);
+        if (ret) {
+            if (isNaN(ret)) {
+                if (Array.isArray(ret)) {
+                    for (let i = 0; i < ret.length; i++) {
+                        let msg = ret[i];
+                        this.msg_time.add(msg.stringTime);
+                        if (this.key)
+                            msg.text = await this.decrypt(msg.text);
+                        this.msgs_cont.appendChild(this.form_msg(msg));
+                    }
+                    this.last_msg_time = ret[ret.length - 1].stringTime;
+                    if (this.isdown)
+                        this.msgs_cont.scrollTop = this.msgs_cont.scrollHeight;
+                }
+            }
+            else {
+                if (ret == -1)
+                    app.alert("Limit exceeded. Try to reload the page.");
+            }
+            this.msgs_loaded = true;
+            if (this.msg_pipe.length == 0)
+                this.msg_input.removeAttribute("disabled");
+        }
+        else {
+            this.msgs_loaded = true;
+            if (this.msg_pipe.length == 0)
+                this.msg_input.removeAttribute("disabled");
+        }
     }
     scroll() {
         if (!this.block_scroll) {
@@ -1646,7 +1673,65 @@ class ingroup_class {
             }
         }
     }
-    //edge doesn't show arrow pointer on some elements
+    secret_onfocus(el) {
+        el.type = "text";
+        el.placeholder = "";
+    }
+    secret_onblur(el) {
+        el.type = "password";
+        el.placeholder = "Secret Word or Phrase";
+        el.value = this.secret;
+    }
+    secret_onkey(e, el) {
+        if (e.key == "Escape")
+            el.blur();
+        else if (e.key == "Enter") {
+            if (el.value == this.secret)
+                el.blur();
+            else {
+                this.secret = el.value;
+                el.blur();
+                this.reload_msgs();
+            }
+        }
+    }
+    async reload_msgs() {
+        if (!this.secret)
+            this.key = null;
+        else
+            this.key = await this.toCryptoKey(this.secret);
+        this.clear_msgs();
+        await this.get_msgs(true);
+    }
+    async toCryptoKey(txt_key) {
+        let byte_arr = this.textEncoder.encode(txt_key);
+        let hash_buffer = await crypto.subtle.digest('SHA-256', byte_arr);
+        return await crypto.subtle.importKey(
+            "raw", new Uint8Array(hash_buffer), "AES-CTR", false, ["encrypt", "decrypt"]);
+    }
+    async encrypt(text) {
+        if (!this.key)
+            return;
+        let buf = await crypto.subtle.encrypt({ name: "AES-CTR", counter: new Uint8Array(16), length: 128 }, this.key, this.textEncoder.encode(text));
+        let array = Array.from(new Uint8Array(buf));
+        return array.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    async decrypt(text) {
+        if (!this.key)
+            return;
+        let bytes = [];
+        for (let c = 0; c < text.length; c += 2) {
+            let num = parseInt(text.substring(c, c + 2), 16);
+            if (isNaN(num))
+                return "Corrupted. Try to remove secret.";
+            else
+                bytes.push(num);
+        }
+        let uint8arr = new Uint8Array(bytes);
+        let buf = await crypto.subtle.decrypt({ name: "AES-CTR", counter: new Uint8Array(16), length: 128 }, this.key, uint8arr);
+        let array = Array.from(new Uint8Array(buf));
+        return array.map(c => String.fromCharCode(c)).join('');
+    }
     //implement encryption word or sentence (maybe only word by trimming spaces) testing
     //implement notification of users
 }
@@ -1654,6 +1739,7 @@ class ingroup_class {
 class app_class {
     constructor() {
         window.addEventListener('resize', () => this.on_resize());
+        this.alert_el = document.getElementById("message");
         this.wait_count = 0;
         this.wait_handle = null;
         this.wait_el = document.getElementById('wait');
@@ -1706,10 +1792,9 @@ class app_class {
         }
     }
     alert(message) {
-        let el = document.getElementById('message');
-        el.children[0].children[1].focus();
-        el.children[0].children[0].textContent = message;
-        el.style.display = 'block';
+        app.alert_el.style.display = 'block';
+        app.alert_el.focus();
+        app.alert_el.firstElementChild.firstElementChild.textContent = message;
     }
     goto(place) {
         if (this.page == place)

@@ -34,6 +34,10 @@
     justify-content:space-between;
     align-items:center;
 }
+#ingroup > div:first-child > nav {
+    box-shadow:0 0 7px 2px silver;
+
+}
 #ingroup > div > nav > img {
     display:none;
     height:100%;
@@ -77,7 +81,7 @@
 }
 #ingroup > div:nth-child(2) > nav > input:focus {
     background-color:white;
-    text-align:start;
+    text-align:left;
 }
 #ingroup > div:first-child > nav > div:nth-child(2) {
     width:40%;
@@ -85,6 +89,7 @@
     text-overflow:ellipsis;
     margin-left:15px;
     font-size:23px;
+    cursor:default;
 }
 #ingroup > div:first-child > nav > div:nth-child(3) {
     margin-right:13px;
@@ -238,6 +243,7 @@
     font-size: 19px;
     text-decoration: underline;
     color: darkgoldenrod;
+    cursor:default;
 }
 #ingroup > div:nth-child(2) > div:nth-child(3) {
     position:absolute;
@@ -289,9 +295,11 @@
 }
 #online_usrs {
     color:black;
+    cursor:default;
 }
 #offline_usrs {
-    color:silver;
+    color: silver;
+    cursor: default;
 }
 #online_usrs > div, #offline_usrs > div {
     padding:6px 20px;
