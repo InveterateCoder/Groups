@@ -78,7 +78,7 @@ namespace Chat.Web.Migrations
                         .HasMaxLength(64);
 
                     b.Property<string>("Text")
-                        .HasMaxLength(2048);
+                        .HasMaxLength(10000);
 
                     b.HasKey("Id");
 

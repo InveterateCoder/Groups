@@ -1036,6 +1036,7 @@ class ingroup_class {
         this.msgs_cont = this.msgs_panel.children[1];
         this.msg_input = document.querySelector("#ingroup > div:first-child > input");
         this.usrs_panel = this.msgs_panel.nextElementSibling;
+        this.secret_input = this.usrs_panel.firstElementChild.firstElementChild;
         this.open_btn = this.msgs_panel.firstElementChild.firstElementChild;
         this.close_btn = this.usrs_panel.firstElementChild.children[1];
         this.connection = new signalR.HubConnectionBuilder().withUrl("/hub").configureLogging(signalR.LogLevel.Error).build();
@@ -1071,17 +1072,42 @@ class ingroup_class {
         this.msg_pipe_handle = null;
         this.msg_pipe = [];
         this.msg_time = new Set();
-        this.secret = "";
         this.key = null;
         this.recieve_msg_mutex = false;
+        this.encoder = new TextEncoder();
+        this.decoder = new TextDecoder();
+    }
+    get secret() {
+        let val = localStorage.getItem("secret");
+        if (!val)
+            return "";
+        else return val;
+    }
+    set secret(val) {
+        if (!val)
+            localStorage.removeItem("secret");
+        else
+            localStorage.setItem("secret", val);
     }
     init() {
         this.dicon_cover.style.opacity = "0";
         setTimeout(() => app.groupin.dicon_cover.style.display = "none", 500);
         this.config_mobile();
         this.members_get();
-        if (!this.last_msg_time)
-            this.get_msgs(true);
+        if (!this.last_msg_time) {
+            this.secret_input.value = "";
+            let sec = this.secret;
+            if (sec)
+                for (let i = 0; i < sec.length; i++)
+                    this.secret_input.value += '-';
+            if (!this.key && sec)
+                this.toCryptoKey(this.secret).then(key => {
+                    this.key = key;
+                    this.get_msgs(true);
+                });
+            else
+                this.get_msgs(true);
+        }
         else this.get_missed_msgs(this.last_msg_time);
     }
     leave(page = false) {
@@ -1094,6 +1120,8 @@ class ingroup_class {
         if (page) {
             this.msg_input.value = null;
             this.clear_msgs();
+            this.key = null;
+            this.secret_input.value = "";
         }
     }
     async members_get() {
@@ -1449,6 +1477,11 @@ class ingroup_class {
     }
     onkey_input(ev) {
         if (ev.key == "Enter" && this.msg_input.value) {
+            if (this.msg_input.value.length > 2500) {
+                this.msg_input.value = "";
+                app.alert("Message size is limited to 2500 characters");
+                return;
+            }
             var msg = null;
             if (this.onl_usrs.size == 0 || this.is_cleared == true) {
                 msg = {
@@ -1710,19 +1743,22 @@ class ingroup_class {
             "raw", new Uint8Array(hash_buffer), "AES-CTR", false, ["encrypt", "decrypt"]);
     }
     textToArr(text) {
-        return text.split('').map(c => c.charCodeAt(0));
+        let arr = [];
+        for (let i = 0; i < text.length; i++)
+            arr.push(text.charCodeAt(i));
+        return arr;
     }
     async encrypt(text) {
         if (!this.key)
             return;
-        let buf = await crypto.subtle.encrypt({ name: "AES-CTR", counter: new Uint8Array(16), length: 128 }, this.key, new Uint8Array(this.textToArr(text)));
-        return String.fromCharCode.apply(null, new Uint8Array(buf));
+        let buf = await crypto.subtle.encrypt({ name: "AES-CTR", counter: new Uint8Array(16), length: 128 }, this.key, this.encoder.encode(text));
+        return String.fromCharCode(...new Uint8Array(buf));
     }
     async decrypt(text) {
         if (!this.key)
             return;
         let buf = await crypto.subtle.decrypt({ name: "AES-CTR", counter: new Uint8Array(16), length: 128 }, this.key, new Uint8Array(this.textToArr(text)));
-        return String.fromCharCode.apply(null, new Uint8Array(buf));
+        return this.decoder.decode(new Uint8Array(buf));
     }
     //todo implement notification of users
 }
@@ -1767,7 +1803,7 @@ class app_class {
                 break;
         }
     }
-    wait() {
+    wait() { //todo set instead of counter
         if (this.wait_count == 0)
             this.wait_handle = setTimeout(() => {
                 app.wait_el.style.display = 'block';
@@ -1792,11 +1828,13 @@ class app_class {
             return;
         switch (place) {
             case 'reg':
+                this.groupin.secret = null;
                 document.body.children[0].style.display = 'block';
                 document.body.children[0].focus();
                 this.hide('reg');
                 break;
             case 'groups':
+                this.groupin.secret = null;
                 this.groups.list_clear();
                 this.groups.list_load();
                 this.groups.groups_window.getElementsByTagName('code')[0].textContent = this.name;

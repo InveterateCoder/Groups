@@ -38,7 +38,7 @@ namespace Chat.Web.Models
             public string StringTime { get; set; }
             [MaxLength(64)]
             public string From { get; set; }
-            [MaxLength(2048)]
+            [MaxLength(10000)]
             public string Text { get; set; }
             [Required]
             public int GroupId { get; set; }

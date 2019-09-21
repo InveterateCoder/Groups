@@ -40,7 +40,7 @@ namespace Chat.Web.Migrations
                     JsTime = table.Column<long>(nullable: false),
                     StringTime = table.Column<string>(maxLength: 64, nullable: true),
                     From = table.Column<string>(maxLength: 64, nullable: true),
-                    Text = table.Column<string>(maxLength: 2048, nullable: true),
+                    Text = table.Column<string>(maxLength: 10000, nullable: true),
                     GroupId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>

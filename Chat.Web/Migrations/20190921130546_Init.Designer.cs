@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chat.Web.Migrations
 {
     [DbContext(typeof(ChatterersDb))]
-    [Migration("20190917144634_Init")]
+    [Migration("20190921130546_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -80,7 +80,7 @@ namespace Chat.Web.Migrations
                         .HasMaxLength(64);
 
                     b.Property<string>("Text")
-                        .HasMaxLength(2048);
+                        .HasMaxLength(10000);
 
                     b.HasKey("Id");
 

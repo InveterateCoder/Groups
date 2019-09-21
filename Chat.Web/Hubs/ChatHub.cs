@@ -51,8 +51,8 @@ namespace Chat.Web.Hubs
         public async Task<Time> MessageServer(MessageFromClient msg)
         {
             var user = GetUser();
-            if (string.IsNullOrEmpty(msg.Text) || msg.Text.Length > 2048)
-                throw new HubException("Message cannot be empty or exceed 2048 characters");
+            if (string.IsNullOrEmpty(msg.Text) || msg.Text.Length > 10000)
+                throw new HubException("Message cannot be empty or exceed 10000 characters");
             Time time = new Time();
             time.SharpTime = DateTime.UtcNow.Ticks;
             time.JsTime = StaticData.TicksToJsMs(time.SharpTime);
