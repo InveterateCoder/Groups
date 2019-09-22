@@ -1389,7 +1389,7 @@ class ingroup_class {
             month = time.getMonth().toString();
             if (month.length < 2)
                 month = '0' + month;
-            day = time.getDay().toString();
+            day = time.getDate().toString();
             if (day.length < 2)
                 day = '0' + day;
             hours = time.getHours().toString();
