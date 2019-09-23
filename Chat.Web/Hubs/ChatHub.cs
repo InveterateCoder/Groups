@@ -49,7 +49,7 @@ namespace Chat.Web.Hubs
             await Groups.RemoveFromGroupAsync(user.ConnectionId, user.InGroupId.ToString());
         }
         public async Task<Time> MessageServer(MessageFromClient msg)
-        {
+        { //todo implement spam protection
             var user = GetUser();
             if (string.IsNullOrEmpty(msg.Text) || msg.Text.Length > 10000)
                 throw new HubException("Message cannot be empty or exceed 10000 characters");

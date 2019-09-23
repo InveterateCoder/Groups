@@ -49,9 +49,7 @@ namespace Chat.Web.Infrastructure
         }
         private async Task Filter(HttpContext context, bool signed = false)
         {
-            if (!signed && (context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/hub"), StringComparison.OrdinalIgnoreCase)
-                || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/groups"), StringComparison.OrdinalIgnoreCase)
-                || context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/account/user"), StringComparison.OrdinalIgnoreCase)))
+            if (!signed && context.Request.Path != "/" && !(context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/api/account"), StringComparison.OrdinalIgnoreCase)))
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             else
                 await _next(context);

@@ -54,6 +54,8 @@ namespace Chat.Web.Migrations
                     b.Property<string>("Token")
                         .HasMaxLength(50);
 
+                    b.Property<string>("WebSubscription");
+
                     b.HasKey("Id");
 
                     b.ToTable("Chatterers");

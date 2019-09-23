@@ -17,7 +17,44 @@ namespace Chat.Web.Models
         public string InGroupPassword { get => Chatterer?.InGroupPassword; set { if (Chatterer != null) Chatterer.InGroupPassword = value; else Throw(); } }
         public string Token { get => Chatterer?.Token; set { if (Chatterer != null) Chatterer.Token = value; else Throw(); } }
         public string ConnectionId { get => Chatterer?.ConnectionId; set { if (Chatterer != null) Chatterer.ConnectionId = value; else Throw(); } }
+        public string WebSubscription { get => Chatterer?.WebSubscription; set { if (Chatterer != null) Chatterer.WebSubscription = value; else Throw(); } }
+        public WebPush.PushSubscription PushSubscription
+        {
+            get
+            {
+                string subscription = WebSubscription;
+                if (subscription == null)
+                    return null;
+                else
+                    return Subscription.FromJson(subscription).FormWebPushSubscription();
+            }
+        }
         public async Task SaveAsync() => await Database?.SaveChangesAsync();
         private void Throw() => throw new System.Exception("User is not signed");
+    }
+    public class Subscription
+    {
+        public struct KeysStruct
+        {
+            public string P256DH;
+            public string Auth;
+        }
+        public string Endpoint;
+        public string ExpirationTime;
+        public KeysStruct Keys;
+        public WebPush.PushSubscription FormWebPushSubscription()
+        {
+            return new WebPush.PushSubscription
+            {
+                Auth = Keys.Auth,
+                P256DH = Keys.P256DH,
+                Endpoint = Endpoint
+            };
+        }
+        public static Subscription FromJson(string json) => Newtonsoft.Json.JsonConvert.DeserializeObject<Subscription>(json);
+        public override string ToString()
+        {
+            return Newtonsoft.Json.JsonConvert.SerializeObject(this);
+        }
     }
 }

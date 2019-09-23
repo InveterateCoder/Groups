@@ -28,6 +28,7 @@ namespace Chat.Web.Models
             public string Token { get; set; }
             [MaxLength(64)]
             public string ConnectionId { get; set; }
+            public string WebSubscription { get; set; }
         }
         public class Message
         {

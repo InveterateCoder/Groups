@@ -1,5 +1,9 @@
 ﻿var app;
-document.addEventListener('DOMContentLoaded', () => app = new app_class());
+var notif_worker;
+document.addEventListener('DOMContentLoaded', () => {
+    navigator.serviceWorker.register('/js/notif_worker.js').then(ret => notif_worker = ret);
+    app = new app_class();
+});
 
 class api_class {
     constructor() { }
@@ -80,7 +84,7 @@ class api_class {
     async signout() {
         try {
             let ret = false;
-            let resp = await this.post('api/account/user/signout');
+            let resp = await this.post('api/user/signout');
             if (resp == 'OK' || resp == "not_authorized" || resp == "single_connection_only")
                 ret = true;
             else
@@ -98,7 +102,7 @@ class api_class {
                 name: false,
                 pass: false
             };
-            let resp = await this.post('api/account/user/change', request);
+            let resp = await this.post('api/user/change', request);
             switch (resp) {
                 case "name_changed":
                     ret.name = true;
@@ -141,7 +145,7 @@ class api_class {
     async acc_delete(signin) {
         try {
             let ret = false;
-            let resp = await this.post('api/account/user/del', signin);
+            let resp = await this.post('api/user/del', signin);
             switch (resp) {
                 case "deleted":
                     ret = true;
@@ -236,7 +240,7 @@ class api_class {
     async usr_info() {
         try {
             let ret = false;
-            let fetresp = await fetch('api/account/user/info', {
+            let fetresp = await fetch('api/user/info', {
                 method: 'get',
                 headers: {
                     'Accept': 'application/json'
@@ -264,6 +268,7 @@ class api_class {
                     app.ingroup = obj.ingroup;
                 else
                     app.ingroup = null;
+                app.pub_key = obj.pub_key;
             }
             return ret;
         }
@@ -410,6 +415,20 @@ class api_class {
             return null;
         }
     }
+    async subscribe(token) {
+        try {
+            let ret = await this.post("api/push/web/subscribe", token);
+            if (ret != "OK") {
+                app.alert(ret);
+                return false;
+            }
+            return true;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
     async post(addr, obj) {
         app.wait();
         let ret;
@@ -417,17 +436,16 @@ class api_class {
             let resp = await fetch(addr, {
                 method: 'post',
                 headers: {
-                    'Accept': 'plain/text', 'Content-Type': 'application/json'
+                    'Accept': 'text/plain', 'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(obj || '')
             });
             if (resp.status != 200) {
-                document.cookie = "Auth_Tok=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                app.name = null;
-                app.group = null;
-                app.goto('reg');
+                app.fail("Error. Server responded with: " + resp.statusText);
+                ret = null;
             }
-            ret = await resp.text();
+            else
+                ret = await resp.text();
         }
         catch (err) {
             ret = err.message;
@@ -448,10 +466,7 @@ class api_class {
                 }
             });
             if (resp.status != 200) {
-                document.cookie = "Auth_Tok=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                app.name = null;
-                app.group = null;
-                app.goto('reg');
+                app.fail("Error. Server responded with: " + resp.statusText);
                 ret = null;
             }
             else
@@ -1761,12 +1776,15 @@ class ingroup_class {
         return this.decoder.decode(new Uint8Array(buf));
     }
     //todo implement notification of users
+    //todo sound
 }
 
 class app_class {
     constructor() {
         window.addEventListener('resize', () => this.on_resize());
         this.alert_el = document.getElementById("message");
+        this.alert_btn = this.alert_el.firstElementChild.children[1];
+        this.alert_btn.onclick = this.alert_hide;
         this.wait_count = 0;
         this.wait_handle = null;
         this.wait_el = document.getElementById('wait');
@@ -1774,6 +1792,7 @@ class app_class {
         this.name = null;
         this.group = null;
         this.ingroup = null;
+        this.pub_key = null;
         this.api = new api_class();
         this.reg_panel = new reg_panel_class();
         this.groups = new groups_class();
@@ -1792,6 +1811,13 @@ class app_class {
             password: text => text + " must be at least 8 characters long and maximum 32",
             name: text => text + " must be at least 5 characters long and maximum 64"
         };
+        navigator.permissions.query({ name: 'notifications' }).then(notifPerm => notifPerm.onchange = () => app.notif_perm_changed());
+        this.subscription = null;
+    }
+    get pkey_array() {
+        const padding = ' '.repeat(4 - this.pub_key.length % 4);
+        const base64 = (this.pub_key + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        return new Uint8Array(Array.from(atob(base64), c => c.charCodeAt(0)));
     }
     on_resize() {
         switch (this.page) {
@@ -1803,17 +1829,15 @@ class app_class {
                 break;
         }
     }
-    wait() { //todo set instead of counter
-        if (this.wait_count == 0)
+    wait() {
+        if (++this.wait_count == 1)
             this.wait_handle = setTimeout(() => {
                 app.wait_el.style.display = 'block';
                 app.wait_el.focus();
             }, 1000);
-        this.wait_count++;
     }
     resume() {
-        this.wait_count--;
-        if (this.wait_count == 0) {
+        if (--this.wait_count == 0) {
             clearTimeout(this.wait_handle);
             this.wait_el.style.display = 'none';
         }
@@ -1822,6 +1846,18 @@ class app_class {
         app.alert_el.style.display = 'block';
         app.alert_el.focus();
         app.alert_el.firstElementChild.firstElementChild.textContent = message;
+    }
+    alert_hide() {
+        app.alert_el.style.display = 'none';
+    }
+    fail(text) {
+        document.cookie = "Auth_Tok=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        app.name = null;
+        app.group = null;
+        app.ingroup = null;
+        app.goto('reg');
+        if (text)
+            app.alert(text);
     }
     goto(place) {
         if (this.page == place)
@@ -1845,18 +1881,43 @@ class app_class {
                 this.hide('groups');
                 break;
             case 'ingroup':
-                this.groupin.connection.start().then(() => {
-                    this.groupin.init();
-                    this.groupin.usrs_panel.children[1].textContent = app.name;
-                    this.groupin.open_btn.nextElementSibling.textContent = this.ingroup;
-                    this.groupin.open_btn.nextElementSibling.title = 'In Group: ' + this.ingroup;
-                    document.body.children[2].style.display = 'block';
-                    document.body.children[2].focus();
-                    document.addEventListener("visibilitychange", this.visib_change);
-                    this.hide('ingroup');
-                });
+                switch (Notification.permission) {
+                    case 'default':
+                        this.alert_btn.onclick = () => this.proceed_ingroup(true);
+                        this.alert("Shortly you'll be prompted to allow this website send you push notifications. " +
+                            "In order to allow group users send you notifications and for you to be able to notify them, please allow.");
+                        break;
+                    case 'denied':
+                        this.alert_btn.onclick = () => this.proceed_ingroup();
+                        this.alert("Your notifications are disabled. To be able to receive and send group notifications, " +
+                            "please enable notifications in your browser settings for this website");
+                        break;
+                    case 'granted':
+                        this.load_ingroup();
+                        break;
+                }
                 break;
         }
+    }
+    proceed_ingroup(def = false) {
+        this.alert_hide();
+        this.alert_btn.onclick = () => this.alert_hide();
+        if (def)
+            Notification.requestPermission(app.load_ingroup);
+        else this.load_ingroup();
+    }
+    load_ingroup() {
+        app.notif_subscribe();
+        app.groupin.connection.start().then(() => {
+            app.groupin.init();
+            app.groupin.usrs_panel.children[1].textContent = app.name;
+            app.groupin.open_btn.nextElementSibling.textContent = app.ingroup;
+            app.groupin.open_btn.nextElementSibling.title = 'In Group: ' + app.ingroup;
+            document.body.children[2].style.display = 'block';
+            document.body.children[2].focus();
+            document.addEventListener("visibilitychange", app.visib_change);
+            app.hide('ingroup');
+        });
     }
     hide(place) {
         switch (this.page) {
@@ -1901,6 +1962,52 @@ class app_class {
                 break;
             case "visible":
                 app.groupin.connection.start().then(() => app.groupin.init()).catch(err => app.alert(err));
+                break;
+        }
+    }
+    notif_subscribe() {
+        if (Notification.permission == 'granted') {
+            notif_worker.pushManager.getSubscription().then(subs => {
+                if (subs) {
+                    app.subscription = subs;
+                    return;
+                }
+                notif_worker.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this.pkey_array })
+                    .then(newsubs => {
+                        app.subscription = newsubs;
+                        app.api.subscribe(newsubs).then(ret => {
+                            if (!ret)
+                                app.fail(err.message);
+                        }).catch (err => {
+                            app.fail(err.message);
+                        });
+                    }).catch(err => app.alert(err.message));
+            });
+        }
+    }
+    notif_unsubscribe() {
+        if (app.subscription)
+            app.wait();
+        fetch("api/push/web/unsubscribe", { method: 'get', headers: { 'Accept': 'text/plain' } }).then(resp => {
+            app.resume();
+            if (resp.status != 200)
+                app.fail();
+            else
+                resp.text().then(ret => {
+                    if (ret != 'OK')
+                        app.fail(ret);
+                    else window.location.reload();
+                })
+            }).catch(err => app.fail(err.message));
+    }
+    notif_perm_changed() {
+        switch (Notification.permission) {
+            case 'default':
+            case 'denied':
+                this.notif_unsubscribe();
+                break;
+            case 'granted':
+                window.location.reload();
                 break;
         }
     }
