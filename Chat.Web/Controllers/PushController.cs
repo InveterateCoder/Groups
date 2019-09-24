@@ -48,5 +48,18 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
+        [HttpGet("web/push")]
+        public async Task<ContentResult> Push()
+        {
+            try
+            {
+
+            }
+            catch(Exception e)
+            {
+
+            }
+            return Content("ol");
+        }
     }
 }

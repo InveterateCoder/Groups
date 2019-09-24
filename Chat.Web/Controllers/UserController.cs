@@ -68,7 +68,7 @@ namespace Chat.Web.Controllers
         }
         [HttpPost("change")]
         public async Task<ContentResult> Change([FromBody]AccountChangeRequest request)
-        {
+        { //todo allow change your own name with capitalization, check your user's name first
             string ret;
             try
             {

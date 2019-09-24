@@ -429,6 +429,29 @@ class api_class {
             return false;
         }
     }
+    async unsubscribe() {
+        try {
+            app.wait();
+            let ret;
+            let resp = await fetch("api/push/web/unsubscribe", { method: 'get', headers: { 'Accept': 'text/plain' } });
+            app.resume();
+            if (resp.status != 200) {
+                app.fail("Error. Server responded with: " + resp.statusText);
+                return false;
+            }
+            else
+                ret = await resp.text();
+            if (ret != 'OK') {
+                app.alert(ret);
+                return false;
+            }
+            else return true;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
     async post(addr, obj) {
         app.wait();
         let ret;
@@ -1812,7 +1835,6 @@ class app_class {
             name: text => text + " must be at least 5 characters long and maximum 64"
         };
         navigator.permissions.query({ name: 'notifications' }).then(notifPerm => notifPerm.onchange = () => app.notif_perm_changed());
-        this.subscription = null;
     }
     get pkey_array() {
         const padding = ' '.repeat(4 - this.pub_key.length % 4);
@@ -1902,8 +1924,10 @@ class app_class {
     proceed_ingroup(def = false) {
         this.alert_hide();
         this.alert_btn.onclick = () => this.alert_hide();
-        if (def)
-            Notification.requestPermission(app.load_ingroup);
+        if (def) {
+            localStorage.setItem("asked", "true");
+            Notification.requestPermission().then(() => this.load_ingroup());
+        }
         else this.load_ingroup();
     }
     load_ingroup() {
@@ -1965,40 +1989,48 @@ class app_class {
                 break;
         }
     }
-    notif_subscribe() {
+    async notif_subscribe() {
         if (Notification.permission == 'granted') {
-            notif_worker.pushManager.getSubscription().then(subs => {
+            try {
+                let ret;
+                let subs = await notif_worker.pushManager.getSubscription();
                 if (subs) {
-                    app.subscription = subs;
-                    return;
+                    if (localStorage.getItem("asked")) {
+                        localStorage.removeItem("asked");
+                        ret = await app.api.subscribe(subs);
+                        if (!ret) {
+                            subs.unsubscribe();
+                            app.fail()
+                        }
+                    }
                 }
-                notif_worker.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this.pkey_array })
-                    .then(newsubs => {
-                        app.subscription = newsubs;
-                        app.api.subscribe(newsubs).then(ret => {
-                            if (!ret)
-                                app.fail(err.message);
-                        }).catch (err => {
-                            app.fail(err.message);
-                        });
-                    }).catch(err => app.alert(err.message));
-            });
+                else {
+                    subs = await notif_worker.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this.pkey_array });
+                    if (subs) {
+                        ret = await app.api.subscribe(subs);
+                        if (!ret) {
+                            subs.unsubscribe();
+                            app.fail()
+                        }
+                    }
+                    else app.fail("System failed");
+                }
+            }
+            catch (err) {
+                app.fail(err.message);
+            }
+        }
+        else if (localStorage.getItem("asked")) {
+            localStorage.removeItem("asked");
+            app.api.unsubscribe();
         }
     }
     notif_unsubscribe() {
-        if (app.subscription)
-            app.wait();
-        fetch("api/push/web/unsubscribe", { method: 'get', headers: { 'Accept': 'text/plain' } }).then(resp => {
-            app.resume();
-            if (resp.status != 200)
-                app.fail();
-            else
-                resp.text().then(ret => {
-                    if (ret != 'OK')
-                        app.fail(ret);
-                    else window.location.reload();
-                })
-            }).catch(err => app.fail(err.message));
+        app.api.unsubscribe().then(ret => {
+            if (ret)
+                window.location.reload();
+            else app.fail();
+        });
     }
     notif_perm_changed() {
         switch (Notification.permission) {
