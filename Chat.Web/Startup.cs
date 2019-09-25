@@ -46,6 +46,7 @@ namespace Chat.Web
             else
                 app.UseHsts();
             app.UseStatusCodePages();
+            //todo turn on cashing and cash
             //app.UseCors("_allowAll");
             app.UseHttpsRedirection();
             app.UseStaticFiles();
