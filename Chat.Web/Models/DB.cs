@@ -29,6 +29,8 @@ namespace Chat.Web.Models
             [MaxLength(64)]
             public string ConnectionId { get; set; }
             public string WebSubscription { get; set; }
+            public long LastNotified { get; set; }
+            public byte[] IPAddress { get; set; }
         }
         public class Message
         {

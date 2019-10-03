@@ -452,6 +452,43 @@ class api_class {
             return false;
         }
     }
+    async push(name) {
+        try {
+            let ret = false;
+            let resp = await this.post("api/push/web/push", name);
+            switch (resp) {
+                case "OK":
+                    ret = true;
+                    break;
+                case "not_in_group":
+                    app.alert("You must be signed to a group.");
+                    break;
+                case "s_not_subscribed":
+                    app.alert("You must be subscribed for notifications.");
+                    break;
+                case "not_found":
+                    app.alert("User was not found");
+                    break;
+                case "r_not_subscribed":
+                    app.alert("User is not subscribed for notifications.");
+                    break;
+                case "is_notified_hour":
+                    app.alert("User has been already invited. Active one hour policy. Please try later.");
+                    break;
+                case "usr_active":
+                    app.alert("User is online and cannot be invited.");
+                    break;
+                default:
+                    app.alert(resp);
+                    break;
+            }
+            return ret;
+        }
+        catch (err) {
+            app.alert(err.message);
+            return false;
+        }
+    }
     async post(addr, obj) {
         app.wait();
         let ret;
@@ -1798,7 +1835,21 @@ class ingroup_class {
         let buf = await crypto.subtle.decrypt({ name: "AES-CTR", counter: new Uint8Array(16), length: 128 }, this.key, new Uint8Array(this.textToArr(text)));
         return this.decoder.decode(new Uint8Array(buf));
     }
-    //todo implement notification of users
+    notify() {
+        if (this.offl_usr == null)
+            return;
+        if (Notification.permission != "granted") {
+            app.alert("For you to be able to send notifications, you have to allow notifications for this web page in your browser's settings.");
+            return;
+        }
+        app.api.push(this.offl_usr.textContent).then(ret => {
+            if (ret)
+                app.alert("User " + this.offl_usr.textContent + "has been invited");
+            this.offl_usr.classList.remove("selected");
+            this.btn_notif.classList.add("disabled");
+            this.offl_usr = null;
+        });
+    }
     //todo sound
 }
 
@@ -1924,10 +1975,8 @@ class app_class {
     proceed_ingroup(def = false) {
         this.alert_hide();
         this.alert_btn.onclick = () => this.alert_hide();
-        if (def) {
-            localStorage.setItem("asked", "true");
+        if (def)
             Notification.requestPermission().then(() => this.load_ingroup());
-        }
         else this.load_ingroup();
     }
     load_ingroup() {
@@ -1995,13 +2044,10 @@ class app_class {
                 let ret;
                 let subs = await notif_worker.pushManager.getSubscription();
                 if (subs) {
-                    if (localStorage.getItem("asked")) {
-                        localStorage.removeItem("asked");
-                        ret = await app.api.subscribe(subs);
-                        if (!ret) {
-                            subs.unsubscribe();
-                            app.fail()
-                        }
+                    ret = await app.api.subscribe(subs);
+                    if (!ret) {
+                        subs.unsubscribe();
+                        app.fail()
                     }
                 }
                 else {
@@ -2020,27 +2066,9 @@ class app_class {
                 app.fail(err.message);
             }
         }
-        else if (localStorage.getItem("asked")) {
-            localStorage.removeItem("asked");
-            app.api.unsubscribe();
-        }
-    }
-    notif_unsubscribe() {
-        app.api.unsubscribe().then(ret => {
-            if (ret)
-                window.location.reload();
-            else app.fail();
-        });
+        else app.api.unsubscribe();
     }
     notif_perm_changed() {
-        switch (Notification.permission) {
-            case 'default':
-            case 'denied':
-                this.notif_unsubscribe();
-                break;
-            case 'granted':
-                window.location.reload();
-                break;
-        }
+        window.location.reload();
     }
 }

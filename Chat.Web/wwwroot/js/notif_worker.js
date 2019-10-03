@@ -1,7 +1,7 @@
 ﻿self.addEventListener('push', event => {
     const title = 'Groups Notification';
     const options = {
-        body: "You are invited to " + event.data.text(),
+        body: "You have been invited by " + event.data.text(),
         icon: '/images/icon192.png',
         badge: '/images/badge72.png'
     };
