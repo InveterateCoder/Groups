@@ -21,6 +21,9 @@ class api_class {
                 case "email_is_taken":
                     app.alert("This email address has been already registered");
                     break;
+                case "invalid_name":
+                    app.alert("Name cannot contain following characters: \\/:*?\"<>|&%#[]+=„“");
+                    break;
                 case "name_is_taken":
                     app.alert("This nickname has been already taken");
                     break;
@@ -116,6 +119,9 @@ class api_class {
                     ret.pass = true;
                     app.name = request.NewName;
                     break;
+                case "invalid_name":
+                    app.alert("New name cannot contain following characters: \\/:*?\"<>|&%#[]+=„“")
+                    break;
                 case "wrong_password":
                     app.alert("Wrong password")
                     break;
@@ -181,6 +187,9 @@ class api_class {
                 case "has_group":
                     app.alert("You have already registered a group");
                     break;
+                case "invalid_name":
+                    app.alert("Group name cannot contain following characters: \\/:*?\"<>|&%#[]+=„“");
+                    break;
                 case "name_taken":
                     app.alert("A group with such name already exists");
                     break;
@@ -217,6 +226,9 @@ class api_class {
                     break;
                 case "wrong_password":
                     app.alert("Wrong password");
+                    break;
+                case "invalid_name":
+                    app.alert("New group name cannot contain following characters: \\/:*?\"<>|&%#[]+=„“");
                     break;
                 case "group_name_exists":
                     app.alert("The group name is already taken, choose another one");
@@ -467,7 +479,10 @@ class api_class {
                     app.alert("You must be subscribed for notifications.");
                     break;
                 case "not_found":
-                    app.alert("User was not found");
+                    app.alert("User was not found.");
+                    break;
+                case "not_same_group":
+                    app.alert("User is not in the same group.")
                     break;
                 case "r_not_subscribed":
                     app.alert("User is not subscribed for notifications.");
@@ -595,16 +610,19 @@ class reg_panel_class {
             case 'reg':
                 this.hide();
                 this.panel.children[2].style.display = 'flex';
+                this.panel.children[2].children[1].children[1].focus();
                 this.place = place;
                 break;
             case 'sign':
                 this.hide();
                 this.panel.children[3].style.display = 'flex';
+                this.panel.children[3].children[1].children[1].focus();
                 this.place = place;
                 break;
             case 'numb':
                 this.hide();
                 this.panel.children[4].style.display = 'flex';
+                this.panel.children[4].children[1].firstElementChild.focus();
                 this.place = place;
                 break;
         }
@@ -678,6 +696,25 @@ class reg_panel_class {
             }
         });
     }
+    cntrl_key(key) {
+        if (key == "Enter") {
+            switch (this.place) {
+                case 'reg':
+                    this.register();
+                    break;
+                case 'sign':
+                    this.signin();
+                    break;
+                case 'numb':
+                    this.validate();
+                    break;
+            }
+        }
+        else if (key == "Escape") {
+            if (this.place != 'home')
+                this.goto('home');
+        }
+    }
 }
 
 class groups_class {
@@ -696,6 +733,7 @@ class groups_class {
         this.quantity = 100;
         this.query = '';
         this.timeoutHandle = null;
+        this.open_form = null;
     }
     hmbrg_click() {
         this.hmbrgr_btn.classList.toggle('clicked');
@@ -840,11 +878,13 @@ class groups_class {
         });
     }
     form_open(n) {
+        this.open_form = n;
         this.groups_forms.children[n].style.display = 'flex';
         this.groups_forms.style.display = 'block';
         this.close_all_menus();
     }
     form_close(n) {
+        this.open_form = null;
         this.groups_forms.style.display = 'none';
         this.groups_forms.children[n].style.display = 'none';
         let form = this.groups_forms.children[n].getElementsByTagName('input');
@@ -1099,6 +1139,17 @@ class groups_class {
                         this.form_close(6);
                 }
             });
+        }
+    }
+    cntrl_key(key) {
+        if (key == "Enter") {
+            if (this.open_form)
+                this.groups_forms.children[this.open_form].lastElementChild.lastElementChild.click();
+        }
+        else if (key == "Escape") {
+            if (this.open_form)
+                this.groups_forms.children[this.open_form].lastElementChild.firstElementChild.click();
+            else this.close_all_menus();
         }
     }
 }
@@ -1844,7 +1895,7 @@ class ingroup_class {
         }
         app.api.push(this.offl_usr.textContent).then(ret => {
             if (ret)
-                app.alert("User " + this.offl_usr.textContent + "has been invited");
+                app.alert("User " + this.offl_usr.textContent + " has been invited");
             this.offl_usr.classList.remove("selected");
             this.btn_notif.classList.add("disabled");
             this.offl_usr = null;
@@ -1859,6 +1910,7 @@ class app_class {
         this.alert_el = document.getElementById("message");
         this.alert_btn = this.alert_el.firstElementChild.children[1];
         this.alert_btn.onclick = this.alert_hide;
+        this.alert_active = false;
         this.wait_count = 0;
         this.wait_handle = null;
         this.wait_el = document.getElementById('wait');
@@ -1886,6 +1938,21 @@ class app_class {
             name: text => text + " must be at least 5 characters long and maximum 64"
         };
         navigator.permissions.query({ name: 'notifications' }).then(notifPerm => notifPerm.onchange = () => app.notif_perm_changed());
+        document.addEventListener("keydown", this.key_pressed);
+    }
+    key_pressed(e) {
+        if (app.alert_active)
+            return;
+        if (e.key == "Enter" || e.key == "Escape" && !e.repeat) {
+            switch (app.page) {
+                case 'reg':
+                    app.reg_panel.cntrl_key(e.key);
+                    break;
+                case 'groups':
+                    app.groups.cntrl_key(e.key);
+                    break;
+            }
+        }
     }
     get pkey_array() {
         const padding = ' '.repeat(4 - this.pub_key.length % 4);
@@ -1916,12 +1983,15 @@ class app_class {
         }
     }
     alert(message) {
+        this.alert_active = true;
         app.alert_el.style.display = 'block';
         app.alert_el.focus();
+        setTimeout(() => app.alert_btn.focus(), 150);
         app.alert_el.firstElementChild.firstElementChild.textContent = message;
     }
     alert_hide() {
         app.alert_el.style.display = 'none';
+        app.alert_active = false;
     }
     fail(text) {
         document.cookie = "Auth_Tok=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";

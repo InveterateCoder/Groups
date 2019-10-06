@@ -78,38 +78,43 @@ namespace Chat.Web.Controllers
                     ret = "no_change_requested";
                 else
                 {
-                    if (request.NewName != null && request.NewName != _user.Name
-                        && request.NewPassword != null && request.NewPassword != _user.Password)
+                    if (request.NewName != null && !StaticData.IsNameValid(request.NewName))
+                        ret = "invalid_name";
+                    else
                     {
-                        if (_user.Chatterers.Any(c => c.Name == request.NewName))
-                            ret = "name_exists";
-                        else
+                        if (request.NewName != null && request.NewName != _user.Name
+                        && request.NewPassword != null && request.NewPassword != _user.Password)
                         {
-                            _user.Name = request.NewName;
+                            if (_user.Chatterers.Any(c => c.Name == request.NewName))
+                                ret = "name_exists";
+                            else
+                            {
+                                _user.Name = request.NewName;
+                                _user.Password = request.NewPassword;
+                                await _user.SaveAsync();
+                                ret = "name&pass_changed";
+                            }
+                        }
+                        else if (request.NewName != null && request.NewName != _user.Name)
+                        {
+                            if (_user.Chatterers.Any(c => c.Name == request.NewName))
+                                ret = "name_exists";
+                            else
+                            {
+                                _user.Name = request.NewName;
+                                await _user.SaveAsync();
+                                ret = "name_changed";
+                            }
+                        }
+                        else if (request.NewPassword != null && request.NewPassword != _user.Password)
+                        {
                             _user.Password = request.NewPassword;
                             await _user.SaveAsync();
-                            ret = "name&pass_changed";
+                            ret = "pass_changed";
                         }
-                    }
-                    else if (request.NewName != null && request.NewName != _user.Name)
-                    {
-                        if (_user.Chatterers.Any(c => c.Name == request.NewName))
-                            ret = "name_exists";
                         else
-                        {
-                            _user.Name = request.NewName;
-                            await _user.SaveAsync();
-                            ret = "name_changed";
-                        }
+                            ret = "same_credentials";
                     }
-                    else if (request.NewPassword != null && request.NewPassword != _user.Password)
-                    {
-                        _user.Password = request.NewPassword;
-                        await _user.SaveAsync();
-                        ret = "pass_changed";
-                    }
-                    else
-                        ret = "same_credentials";
                 }
             }
             catch (Exception e)

@@ -61,6 +61,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     cursor:default;
+    white-space:nowrap;
 }
 #groups > nav > input {
     background-color: rgba(0,0,0,0.3);

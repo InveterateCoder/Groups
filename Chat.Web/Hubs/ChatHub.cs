@@ -119,6 +119,7 @@ namespace Chat.Web.Hubs
             else
             {
                 user.ConnectionId = Context.ConnectionId;
+                user.Chatterer.LastNotified = 0;
                 await user.SaveAsync();
                 await Groups.AddToGroupAsync(Context.ConnectionId, user.InGroupId.ToString());
                 await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("go_on", user.Name);

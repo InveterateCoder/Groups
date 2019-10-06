@@ -90,6 +90,8 @@ namespace Chat.Web.Controllers
                     request.Email = request.Email.ToLower();
                     if (_user.Chatterers.Any(c => c.Email == request.Email))
                         ret = "email_is_taken";
+                    else if (!StaticData.IsNameValid(request.Name))
+                        ret = "invalid_name";
                     else if (_user.Chatterers.Any(c => c.Name == request.Name))
                         ret = "name_is_taken";
                     else

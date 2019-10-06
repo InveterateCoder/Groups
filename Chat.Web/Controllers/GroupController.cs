@@ -106,6 +106,8 @@ namespace Chat.Web.Controllers
             {
                 if (_user.Group != null)
                     ret = "has_group";
+                else if (!StaticData.IsNameValid(request.GroupName))
+                    ret = "invalid_name";
                 else if (_user.Chatterers.Any(c => c.Group == request.GroupName))
                     ret = "name_taken";
                 else if (request.Password != _user.Password)
@@ -139,39 +141,44 @@ namespace Chat.Web.Controllers
                     ret = "wrong_password";
                 else
                 {
-                    if (request.NewGroupName != null && request.NewGroupName != _user.Group && request.NewGroupPassword != _user.GroupPassword
-                            && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
+                    if (request.NewGroupName != null && !StaticData.IsNameValid(request.NewGroupName))
+                        ret = "invalid_name";
+                    else
                     {
-                        if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
-                            ret = "group_name_exists";
-                        else
+                        if (request.NewGroupName != null && request.NewGroupName != _user.Group && request.NewGroupPassword != _user.GroupPassword
+                            && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
                         {
-                            _user.Group = request.NewGroupName;
+                            if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
+                                ret = "group_name_exists";
+                            else
+                            {
+                                _user.Group = request.NewGroupName;
+                                _user.GroupPassword = request.NewGroupPassword;
+                                await _user.SaveAsync();
+                                ret = "name&pass_changed";
+                            }
+
+                        }
+                        else if (request.NewGroupName != null && request.NewGroupName != _user.Group)
+                        {
+                            if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
+                                ret = "group_name_exists";
+                            else
+                            {
+                                _user.Group = request.NewGroupName;
+                                await _user.SaveAsync();
+                                ret = "name_changed";
+                            }
+                        }
+                        else if (request.NewGroupPassword != _user.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
+                        {
                             _user.GroupPassword = request.NewGroupPassword;
                             await _user.SaveAsync();
-                            ret = "name&pass_changed";
+                            ret = "pass_changed";
                         }
-
-                    }
-                    else if (request.NewGroupName != null && request.NewGroupName != _user.Group)
-                    {
-                        if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
-                            ret = "group_name_exists";
                         else
-                        {
-                            _user.Group = request.NewGroupName;
-                            await _user.SaveAsync();
-                            ret = "name_changed";
-                        }
+                            ret = "not_changed";
                     }
-                    else if (request.NewGroupPassword != _user.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
-                    {
-                        _user.GroupPassword = request.NewGroupPassword;
-                        await _user.SaveAsync();
-                        ret = "pass_changed";
-                    }
-                    else
-                        ret = "not_changed";
                 }
             }
             catch(Exception e)
@@ -257,6 +264,9 @@ namespace Chat.Web.Controllers
                     ret = "wrong_password";
                 else
                 {
+                    var group_users = _user.Chatterers.Where(c => c.InGroupId == _user.Chatterer.Id);
+                    foreach (var u in group_users)
+                        u.InGroupId = 0;
                     _user.Database.Messages.RemoveRange(_user.Database.Messages.Where(m => m.GroupId == _user.Chatterer.Id));
                     _user.Group = null;
                     _user.GroupPassword = null;

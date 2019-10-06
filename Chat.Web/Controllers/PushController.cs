@@ -67,29 +67,36 @@ namespace Chat.Web.Controllers
                             ret = "not_found";
                         else
                         {
-                            var web_subscription = StaticData.GetPushSubscription(rcvr.WebSubscription);
-                            if (web_subscription == null)
-                                ret = "r_not_subscribed";
+                            if (rcvr.InGroupId != _user.InGroupId)
+                                ret = "not_same_group";
                             else
                             {
-                                if (rcvr.LastNotified > DateTime.UtcNow.Subtract(TimeSpan.FromHours(1)).Ticks)
-                                    ret = "is_notified_hour";
+                                var web_subscription = StaticData.GetPushSubscription(rcvr.WebSubscription);
+                                if (web_subscription == null)
+                                    ret = "r_not_subscribed";
                                 else
                                 {
-                                    if (rcvr.ConnectionId != null)
-                                        ret = "usr_active";
+                                    if (rcvr.LastNotified > DateTime.UtcNow.Subtract(TimeSpan.FromHours(1)).Ticks)
+                                        ret = "is_notified_hour";
                                     else
                                     {
-                                        WebPush.WebPushClient client = new WebPush.WebPushClient();
-                                        WebPush.VapidDetails det = new WebPush.VapidDetails("mailto:splendiferouslife@outlook.com",
-                                            "BFnbEjZPGFowzLKbDeFjlJ-o5juCQWiaFUzDH6jb_H3Rid3EO8f59N8PSe5AAMp5KhLMV31u1V79RxBiAmeofH0",
-                                            "llDpC8IqKbdgsHqaF00xrcqHVefNt50NAMDQBBQrgNo");
-                                        client.SetVapidDetails(det);
-                                        var send_task = client.SendNotificationAsync(web_subscription, _user.Name);
-                                        rcvr.LastNotified = DateTime.UtcNow.Ticks;
-                                        var save_task = _user.SaveAsync();
-                                        await Task.WhenAll(send_task, save_task);
-                                        ret = "OK";
+                                        if (rcvr.ConnectionId != null)
+                                            ret = "usr_active";
+                                        else
+                                        {
+                                            Task<ChatterersDb.Chatterer> groupN = _user.Chatterers.FindAsync(rcvr.InGroupId);
+                                            WebPush.WebPushClient client = new WebPush.WebPushClient();
+                                            WebPush.VapidDetails det = new WebPush.VapidDetails("mailto:splendiferouslife@outlook.com",
+                                                "BFnbEjZPGFowzLKbDeFjlJ-o5juCQWiaFUzDH6jb_H3Rid3EO8f59N8PSe5AAMp5KhLMV31u1V79RxBiAmeofH0",
+                                                "llDpC8IqKbdgsHqaF00xrcqHVefNt50NAMDQBBQrgNo");
+                                            client.SetVapidDetails(det);
+                                            var groupName = (await groupN).Group;
+                                            var send_task = client.SendNotificationAsync(web_subscription, $"{groupName} by {_user.Name}");
+                                            rcvr.LastNotified = DateTime.UtcNow.Ticks;
+                                            var save_task = _user.SaveAsync();
+                                            await Task.WhenAll(send_task, save_task);
+                                            ret = "OK";
+                                        }
                                     }
                                 }
                             }

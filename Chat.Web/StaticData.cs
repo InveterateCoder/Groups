@@ -2,8 +2,16 @@
 {
     public static class StaticData
     {
+        private static readonly string _forbiddenChars = "\\/:*?\"<>|&%#[]+=„“";
         public static string RootPath;
         public static readonly string AuthenticationCookieName = "Auth_Tok";
+        public static bool IsNameValid(string name)
+        {
+            foreach (var c in name)
+                if (_forbiddenChars.Contains(c))
+                    return false;
+            return true;
+        }
         public static long JsMsToTicks(long jsMs) => 621355968000000000 + jsMs * 10000;
         public static long TicksToJsMs(long ticks) => (ticks - 621355968000000000) / 10000;
         public static WebPush.PushSubscription GetPushSubscription(string subscription)
