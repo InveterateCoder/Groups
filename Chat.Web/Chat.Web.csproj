@@ -6,13 +6,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="bundleconfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Assets\mailconfirm.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\css\all.css" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\mailconfirm.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="DevFiles\body.css" />
+    <Content Include="DevFiles\groups.css" />
+    <Content Include="DevFiles\groups.js" />
+    <Content Include="DevFiles\ingroup.css" />
+    <Content Include="DevFiles\reg.css" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +37,10 @@
 
   <ItemGroup>
     <Folder Include="RegFiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="bundleconfig.json" />
   </ItemGroup>
 
 </Project>

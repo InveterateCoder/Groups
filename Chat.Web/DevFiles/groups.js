@@ -1177,6 +1177,7 @@ class ingroup_class {
         this.onl_usrs = new Set();
         this.btn_swtch = this.usrs_panel.children[2].firstElementChild;
         this.btn_notif = this.btn_swtch.nextElementSibling;
+        this.btn_sound = this.btn_notif.nextElementSibling;
         this.is_cleared = false;
         this.onl_usr_panel = this.usrs_panel.children[3].firstElementChild;
         this.ofl_usr_panel = this.usrs_panel.children[3].children[2];
@@ -1202,6 +1203,12 @@ class ingroup_class {
         this.recieve_msg_mutex = false;
         this.encoder = new TextEncoder();
         this.decoder = new TextDecoder();
+        this.audio = document.createElement("audio");
+        let src = document.createElement("source");
+        src.setAttribute("src", "sounds/new_m.mp3");
+        src.setAttribute("type", "audio/mpeg");
+        this.audio.appendChild(src);
+        this.sound_on = false;
     }
     get secret() {
         let val = localStorage.getItem("secret");
@@ -1575,6 +1582,8 @@ class ingroup_class {
                 this.proc_pipe_msgs();
             }
             else {
+                if (this.sound_on)
+                    this.audio.play();
                 if (!msg.peers)
                     this.last_msg_time = msg.stringTime;
                 if (this.key)
@@ -1901,7 +1910,16 @@ class ingroup_class {
             this.offl_usr = null;
         });
     }
-    //todo sound
+    sound_toggle() {
+        if (this.sound_on) {
+            this.btn_sound.firstElementChild.src = "/images/sound_off.svg";
+            this.sound_on = false;
+        }
+        else {
+            this.btn_sound.firstElementChild.src = "/images/sound_on.svg";
+            this.sound_on = true;
+        }
+    }
 }
 
 class app_class {

@@ -1,0 +1,23 @@
+[
+  {
+    "outputFileName": "wwwroot/css/all.css",
+    "inputFiles": [
+      "wwwroot/css/body.css",
+      "wwwroot/css/groups.css",
+      "wwwroot/css/ingroup.css",
+      "wwwroot/css/reg.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/groups.min.js",
+    "inputFiles": [
+      "wwwroot/js/groups.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/beaut.min.js",
+    "inputFiles": [
+      "wwwroot/js/beaut.js"
+    ]
+  }
+]

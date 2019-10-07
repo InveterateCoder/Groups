@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Chat.Web.Models;
 using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Chat.Web.Controllers
 {
@@ -91,7 +88,7 @@ namespace Chat.Web.Controllers
                                                 "llDpC8IqKbdgsHqaF00xrcqHVefNt50NAMDQBBQrgNo");
                                             client.SetVapidDetails(det);
                                             var groupName = (await groupN).Group;
-                                            var send_task = client.SendNotificationAsync(web_subscription, $"{groupName} by {_user.Name}");
+                                            var send_task = client.SendNotificationAsync(web_subscription, $"\"{groupName}\" by {_user.Name}");
                                             rcvr.LastNotified = DateTime.UtcNow.Ticks;
                                             var save_task = _user.SaveAsync();
                                             await Task.WhenAll(send_task, save_task);
