@@ -113,7 +113,7 @@ namespace Chat.Web.Hubs
         }
         public async override Task OnConnectedAsync()
         {
-            var user = GetUser(); //todo html encoding messages
+            var user = GetUser();
             if (user.InGroupId == 0 || user.ConnectionId != null) //todo (doesn't work) fix connection individuality
                 Context.Abort();    //todo implement ip identification too
             else
@@ -125,7 +125,6 @@ namespace Chat.Web.Hubs
                 await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("go_on", user.Name);
             }
         }
-        //todo need to html encode all traffic
         public async override Task OnDisconnectedAsync(Exception exception)
         {
             //todo inform group about this peer's disconnection, check whether signed out or lost connection

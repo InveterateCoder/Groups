@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
@@ -21,62 +20,9 @@ namespace Chat.Web.Controllers
         private User _user;
         public AccountController(User user)
             => _user = user;
-        [HttpGet("seed")]
-        public ContentResult Seed() //todo delete seeding
-        {
-            Random rand = new Random();
-            List<ChatterersDb.Chatterer> chatterers = new List<ChatterersDb.Chatterer>();
-            chatterers.Add(new ChatterersDb.Chatterer
-            {
-                Name = "Arthur",
-                Email = "inveterate.coder@outlook.com",
-                Password = "adm3.1415"
-            });
-            var chars = Enumerable.Range('A', 'Z' - 'A' + 1).Select(n => (char)n).Concat(Enumerable.Range('a', 'z' - 'a' + 1).Select(n => (char)n)).ToList();
-            chars.Add(' ');
-            for (int i = 0; i < 300; i++)
-            {
-                var chatterer = new ChatterersDb.Chatterer();
-                chatterer.Email = $"email{i}@gm.com";
-                StringBuilder strng = new StringBuilder();
-                var count = rand.Next(5, 64);
-                string name;
-                do
-                {
-                    for (int j = 0; j < count; j++)
-                    {
-                        strng.Append(chars[rand.Next(chars.Count() - 1)]);
-                    }
-                    name = strng.ToString();
-                    strng.Clear();
-                } while (_user.Chatterers.Any(c => c.Name == name));
-                chatterer.Name = name;
-                chatterer.Password = $"password{i}";
-                if (i % 5 != 0)
-                {
-                    do
-                    {
-                        for (int j = 0; j < count; j++)
-                        {
-                            strng.Append(chars[rand.Next(chars.Count() - 1)]);
-                        }
-                        name = strng.ToString();
-                        strng.Clear();
-                    } while (_user.Chatterers.Any(c => c.Group == name));
-                    chatterer.Group = name;
-                    if (i % 8 != 0)
-                        chatterer.GroupPassword = $"gpassword{i}";
-                }
-                chatterers.Add(chatterer);
-            }
-            _user.Chatterers.AddRange(chatterers);
-            _user.Database.SaveChanges();
-            return Content("OK", "text/plain");
-        }
         [HttpPost("reg")]
         public async Task<ContentResult> RequestRegister([FromBody]RegRequest request)
         {
-            //todo delete inactive users and group's messages
             string ret;
             if (_user.Chatterer != null)
             {
@@ -123,7 +69,7 @@ namespace Chat.Web.Controllers
                         }
                         using (StreamWriter writer = new StreamWriter($"{path}{Path.DirectorySeparatorChar}{DateTime.UtcNow.Ticks}_{fileName}.json"))
                             writer.Write(JsonConvert.SerializeObject(request));
-                        await SendMail(request.Email, request.Name, fileName);
+                        await Task.WhenAll(CleanInactiveUsers(), SendMail(request.Email, request.Name, fileName));
                         ret = "pending_" + request.Email;
                     }
                 }
@@ -272,6 +218,24 @@ namespace Chat.Web.Controllers
                 ret = e.Message;
             }
             return Content(ret, "text/plain");
+        }
+        private async Task CleanInactiveUsers()
+        {
+            var limit = DateTime.UtcNow.Subtract(TimeSpan.FromDays(300)).Ticks;
+            var inactiveUsrs = _user.Chatterers.Where(c => c.LastActive < limit);
+            var groupIds = inactiveUsrs.Where(c => c.Group != null).Select(u => u.Id);
+            foreach (var id in groupIds)
+            {
+                var inGroupUsrs = _user.Chatterers.Where(c => c.InGroupId == id);
+                foreach(var usr in inGroupUsrs)
+                {
+                    usr.InGroupId = 0;
+                    usr.InGroupPassword = null;
+                }
+                _user.Database.Messages.RemoveRange(_user.Database.Messages.Where(m => m.GroupId == id));
+            }
+            _user.Chatterers.RemoveRange(inactiveUsrs);
+            await _user.SaveAsync();
         }
         private async Task<string> SendMail(string to, string name, string code)
         {

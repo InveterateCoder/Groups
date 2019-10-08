@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navigator.serviceWorker.register('/js/notif_worker.js').then(ret => notif_worker = ret);
     app = new app_class();
 });
-
+//todo automatic sign in after registration
 class api_class {
     constructor() { }
     async register(chatterer) {

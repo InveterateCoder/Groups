@@ -27,9 +27,8 @@ namespace Chat.Web.Infrastructure
                 }
                 else
                 {
-                    //todo make possible to sign in from another application - switch tokens
-                    //todo clean old (15 days) group messages
-                    chatterer.LastActive = DateTime.UtcNow.Ticks;
+                    var dateNow = DateTime.UtcNow;
+                    chatterer.LastActive = dateNow.Ticks;
                     if (chatterer.InGroupId != 0)
                     {
                         var group = await dbContext.Chatterers.FindAsync(chatterer.InGroupId);
@@ -38,9 +37,17 @@ namespace Chat.Web.Infrastructure
                             chatterer.InGroupId = 0;
                             chatterer.InGroupPassword = null;
                         }
-                    }   
-                    await dbContext.SaveChangesAsync();
+                        else if(group.GroupLastCleaned < dateNow.Subtract(TimeSpan.FromDays(30)).Ticks)
+                        {
+                            var limit = dateNow.Subtract(TimeSpan.FromDays(15)).Ticks;
+                            var disposableMsgs = dbContext.Messages.Where(m => m.GroupId == group.Id && m.SharpTime < limit);
+                            if (disposableMsgs.Count() > 0)
+                                dbContext.Messages.RemoveRange(disposableMsgs);
+                            group.GroupLastCleaned = dateNow.Ticks;
+                        }
+                    }
                     user.Chatterer = chatterer;
+                    await dbContext.SaveChangesAsync();
                     await Filter(context, true);
                 }
             }
