@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     navigator.serviceWorker.register('/js/notif_worker.js').then(ret => notif_worker = ret);
     app = new app_class();
 });
-//todo automatic sign in after registration
 class api_class {
     constructor() { }
     async register(chatterer) {
@@ -74,7 +73,7 @@ class api_class {
             else if (resp == 'password_incorrect')
                 app.alert('Wrong password');
             else if (resp == 'multiple_signins_forbidden')
-                app.alert('Access denied, already signed in');
+                app.alert('Access denied, connection is already open');
             else
                 app.alert(resp);
             return ret;
@@ -561,6 +560,8 @@ class reg_panel_class {
     constructor() {
         this.panel = document.getElementById('reg_panel');
         this.place = 'home';;
+        this.email = null;
+        this.password = null;
     }
     num(e) {
         if (isNaN(e.key))
@@ -661,8 +662,11 @@ class reg_panel_class {
             app.alert(app.message.password("Password"));
         else {
             app.api.register(chatterer).then(ok => {
-                if (ok)
+                if (ok) {
+                    this.email = chatterer.email;
+                    this.password = chatterer.password;
                     this.goto("numb");
+                }
             });
         }
     }
@@ -674,6 +678,11 @@ class reg_panel_class {
             app.api.validate(Number(num)).then(ok => {
                 if (ok) {
                     this.goto("sign");
+                    let form = this.panel.children[3].getElementsByTagName('input');
+                    form[0].value = this.email;
+                    form[1].value = this.password;
+                    this.email = this.password = null;
+                    this.signin();
                 }
             });
         }
@@ -1992,7 +2001,7 @@ class app_class {
             this.wait_handle = setTimeout(() => {
                 app.wait_el.style.display = 'block';
                 app.wait_el.focus();
-            }, 1000);
+            }, 300);
     }
     resume() {
         if (--this.wait_count == 0) {

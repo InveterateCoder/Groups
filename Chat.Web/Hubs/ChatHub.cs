@@ -1,10 +1,6 @@
 ﻿using Chat.Web.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -55,6 +51,7 @@ namespace Chat.Web.Hubs
                 throw new HubException("Message cannot be empty or exceed 10000 characters");
             Time time = new Time();
             time.SharpTime = DateTime.UtcNow.Ticks;
+            user.Chatterer.LastActive = time.SharpTime;
             time.JsTime = StaticData.TicksToJsMs(time.SharpTime);
             time.StringTime = time.SharpTime.ToString();
             if (msg.To == null)
@@ -77,7 +74,7 @@ namespace Chat.Web.Hubs
                         Peers = null,
                         Text = msg.Text
                     };
-                    Task sendTask = Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("message_client", retMsg);
+                    await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("message_client", retMsg);
                     await user.Database.Messages.AddAsync(new ChatterersDb.Message
                     {
                         SharpTime = time.SharpTime,
@@ -87,8 +84,6 @@ namespace Chat.Web.Hubs
                         Text = msg.Text,
                         GroupId = group.Id
                     });
-                    Task saveTask = user.SaveAsync();
-                    await Task.WhenAll(sendTask, saveTask);
                 }
             }
             else
@@ -109,25 +104,21 @@ namespace Chat.Web.Hubs
                 };
                 await Clients.Clients(user.Chatterers.Where(c => msg.To.Contains(c.Name)).Select(c => c.ConnectionId).ToArray()).SendAsync("message_client", retMsg);
             }
+            await user.SaveAsync();
             return time;
         }
         public async override Task OnConnectedAsync()
         {
             var user = GetUser();
-            if (user.InGroupId == 0 || user.ConnectionId != null) //todo (doesn't work) fix connection individuality
-                Context.Abort();    //todo implement ip identification too
-            else
-            {
-                user.ConnectionId = Context.ConnectionId;
-                user.Chatterer.LastNotified = 0;
-                await user.SaveAsync();
-                await Groups.AddToGroupAsync(Context.ConnectionId, user.InGroupId.ToString());
-                await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("go_on", user.Name);
-            }
+            user.ConnectionId = Context.ConnectionId;
+            user.Chatterer.LastNotified = 0;
+            user.Chatterer.LastActive = DateTime.UtcNow.Ticks;
+            await user.SaveAsync();
+            await Groups.AddToGroupAsync(Context.ConnectionId, user.InGroupId.ToString());
+            await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("go_on", user.Name);
         }
         public async override Task OnDisconnectedAsync(Exception exception)
         {
-            //todo inform group about this peer's disconnection, check whether signed out or lost connection
             var user = GetUser();
             if (user.InGroupId != 0)
             {
@@ -135,6 +126,7 @@ namespace Chat.Web.Hubs
                 await Groups.RemoveFromGroupAsync(user.ConnectionId, user.InGroupId.ToString());
             }
             user.ConnectionId = null;
+            user.Chatterer.LastActive = DateTime.UtcNow.Ticks;
             await user.SaveAsync();
             await base.OnDisconnectedAsync(exception);
         }

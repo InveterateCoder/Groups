@@ -65,7 +65,7 @@ namespace Chat.Web.Controllers
         }
         [HttpPost("change")]
         public async Task<ContentResult> Change([FromBody]AccountChangeRequest request)
-        { //todo allow change your own name with capitalization, check your user's name first
+        {
             string ret;
             try
             {
@@ -82,25 +82,44 @@ namespace Chat.Web.Controllers
                         if (request.NewName != null && request.NewName != _user.Name
                         && request.NewPassword != null && request.NewPassword != _user.Password)
                         {
-                            if (_user.Chatterers.Any(c => c.Name == request.NewName))
-                                ret = "name_exists";
-                            else
+                            if(request.NewName.Equals(_user.Name, StringComparison.OrdinalIgnoreCase))
                             {
                                 _user.Name = request.NewName;
                                 _user.Password = request.NewPassword;
                                 await _user.SaveAsync();
                                 ret = "name&pass_changed";
                             }
+                            else
+                            {
+                                if (_user.Chatterers.Any(c => c.Name == request.NewName))
+                                    ret = "name_exists";
+                                else
+                                {
+                                    _user.Name = request.NewName;
+                                    _user.Password = request.NewPassword;
+                                    await _user.SaveAsync();
+                                    ret = "name&pass_changed";
+                                }
+                            }
                         }
                         else if (request.NewName != null && request.NewName != _user.Name)
                         {
-                            if (_user.Chatterers.Any(c => c.Name == request.NewName))
-                                ret = "name_exists";
-                            else
+                            if(request.NewName.Equals(_user.Name, StringComparison.OrdinalIgnoreCase))
                             {
                                 _user.Name = request.NewName;
                                 await _user.SaveAsync();
                                 ret = "name_changed";
+                            }
+                            else
+                            {
+                                if (_user.Chatterers.Any(c => c.Name == request.NewName))
+                                    ret = "name_exists";
+                                else
+                                {
+                                    _user.Name = request.NewName;
+                                    await _user.SaveAsync();
+                                    ret = "name_changed";
+                                }
                             }
                         }
                         else if (request.NewPassword != null && request.NewPassword != _user.Password)

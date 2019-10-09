@@ -1,7 +1,5 @@
-﻿using Chat.Web.Hubs;
-using Chat.Web.Models;
+﻿using Chat.Web.Models;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Linq;
 using System.Net;
@@ -25,6 +23,8 @@ namespace Chat.Web.Infrastructure
                     context.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
                     await Filter(context);
                 }
+                else if(chatterer.ConnectionId!=null && context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/hub")))
+                    context.Response.StatusCode = StatusCodes.Status409Conflict;
                 else
                 {
                     var dateNow = DateTime.UtcNow;

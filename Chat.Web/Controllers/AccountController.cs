@@ -255,7 +255,7 @@ namespace Chat.Web.Controllers
                     client.UseDefaultCredentials = false;
                     client.EnableSsl = true;
                     client.Credentials = new System.Net.NetworkCredential("splendiferouslife@outlook.com", "adm3.1415");
-                    MailMessage message = new MailMessage("splendiferouslife@outlook.com", to, "CHAT Registration Confirmation", mailContent);
+                    MailMessage message = new MailMessage("splendiferouslife@outlook.com", to, "Groups Registration Confirmation", mailContent);
                     message.IsBodyHtml = true;
                     message.BodyEncoding = Encoding.UTF8;
                     await client.SendMailAsync(message);

@@ -30,7 +30,7 @@ namespace Chat.Web.Models
             public string ConnectionId { get; set; }
             public string WebSubscription { get; set; }
             public long LastNotified { get; set; }
-            public byte[] IPAddress { get; set; }
+            public byte[] IPAddress { get; set; } //todo delete IP row if now needed
         }
         public class Message
         {

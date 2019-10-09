@@ -148,26 +148,44 @@ namespace Chat.Web.Controllers
                         if (request.NewGroupName != null && request.NewGroupName != _user.Group && request.NewGroupPassword != _user.GroupPassword
                             && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
                         {
-                            if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
-                                ret = "group_name_exists";
-                            else
+                            if(request.NewGroupName.Equals(_user.Group, StringComparison.OrdinalIgnoreCase))
                             {
                                 _user.Group = request.NewGroupName;
                                 _user.GroupPassword = request.NewGroupPassword;
                                 await _user.SaveAsync();
                                 ret = "name&pass_changed";
                             }
-
+                            else
+                            {
+                                if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
+                                    ret = "group_name_exists";
+                                else
+                                {
+                                    _user.Group = request.NewGroupName;
+                                    _user.GroupPassword = request.NewGroupPassword;
+                                    await _user.SaveAsync();
+                                    ret = "name&pass_changed";
+                                }
+                            }
                         }
                         else if (request.NewGroupName != null && request.NewGroupName != _user.Group)
                         {
-                            if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
-                                ret = "group_name_exists";
-                            else
+                            if(request.NewGroupName.Equals(_user.Group, StringComparison.OrdinalIgnoreCase))
                             {
                                 _user.Group = request.NewGroupName;
                                 await _user.SaveAsync();
                                 ret = "name_changed";
+                            }
+                            else
+                            {
+                                if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
+                                    ret = "group_name_exists";
+                                else
+                                {
+                                    _user.Group = request.NewGroupName;
+                                    await _user.SaveAsync();
+                                    ret = "name_changed";
+                                }
                             }
                         }
                         else if (request.NewGroupPassword != _user.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
