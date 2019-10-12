@@ -23,6 +23,7 @@
     </Content>
     <Content Include="DevFiles\body.css" />
     <Content Include="DevFiles\groups.css" />
+    <Content Include="DevFiles\groups.js" />
     <Content Include="DevFiles\ingroup.css" />
     <Content Include="DevFiles\reg.css" />
   </ItemGroup>

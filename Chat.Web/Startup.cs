@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace Chat.Web
 {
@@ -25,15 +24,7 @@ namespace Chat.Web
                 opts.UseSqlServer(Configuration.GetConnectionString("Users"));
             });
             services.AddScoped<User>();
-            /*services.AddCors(opts =>
-            {
-                opts.AddPolicy("_allowAll", blder =>
-                 {
-                     blder.AllowAnyOrigin();
-                     blder.AllowAnyHeader();
-                     blder.AllowAnyMethod();
-                 });
-            });*/
+            services.AddResponseCaching();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddSignalR();
         }
@@ -46,11 +37,10 @@ namespace Chat.Web
             else
                 app.UseHsts();
             app.UseStatusCodePages();
-            //todo turn on cashing and cash
-            //app.UseCors("_allowAll");
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseMiddleware<CustomAuthenticationMiddleware>();
+            app.UseResponseCaching();
             app.UseSignalR(routes =>
             {
                 routes.MapHub<ChatHub>("/hub");

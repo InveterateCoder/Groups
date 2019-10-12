@@ -23,6 +23,7 @@ namespace Chat.Web.Controllers
         [HttpPost("reg")]
         public async Task<ContentResult> RequestRegister([FromBody]RegRequest request)
         {
+            //todo change registration files to sql here
             string ret;
             if (_user.Chatterer != null)
             {
@@ -83,6 +84,7 @@ namespace Chat.Web.Controllers
         [HttpPost("val")]
         public async Task<ContentResult> Validate([Required, FromBody]object _id)
         {
+            //todo change registration files to sql here too
             string ret;
             if (_user.Chatterer != null)
             {

@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Metadata;
+﻿using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Chat.Web.Migrations
@@ -26,8 +25,7 @@ namespace Chat.Web.Migrations
                     Token = table.Column<string>(maxLength: 50, nullable: true),
                     ConnectionId = table.Column<string>(maxLength: 64, nullable: true),
                     WebSubscription = table.Column<string>(nullable: true),
-                    LastNotified = table.Column<long>(nullable: false),
-                    IPAddress = table.Column<byte[]>(nullable: true)
+                    LastNotified = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
                 {

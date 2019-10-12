@@ -18,12 +18,12 @@ namespace Chat.Web.Infrastructure
             if (token != null)
             {
                 var chatterer = dbContext.Chatterers.Where(c => c.Token == token).SingleOrDefault();
-                if(chatterer == null)
+                if (chatterer == null)
                 {
                     context.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
                     await Filter(context);
                 }
-                else if(chatterer.ConnectionId!=null && context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/hub")))
+                else if (chatterer.ConnectionId != null && context.Request.Path.StartsWithSegments(PathString.FromUriComponent("/hub")))
                     context.Response.StatusCode = StatusCodes.Status409Conflict;
                 else
                 {
