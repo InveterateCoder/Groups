@@ -3,14 +3,16 @@ using Chat.Web.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Chat.Web.Migrations
 {
     [DbContext(typeof(ChatterersDb))]
-    partial class ChatterersDbModelSnapshot : ModelSnapshot
+    [Migration("20191014092721_Third")]
+    partial class Third
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,8 +107,6 @@ namespace Chat.Web.Migrations
 
                     b.Property<string>("Password")
                         .HasMaxLength(32);
-
-                    b.Property<long>("RequestTime");
 
                     b.HasKey("Id");
 

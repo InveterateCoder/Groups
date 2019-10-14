@@ -10,17 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Assets\mailconfirm.html" />
-  </ItemGroup>
-
-  <ItemGroup>
     <_ContentIncludedByDefault Remove="wwwroot\css\all.css" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\mailconfirm.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="DevFiles\body.css" />
     <Content Include="DevFiles\groups.css" />
     <Content Include="DevFiles\groups.js" />
@@ -33,10 +26,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.3" />
     <PackageReference Include="WebPush-NetCore" Version="1.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="RegFiles\" />
   </ItemGroup>
 
   <ItemGroup>

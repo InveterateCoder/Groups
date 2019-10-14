@@ -6,6 +6,18 @@ namespace Chat.Web.Models
 {
     public class ChatterersDb : DbContext
     {
+        public class RegData
+        {
+            public int Id { get; set; }
+            public int Code { get; set; }
+            public long RequestTime { get; set; }
+            [MaxLength(64)]
+            public string Name { get; set; }
+            [MaxLength(256)]
+            public string Email { get; set; }
+            [MaxLength(32)]
+            public string Password { get; set; }
+        }
         public class Chatterer
         {
             public int Id { get; set; }
@@ -48,5 +60,6 @@ namespace Chat.Web.Models
         public ChatterersDb(DbContextOptions<ChatterersDb> opts) : base(opts) { }
         public DbSet<Chatterer> Chatterers { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<RegData> RegRequests { get; set; }
     }
 }
