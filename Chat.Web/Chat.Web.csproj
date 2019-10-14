@@ -16,6 +16,7 @@
   <ItemGroup>
     <Content Include="DevFiles\body.css" />
     <Content Include="DevFiles\groups.css" />
+    <Content Include="DevFiles\groups.js" />
     <Content Include="DevFiles\ingroup.css" />
     <Content Include="DevFiles\reg.css" />
   </ItemGroup>
@@ -25,6 +26,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Azure.SignalR" Version="1.1.1" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.0.0" />
+    <PackageReference Include="Sendgrid" Version="9.12.0" />
     <PackageReference Include="WebPush-NetCore" Version="1.0.2" />
   </ItemGroup>
 
