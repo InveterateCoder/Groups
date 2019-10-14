@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Chat.Web.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -10,19 +12,24 @@ namespace Chat.Web.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class GroupsController : ControllerBase
     {
-        private User _user;
-        public GroupsController(User user)
+        private UserManager<Chatterer> _userMgr;
+        private SignInManager<Chatterer> _signMgr;
+        private GroupsDbContext _groupsDb;
+        public GroupsController(GroupsDbContext groupsDb, UserManager<Chatterer> userMgr, SignInManager<Chatterer> signMgr)
         {
-            _user = user;
+            _userMgr = userMgr;
+            _signMgr = signMgr;
+            _groupsDb = groupsDb;
         }
         [HttpGet("list/{start:int:min(0)}/{quantity:int:range(1,100)?}/{query:maxlength(64)?}")]
         public JsonResult Groups(int start, int quantity, string query = "")
         {
             try
             {
-                var groups = _user.Chatterers.Select(c => c.Group).Where(g => g != null && g.StartsWith(query, StringComparison.OrdinalIgnoreCase));
+                var groups = _userMgr.Users.Where(u => u.Group != null && u.Group.StartsWith(query)).Select(u => u.Group);
                 var groupsCount = groups.Count();
                 if (groupsCount <= start)
                     return new JsonResult(0);
@@ -37,24 +44,10 @@ namespace Chat.Web.Controllers
                 return new JsonResult(e.Message);
             }
         }
-        [HttpGet("members")]
-        public JsonResult GroupMembers()
-        {
-            try
-            {
-                var members = _user.Chatterers.Where(c => c.InGroupId == _user.InGroupId);
-                var onl = members.Where(c => c.ConnectionId != null).Select(c => c.Name).ToArray();
-                var ofl = members.Where(c => c.ConnectionId == null).Select(c => c.Name).ToArray();
-                return new JsonResult(new { online = onl, offline = ofl });
-            }
-            catch(Exception e)
-            {
-                return new JsonResult(e.Message);
-            }
-        }
         [HttpGet("msgs/{ticks}/{quantity:int:range(1,100)}")]
         public JsonResult Messages(string ticks, int quantity)
         {
+            var user = _userMgr.GetUserAsync(User).Result;
             try
             {
                 long lticks = long.Parse(ticks);
@@ -62,8 +55,8 @@ namespace Chat.Web.Controllers
                 if (lticks == 0) lticks = DateTime.UtcNow.Ticks;
                 else if (lticks < limit)
                     return new JsonResult(-1);
-                IQueryable<ChatterersDb.Message> messages;
-                messages = _user.Database.Messages.Where(m => m.GroupId == _user.InGroupId && m.SharpTime < lticks && m.SharpTime >= limit).OrderBy(m => m.SharpTime);
+                IQueryable<Message> messages;
+                messages = _groupsDb.Messages.Where(m => m.GroupId == user.InGroupId && m.SharpTime < lticks && m.SharpTime >= limit).OrderBy(m => m.SharpTime);
                 if (messages.Count() <= 0)
                     return new JsonResult(0);
                 if (messages.Count() <= quantity)
@@ -79,6 +72,7 @@ namespace Chat.Web.Controllers
         [HttpGet("msgs/missed/{ticks}")]
         public JsonResult MessagesMissed(string ticks)
         {
+            var user = _userMgr.GetUserAsync(User).Result;
             try
             {
                 long lticks = long.Parse(ticks);
@@ -86,7 +80,7 @@ namespace Chat.Web.Controllers
                     return new JsonResult(-1);
                 else
                 {
-                    var messages = _user.Database.Messages.Where(m => m.GroupId == _user.InGroupId && m.SharpTime > lticks).OrderBy(m => m.SharpTime);
+                    var messages = _groupsDb.Messages.Where(m => m.GroupId == user.InGroupId && m.SharpTime > lticks).OrderBy(m => m.SharpTime);
                     if (messages.Count() <= 0)
                         return new JsonResult(0);
                     else
@@ -101,23 +95,24 @@ namespace Chat.Web.Controllers
         [HttpPost("reg")]
         public async Task<ContentResult> Register([FromBody]GroupRegRequest request)
         {
+            var user = await _userMgr.GetUserAsync(User);
             string ret;
             try
             {
-                if (_user.Group != null)
+                if (user.Group != null)
                     ret = "has_group";
+                else if ((await _signMgr.CheckPasswordSignInAsync(user, request.Password, false)).Succeeded != true)
+                    ret = "wrong_password";
                 else if (!StaticData.IsNameValid(request.GroupName))
                     ret = "invalid_name";
-                else if (_user.Chatterers.Any(c => c.Group == request.GroupName))
+                else if (_groupsDb.Users.Any(c => c.Group == request.GroupName))
                     ret = "name_taken";
-                else if (request.Password != _user.Password)
-                    ret = "wrong_password";
                 else
                 {
-                    _user.Group = request.GroupName;
-                    _user.GroupPassword = request.GroupPassword;
-                    _user.Chatterer.GroupLastCleaned = DateTime.UtcNow.Ticks;
-                    await _user.SaveAsync();
+                    user.Group = request.GroupName;
+                    user.GroupPassword = request.GroupPassword;
+                    user.GroupLastCleaned = DateTime.UtcNow.Ticks;
+                    await _groupsDb.SaveChangesAsync();
                     ret = "OK";
                 }
             }
@@ -130,14 +125,15 @@ namespace Chat.Web.Controllers
         [HttpPost("change")]
         public async Task<ContentResult> Change([FromBody]GroupChangeRequest request)
         {
+            var user = await _userMgr.GetUserAsync(User);
             string ret;
             try
             {
-                if (_user.Group == null)
+                if (user.Group == null)
                     ret = "has_no_group";
                 else if (request.NewGroupName == null && request.NewGroupPassword != null && request.NewGroupPassword.Length < 8)
                     ret = "no_change_requested";
-                else if (_user.Password != request.Password)
+                else if ((await _signMgr.CheckPasswordSignInAsync(user, request.Password, false)).Succeeded != true)
                     ret = "wrong_password";
                 else
                 {
@@ -145,53 +141,53 @@ namespace Chat.Web.Controllers
                         ret = "invalid_name";
                     else
                     {
-                        if (request.NewGroupName != null && request.NewGroupName != _user.Group && request.NewGroupPassword != _user.GroupPassword
+                        if (request.NewGroupName != null && request.NewGroupName != user.Group && request.NewGroupPassword != user.GroupPassword
                             && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
                         {
-                            if(request.NewGroupName.Equals(_user.Group, StringComparison.OrdinalIgnoreCase))
+                            if(request.NewGroupName.Equals(user.Group, StringComparison.OrdinalIgnoreCase))
                             {
-                                _user.Group = request.NewGroupName;
-                                _user.GroupPassword = request.NewGroupPassword;
-                                await _user.SaveAsync();
+                                user.Group = request.NewGroupName;
+                                user.GroupPassword = request.NewGroupPassword;
+                                await _groupsDb.SaveChangesAsync();
                                 ret = "name&pass_changed";
                             }
                             else
                             {
-                                if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
+                                if (_groupsDb.Users.Any(c => c.Group == request.NewGroupName))
                                     ret = "group_name_exists";
                                 else
                                 {
-                                    _user.Group = request.NewGroupName;
-                                    _user.GroupPassword = request.NewGroupPassword;
-                                    await _user.SaveAsync();
+                                    user.Group = request.NewGroupName;
+                                    user.GroupPassword = request.NewGroupPassword;
+                                    await _groupsDb.SaveChangesAsync();
                                     ret = "name&pass_changed";
                                 }
                             }
                         }
-                        else if (request.NewGroupName != null && request.NewGroupName != _user.Group)
+                        else if (request.NewGroupName != null && request.NewGroupName != user.Group)
                         {
-                            if(request.NewGroupName.Equals(_user.Group, StringComparison.OrdinalIgnoreCase))
+                            if(request.NewGroupName.Equals(user.Group, StringComparison.OrdinalIgnoreCase))
                             {
-                                _user.Group = request.NewGroupName;
-                                await _user.SaveAsync();
+                                user.Group = request.NewGroupName;
+                                await _groupsDb.SaveChangesAsync();
                                 ret = "name_changed";
                             }
                             else
                             {
-                                if (_user.Chatterers.Any(c => c.Group == request.NewGroupName))
+                                if (_groupsDb.Users.Any(c => c.Group == request.NewGroupName))
                                     ret = "group_name_exists";
                                 else
                                 {
-                                    _user.Group = request.NewGroupName;
-                                    await _user.SaveAsync();
+                                    user.Group = request.NewGroupName;
+                                    await _groupsDb.SaveChangesAsync(); ;
                                     ret = "name_changed";
                                 }
                             }
                         }
-                        else if (request.NewGroupPassword != _user.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
+                        else if (request.NewGroupPassword != user.GroupPassword && (request.NewGroupPassword == null || request.NewGroupPassword.Length >= 8))
                         {
-                            _user.GroupPassword = request.NewGroupPassword;
-                            await _user.SaveAsync();
+                            user.GroupPassword = request.NewGroupPassword;
+                            await _groupsDb.SaveChangesAsync();
                             ret = "pass_changed";
                         }
                         else
@@ -208,23 +204,24 @@ namespace Chat.Web.Controllers
         [HttpPost("sign")]
         public async Task<ContentResult> Sign([FromBody]GroupSignRequest request)
         {
+            var user = await _userMgr.GetUserAsync(User);
             string ret;
-            if (_user.InGroupId != 0)
+            if (user.InGroupId != null)
                 ret = "already_signed";
             else
             {
                 try
                 {
-                    if(request.Name == _user.Group)
+                    if(request.Name == user.Group)
                     {
-                        _user.InGroupId = _user.Chatterer.Id;
-                        _user.InGroupPassword = _user.GroupPassword;
-                        await _user.SaveAsync();
+                        user.InGroupId = user.Id;
+                        user.InGroupPassword = user.GroupPassword;
+                        await _groupsDb.SaveChangesAsync();
                         ret = "OK";
                     }
                     else
                     {
-                        var entity = _user.Chatterers.FirstOrDefault(c => c.Group == request.Name);
+                        var entity = _groupsDb.Users.FirstOrDefault(c => c.Group == request.Name);
                         if (entity == null)
                             ret = "not_found";
                         else
@@ -233,9 +230,9 @@ namespace Chat.Web.Controllers
                                 ret = "wrong_password";
                             else
                             {
-                                _user.InGroupId = entity.Id;
-                                _user.InGroupPassword = request.Password;
-                                await _user.SaveAsync();
+                                user.InGroupId = entity.Id;
+                                user.InGroupPassword = request.Password;
+                                await _groupsDb.SaveChangesAsync();
                                 ret = "OK";
                             }
                         }
@@ -248,47 +245,26 @@ namespace Chat.Web.Controllers
             }
             return Content(ret, "text/plain");
         }
-        [HttpPost("sign/out")]
-        public async Task<ContentResult> SignOut()
-        {
-            string ret;
-            try
-            {
-                if (_user.InGroupId == 0)
-                    ret = "not_signed";
-                else
-                {
-                    _user.InGroupId = 0;
-                    _user.InGroupPassword = null;
-                    await _user.SaveAsync();
-                    ret = "OK";
-                }
-            }
-            catch(Exception e)
-            {
-                ret = e.Message;
-            }
-            return Content(ret, "text/plain");
-        }
         [HttpPost("del")]
         public async Task<ContentResult> Delete([Required, StringLength(32, MinimumLength = 8), FromBody] string password)
         {
+            var user = await _userMgr.GetUserAsync(User);
             string ret;
             try
             {
-                if (_user.Group == null)
+                if (user.Group == null)
                     ret = "has_no_group";
-                else if (_user.Password != password)
+                else if ((await _signMgr.CheckPasswordSignInAsync(user, password, false)).Succeeded != true)
                     ret = "wrong_password";
                 else
                 {
-                    var group_users = _user.Chatterers.Where(c => c.InGroupId == _user.Chatterer.Id);
+                    var group_users = _groupsDb.Users.Where(c => c.InGroupId == user.Id);
                     foreach (var u in group_users)
-                        u.InGroupId = 0;
-                    _user.Database.Messages.RemoveRange(_user.Database.Messages.Where(m => m.GroupId == _user.Chatterer.Id));
-                    _user.Group = null;
-                    _user.GroupPassword = null;
-                    await _user.SaveAsync();
+                        u.InGroupId = null;
+                    _groupsDb.Messages.RemoveRange(_groupsDb.Messages.Where(m => m.GroupId == user.Id));
+                    user.Group = null;
+                    user.GroupPassword = null;
+                    await _groupsDb.SaveChangesAsync();
                     ret = "deleted";
                 }
             }

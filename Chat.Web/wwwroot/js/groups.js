@@ -1,9 +1,7 @@
 ﻿var app;
 var notif_worker;
-document.addEventListener('DOMContentLoaded', () => {
-    navigator.serviceWorker.register('/js/notif_worker.js').then(ret => notif_worker = ret);
-    app = new app_class();
-});
+navigator.serviceWorker.register('/js/notif_worker.js').then(ret => notif_worker = ret);
+document.addEventListener('DOMContentLoaded', () => app = new app_class());
 class api_class {
     constructor() { }
     async register(chatterer) {
@@ -361,35 +359,6 @@ class api_class {
                     app.alert(resp);
             }
             return ret;
-        }
-        catch (err) {
-            app.alert(err.message);
-            return false;
-        }
-    }
-    async grp_singout() {
-        let ret = false;
-        try {
-            let resp = await this.post("api/groups/sign/out");
-            switch (resp) {
-                case "OK":
-                case "not_signed":
-                    app.ingroup = null;
-                    ret = true;
-                    break;
-                default:
-                    app.alert(resp);
-            }
-            return ret;
-        }
-        catch (err) {
-            app.alert(err.message);
-            return false;
-        }
-    }
-    async get_members() {
-        try {
-            return await this.get("api/groups/members");
         }
         catch (err) {
             app.alert(err.message);
@@ -1267,7 +1236,7 @@ class ingroup_class {
         }
     }
     async members_get() {
-        let ret = await app.api.get_members();
+        let ret = JSON.parse(await this.connection.invoke("Members"));
         if (!Array.isArray(ret.online) || !Array.isArray(ret.offline)) {
             this.signout();
             app.alert("Something went terribly wrong: " + ret);
@@ -1372,14 +1341,7 @@ class ingroup_class {
         }
     }
     signout() {
-        app.api.grp_singout().then(ret => {
-            if (ret) {
-                this.connection.invoke("SignOut").then(() => app.goto('groups')).catch(err => {
-                    app.goto('groups');
-                    app.alert(err.message);
-                });
-            }
-        });
+        this.connection.invoke("SignOut").then(() => app.goto('groups')).catch(err => app.alert(err.message));
     }
     offl_usr_select(el) {
         if (this.offl_usr == null) {
@@ -2001,7 +1963,7 @@ class app_class {
             this.wait_handle = setTimeout(() => {
                 app.wait_el.style.display = 'block';
                 app.wait_el.focus();
-            }, 300);
+            }, 50);
     }
     resume() {
         if (--this.wait_count == 0) {

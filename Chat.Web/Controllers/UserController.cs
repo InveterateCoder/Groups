@@ -2,35 +2,48 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Chat.Web.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chat.Web.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class UserController : Controller
     {
-        private User _user;
-        public UserController(User user)
-            => _user = user;
-        [HttpGet("info")]
-        public async Task<JsonResult> Info() => new JsonResult(new
+        private UserManager<Chatterer> _userMgr;
+        private SignInManager<Chatterer> _signMgr;
+        private GroupsDbContext _groupsDb;
+        public UserController(GroupsDbContext groupsDb, UserManager<Chatterer> userMgr, SignInManager<Chatterer> signMgr)
         {
-            name = _user.Name,
-            group = _user.Group,
-            ingroup = (await _user.Chatterers.FindAsync(_user.InGroupId))?.Group,
-            pub_key = "BFnbEjZPGFowzLKbDeFjlJ-o5juCQWiaFUzDH6jb_H3Rid3EO8f59N8PSe5AAMp5KhLMV31u1V79RxBiAmeofH0"
-        });
+            _userMgr = userMgr;
+            _signMgr = signMgr;
+            _groupsDb = groupsDb;
+        }
+        [HttpGet("info")]
+        public async Task<JsonResult> Info()
+        {
+            var user = await _userMgr.GetUserAsync(User);
+            return new JsonResult(new
+            {
+                name = user.UserName,
+                group = user.Group,
+                ingroup = (await _userMgr.FindByIdAsync(user.InGroupId))?.Group,
+                pub_key = "BFnbEjZPGFowzLKbDeFjlJ-o5juCQWiaFUzDH6jb_H3Rid3EO8f59N8PSe5AAMp5KhLMV31u1V79RxBiAmeofH0"
+            });
+        }
         [HttpPost("signout")]
         public async Task<ContentResult> SignOut()
         {
+            var user = await _userMgr.GetUserAsync(User);
             string ret;
             try
             {
-                _user.Token = null;
-                _user.InGroupId = 0;
-                _user.InGroupPassword = null;
-                await _user.SaveAsync();
-                HttpContext.Response.Cookies.Delete(StaticData.AuthenticationCookieName);
+                await _signMgr.SignOutAsync();
+                user.InGroupId = null;
+                user.InGroupPassword = null;
+                await _groupsDb.SaveChangesAsync();
                 ret = "OK";
             }
             catch (Exception e)
@@ -42,18 +55,26 @@ namespace Chat.Web.Controllers
         [HttpPost("del")]
         public async Task<ContentResult> Delete([FromBody]SignRequest request)
         {
+            var user = await _userMgr.GetUserAsync(User);
             string ret;
             try
             {
-                if (request.Email.ToLower() != _user.Email)
+                if(user.Email != request.Email.ToLower())
                     ret = "wrong_email";
-                else if (request.Password != _user.Password)
+                else if ((await _signMgr.CheckPasswordSignInAsync(user, request.Password, false)).Succeeded != true)
                     ret = "wrong_password";
                 else
                 {
-                    Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                    _user.Chatterers.Remove(_user.Chatterer);
-                    await _user.SaveAsync();
+                    await _signMgr.SignOutAsync();
+                    _groupsDb.Messages.RemoveRange(_groupsDb.Messages.Where(m => m.Id == user.Id));
+                    var grpUsrs = _userMgr.Users.Where(u => u.InGroupId == user.Id);
+                    foreach(var u in grpUsrs)
+                    {
+                        u.InGroupId = null;
+                        u.InGroupPassword = null;
+                    }
+                    _groupsDb.Users.Remove(user);
+                    await _groupsDb.SaveChangesAsync();
                     ret = "deleted";
                 }
             }
@@ -64,12 +85,13 @@ namespace Chat.Web.Controllers
             return Content(ret, "text/plain");
         }
         [HttpPost("change")]
-        public async Task<ContentResult> Change([FromBody]AccountChangeRequest request)
+        public async Task<ContentResult> Change([FromBody]AccountChangeRequest request, [FromServices] PasswordHasher<Chatterer> pHasher)
         {
+            var user = await _userMgr.GetUserAsync(User);
             string ret;
             try
             {
-                if (request.Password != _user.Password)
+                if ((await _signMgr.CheckPasswordSignInAsync(user, request.Password, false)).Succeeded != true)
                     ret = "wrong_password";
                 else if (request.NewName == null && request.NewPassword == null)
                     ret = "no_change_requested";
@@ -79,53 +101,53 @@ namespace Chat.Web.Controllers
                         ret = "invalid_name";
                     else
                     {
-                        if (request.NewName != null && request.NewName != _user.Name
-                        && request.NewPassword != null && request.NewPassword != _user.Password)
+                        if (request.NewName != null && request.NewName != user.UserName
+                        && request.NewPassword != null && request.NewPassword != request.Password)
                         {
-                            if(request.NewName.Equals(_user.Name, StringComparison.OrdinalIgnoreCase))
+                            if(request.NewName.Equals(user.UserName, StringComparison.OrdinalIgnoreCase))
                             {
-                                _user.Name = request.NewName;
-                                _user.Password = request.NewPassword;
-                                await _user.SaveAsync();
+                                user.UserName = request.NewName;
+                                user.PasswordHash = pHasher.HashPassword(user, request.Password);
+                                await _groupsDb.SaveChangesAsync();
                                 ret = "name&pass_changed";
                             }
                             else
                             {
-                                if (_user.Chatterers.Any(c => c.Name == request.NewName))
+                                if ((await _userMgr.FindByNameAsync(request.NewName)) != null)
                                     ret = "name_exists";
                                 else
                                 {
-                                    _user.Name = request.NewName;
-                                    _user.Password = request.NewPassword;
-                                    await _user.SaveAsync();
+                                    user.UserName = request.NewName;
+                                    user.PasswordHash = pHasher.HashPassword(user, request.Password);
+                                    await _groupsDb.SaveChangesAsync();
                                     ret = "name&pass_changed";
                                 }
                             }
                         }
-                        else if (request.NewName != null && request.NewName != _user.Name)
+                        else if (request.NewName != null && request.NewName != user.UserName)
                         {
-                            if(request.NewName.Equals(_user.Name, StringComparison.OrdinalIgnoreCase))
+                            if(request.NewName.Equals(user.UserName, StringComparison.OrdinalIgnoreCase))
                             {
-                                _user.Name = request.NewName;
-                                await _user.SaveAsync();
+                                user.UserName = request.NewName;
+                                await _groupsDb.SaveChangesAsync();
                                 ret = "name_changed";
                             }
                             else
                             {
-                                if (_user.Chatterers.Any(c => c.Name == request.NewName))
+                                if ((await _userMgr.FindByNameAsync(request.NewName)) != null)
                                     ret = "name_exists";
                                 else
                                 {
-                                    _user.Name = request.NewName;
-                                    await _user.SaveAsync();
+                                    user.UserName = request.NewName;
+                                    await _groupsDb.SaveChangesAsync();
                                     ret = "name_changed";
                                 }
                             }
                         }
-                        else if (request.NewPassword != null && request.NewPassword != _user.Password)
+                        else if (request.NewPassword != null && request.NewPassword != request.Password)
                         {
-                            _user.Password = request.NewPassword;
-                            await _user.SaveAsync();
+                            user.PasswordHash = pHasher.HashPassword(user, request.Password);
+                            await _groupsDb.SaveChangesAsync();
                             ret = "pass_changed";
                         }
                         else

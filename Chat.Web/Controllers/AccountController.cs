@@ -1,5 +1,6 @@
 ﻿using Chat.Web.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
@@ -18,36 +19,39 @@ namespace Chat.Web.Controllers
     public class AccountController : ControllerBase
     {
         private string email = "<!DOCTYPE html><html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\"><head> <meta charset=\"utf-8\"> <meta name=\"viewport\" content=\"width=device-width\"> <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"> <meta name=\"x-apple-disable-message-reformatting\"> <meta name=\"format-detection\" content=\"telephone=no,address=no,email=no,date=no,url=no\"> <title>CHAT email confirmation</title> <style> html, body { margin: 0 !important; padding: 0 !important; height: 100% !important; width: 100% !important; } * { -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; } table, td { mso-table-lspace: 0pt !important; mso-table-rspace: 0pt !important; } table { border-spacing: 0 !important; border-collapse: collapse !important; table-layout: fixed !important; margin: 0 auto !important; } @media only screen and (min-device-width: 320px) and (max-device-width: 374px) { u ~ div .email-container { min-width: 320px !important; } } @media only screen and (min-device-width: 375px) and (max-device-width: 413px) { u ~ div .email-container { min-width: 375px !important; } } @media only screen and (min-device-width: 414px) { u ~ div .email-container { min-width: 414px !important; } } @media screen and (max-width: 600px) { .email-container p { font-size: 17px !important; } } </style></head><body width=\"100%\" style=\"margin: 0; padding: 0 !important; mso-line-height-rule: exactly;\"><center style=\"width: 100%;\"> <div style=\"max-width: 600px; margin: 0 auto;\" class=\"email-container\"> <table align=\"center\" role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"margin: auto;\"> <tr> <td> <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\"> <tr> <td style=\"padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;\"> <h1 style=\"margin: 0 0 10px 0; font-family: sans-serif; font-size: 25px; line-height: 30px; color: #333333; font-weight: normal;\">Please confirm this email address.</h1> <p style=\"margin: 0;\">Hello there, <strong></strong>. This is an automatically generated message. The following is the confirmation number:</p> </td> </tr> <tr> <td style=\"padding: 0 20px;\"> <table align=\"center\" role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"margin: auto;\"> <tr> <td class=\"button-td button-td-primary\" style=\"border-radius: 4px; background: #222222;\"> <span style=\"letter-spacing: 3px; background: #222222; border: 1px solid #000000; font-family: sans-serif; font-size: 15px; line-height: 15px; padding: 13px 17px; color: #ffffff; display: block; border-radius: 4px;\"></span></td> </tr> </table> </td> </tr> <tr> <td style=\"padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;\"> <h2 style=\"margin: 0 0 10px 0; font-family: sans-serif; font-size: 18px; line-height: 22px; color: #333333; font-weight: bold;\">The confirmation number will expire in one hour.</h2> <hr><h1 style=\"margin: 15px 0 0 0; text-align: center;\">Groups</h1> </td> </tr> </table> </td> </tr> </table> </div> </center></body></html>";
-        private User _user;
-        public AccountController(User user)
-            => _user = user;
+        private UserManager<Chatterer> _userMgr;
+        private SignInManager<Chatterer> _signMgr;
+        private GroupsDbContext _groupsDb;
+        public AccountController(GroupsDbContext groupsDb, UserManager<Chatterer> userMgr, SignInManager<Chatterer> signMgr)
+        {
+            _userMgr = userMgr;
+            _signMgr = signMgr;
+            _groupsDb = groupsDb;
+        }
         [HttpPost("reg")]
         public async Task<ContentResult> RequestRegister([FromBody]RegRequest request)
         {
             string ret;
-            if (_user.Chatterer != null)
-            {
-                Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                ret = "signed_out";
-            }
+            if (User.Identity.IsAuthenticated)
+                ret = "already_registered";
             else
             {
                 try
                 {
                     request.Email = request.Email.ToLower();
-                    if (_user.Chatterers.Any(c => c.Email == request.Email))
+                    if ((await _userMgr.FindByEmailAsync(request.Email)) != null)
                         ret = "email_is_taken";
                     else if (!StaticData.IsNameValid(request.Name))
                         ret = "invalid_name";
-                    else if (_user.Chatterers.Any(c => c.Name == request.Name))
+                    else if ((await _userMgr.FindByNameAsync(request.Name)) != null)
                         ret = "name_is_taken";
                     else
                     {
                         Random rand = new Random();
                         int code;
                         do code = rand.Next(1234, 9876);
-                        while (_user.Database.RegRequests.FirstOrDefault(r => r.Code == code) != null);
-                        _user.Database.RegRequests.Add(new ChatterersDb.RegData
+                        while (_groupsDb.RegRequests.FirstOrDefault(r => r.Code == code) != null);
+                        _groupsDb.RegRequests.Add(new RegData
                         {
                             Code = code,
                             RequestTime = DateTime.UtcNow.Ticks,
@@ -55,7 +59,7 @@ namespace Chat.Web.Controllers
                             Email = request.Email,
                             Password = request.Password
                         });
-                        await _user.SaveAsync();
+                        await _groupsDb.SaveChangesAsync();
                         await CleanInactiveUsers();
                         var mret = await SendMail(request.Email, request.Name, code.ToString());
                         if (mret != "ok") ret = mret;
@@ -73,11 +77,8 @@ namespace Chat.Web.Controllers
         public async Task<ContentResult> Validate([Required, FromBody]object _id)
         {
             string ret;
-            if (_user.Chatterer != null)
-            {
-                Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                ret = "signed_out";
-            }
+            if (User.Identity.IsAuthenticated)
+                ret = "already_validated";
             else
             {
                 try
@@ -91,45 +92,44 @@ namespace Chat.Web.Controllers
                     if (idl < 1234 || idl > 9876)
                         throw new InvalidDataException("invalid_confirmation_id");
                     int id = (int)idl;
-                    var overdueReq = _user.Database.RegRequests.Where(r => r.RequestTime < DateTime.UtcNow.Subtract(TimeSpan.FromHours(1)).Ticks);
+                    var overdueReq = _groupsDb.RegRequests.Where(r => r.RequestTime < DateTime.UtcNow.Subtract(TimeSpan.FromHours(1)).Ticks);
                     var mustSave = false;
                     if (overdueReq.Count() > 0)
                     {
-                        _user.Database.RegRequests.RemoveRange(overdueReq);
+                        _groupsDb.RegRequests.RemoveRange(overdueReq);
                         mustSave = true;
                     }
-                    var reqReq = _user.Database.RegRequests.FirstOrDefault(r => r.Code == id);
+                    var reqReq = _groupsDb.RegRequests.FirstOrDefault(r => r.Code == id);
                     if(reqReq == null)
                     {
                         ret = "reg_request_required";
                         if (mustSave)
-                            await _user.SaveAsync();
+                            await _groupsDb.SaveChangesAsync();
                     }
                     else
                     {
-                        if (_user.Chatterers.Any(c => c.Email == reqReq.Email))
+                        if ((await _userMgr.FindByEmailAsync(reqReq.Email)) != null)
                         {
                             ret = "email_is_taken";
                             if (mustSave)
-                                await _user.SaveAsync();
+                                await _groupsDb.SaveChangesAsync();
                         }
-                        else if(_user.Chatterers.Any(c => c.Name == reqReq.Name))
+                        else if ((await _userMgr.FindByNameAsync(reqReq.Name)) != null)
                         {
                             ret = "name_is_taken";
                             if (mustSave)
-                                await _user.SaveAsync();
+                                await _groupsDb.SaveChangesAsync();
                         }
                         else
                         {
-                            await _user.Chatterers.AddAsync(new ChatterersDb.Chatterer
+                            await _userMgr.CreateAsync(new Chatterer
                             {
-                                Name = reqReq.Name,
-                                Email = reqReq.Email,
-                                Password = reqReq.Password,
-                            });
+                                UserName = reqReq.Name,
+                                Email = reqReq.Email
+                            }, reqReq.Password);
                             ret = "added_" + reqReq.Email;
-                            _user.Database.RegRequests.Remove(reqReq);
-                            await _user.SaveAsync();
+                            _groupsDb.RegRequests.Remove(reqReq);
+                            await _groupsDb.SaveChangesAsync();
                         }
                     }
                 }
@@ -146,45 +146,18 @@ namespace Chat.Web.Controllers
             string ret;
             try
             {
-                if (_user.Chatterer != null)
-                {
-                    Response.Cookies.Delete(StaticData.AuthenticationCookieName);
-                    ret = "signed_out";
-                }
+                if (User.Identity.IsAuthenticated)
+                    ret = "already_signed";
                 else
                 {
-                    var user = _user.Chatterers.Where(c => c.Email == request.Email.ToLower()).SingleOrDefault();
+                    var user = await _userMgr.FindByEmailAsync(request.Email);
                     if (user == null)
                         ret = "user_not_found";
                     else
                     {
-                        if (user.Password != request.Password)
-                            ret = "password_incorrect";
-                        else
-                        {
-                            if (user.ConnectionId != null)
-                                ret = "multiple_signins_forbidden";
-                            else
-                            {
-                                SHA256 sha256 = SHA256.Create();
-                                byte[] bytes;
-                                string token;
-                                do
-                                {
-                                    bytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(
-                                    $"{DateTime.UtcNow.ToString()}-{user.Name}-{user.Email}-{user.Password}-{Guid.NewGuid().ToString()}"));
-                                    token = Convert.ToBase64String(bytes);
-                                }
-                                while (_user.Chatterers.Where(c => c.Token == token).FirstOrDefault() != null);
-                                user.Token = token;
-                                sha256.Dispose();
-                                bytes = null;
-                                await _user.SaveAsync();
-                                HttpContext.Response.Cookies.Append(StaticData.AuthenticationCookieName, user.Token,
-                                    new CookieOptions { Secure = true, SameSite = SameSiteMode.Strict, Expires = DateTimeOffset.Now.AddDays(30) });
-                                ret = "OK";
-                            }
-                        }
+                        var result = await _signMgr.PasswordSignInAsync(user, request.Password, true, false);
+                        if (!result.Succeeded) ret = "failed";
+                        else ret = "OK";
                     }
                 }
             }
@@ -197,7 +170,7 @@ namespace Chat.Web.Controllers
         private async Task CleanInactiveUsers()
         {
             var limit = DateTime.UtcNow.Subtract(TimeSpan.FromDays(300)).Ticks;
-            var inactiveUsrs = _user.Chatterers.Where(c => c.LastActive < limit);
+            var inactiveUsrs = _userMgr.Users.Where(c => c.LastActive < limit);
             if (inactiveUsrs.Count() > 0)
             {
                 var groupIds = inactiveUsrs.Where(c => c.Group != null).Select(u => u.Id);
@@ -205,17 +178,17 @@ namespace Chat.Web.Controllers
                 {
                     foreach (var id in groupIds)
                     {
-                        var inGroupUsrs = _user.Chatterers.Where(c => c.InGroupId == id);
+                        var inGroupUsrs = _userMgr.Users.Where(c => c.InGroupId == id);
                         foreach (var usr in inGroupUsrs)
                         {
-                            usr.InGroupId = 0;
+                            usr.InGroupId = null;
                             usr.InGroupPassword = null;
                         }
-                        _user.Database.Messages.RemoveRange(_user.Database.Messages.Where(m => m.GroupId == id));
+                        _groupsDb.Messages.RemoveRange(_groupsDb.Messages.Where(m => m.GroupId == id));
                     }
                 }
-                _user.Chatterers.RemoveRange(inactiveUsrs);
-                await _user.SaveAsync();
+                _groupsDb.Users.RemoveRange(inactiveUsrs);
+                await _groupsDb.SaveChangesAsync();
             }
         }
         private async Task<string> SendMail(string to, string name, string code)

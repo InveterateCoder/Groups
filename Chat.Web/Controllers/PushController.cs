@@ -3,24 +3,35 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Chat.Web.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chat.Web.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PushController : ControllerBase
     {
-        private User _user;
-        public PushController(User user) => _user = user;
+        private UserManager<Chatterer> _userMgr;
+        private SignInManager<Chatterer> _signMgr;
+        private GroupsDbContext _groupsDb;
+        public PushController(GroupsDbContext groupsDb, UserManager<Chatterer> userMgr, SignInManager<Chatterer> signMgr)
+        {
+            _userMgr = userMgr;
+            _signMgr = signMgr;
+            _groupsDb = groupsDb;
+        }
         [HttpPost("web/subscribe")]
         public async Task<ContentResult> WebSubscribe([Required, FromBody]Subscription subscription)
         {
+            var user = await _userMgr.GetUserAsync(User);
             string ret;
             try
             {
-                _user.WebSubscription = subscription.ToString();
-                await _user.SaveAsync();
+                user.WebSubscription = subscription.ToString();
+                await _groupsDb.SaveChangesAsync();
                 ret = "OK";
             }
             catch(Exception e)
@@ -32,11 +43,12 @@ namespace Chat.Web.Controllers
         [HttpGet("web/unsubscribe")]
         public async Task<ContentResult> WebUnsubscribe()
         {
+            var user = await _userMgr.GetUserAsync(User);
             string ret;
             try
             {
-                _user.WebSubscription = null;
-                await _user.SaveAsync();
+                user.WebSubscription = null;
+                await _groupsDb.SaveChangesAsync();
                 ret = "OK";
             }
             catch (Exception e)
@@ -48,23 +60,24 @@ namespace Chat.Web.Controllers
         [HttpPost("web/push")]
         public async Task<ContentResult> Push([Required, FromBody] string name)
         {
+            var user = await _userMgr.GetUserAsync(User);
             string ret;
             try
             {
-                if (_user.InGroupId == 0)
+                if (user.InGroupId == null)
                     ret = "not_in_group";
                 else
                 {
-                    if (_user.WebSubscription == null)
+                    if (user.WebSubscription == null)
                         ret = "s_not_subscribed";
                     else
                     {
-                        var rcvr = _user.Chatterers.Where(c => c.InGroupId == _user.InGroupId).SingleOrDefault(c => c.Name == name);
+                        var rcvr = _groupsDb.Users.Where(c => c.InGroupId == user.InGroupId).SingleOrDefault(c => c.UserName == name);
                         if (rcvr == null)
                             ret = "not_found";
                         else
                         {
-                            if (rcvr.InGroupId != _user.InGroupId)
+                            if (rcvr.InGroupId != user.InGroupId)
                                 ret = "not_same_group";
                             else
                             {
@@ -81,16 +94,16 @@ namespace Chat.Web.Controllers
                                             ret = "usr_active";
                                         else
                                         {
-                                            Task<ChatterersDb.Chatterer> groupN = _user.Chatterers.FindAsync(rcvr.InGroupId);
+                                            Task<Chatterer> groupN = _groupsDb.Users.FindAsync(rcvr.InGroupId);
                                             WebPush.WebPushClient client = new WebPush.WebPushClient();
                                             WebPush.VapidDetails det = new WebPush.VapidDetails("mailto:splendiferouslife@outlook.com",
                                                 "BFnbEjZPGFowzLKbDeFjlJ-o5juCQWiaFUzDH6jb_H3Rid3EO8f59N8PSe5AAMp5KhLMV31u1V79RxBiAmeofH0",
                                                 "llDpC8IqKbdgsHqaF00xrcqHVefNt50NAMDQBBQrgNo");
                                             client.SetVapidDetails(det);
                                             var groupName = (await groupN).Group;
-                                            var send_task = client.SendNotificationAsync(web_subscription, $"\"{groupName}\" by {_user.Name}");
+                                            var send_task = client.SendNotificationAsync(web_subscription, $"\"{groupName}\" by {user.UserName}");
                                             rcvr.LastNotified = DateTime.UtcNow.Ticks;
-                                            var save_task = _user.SaveAsync();
+                                            var save_task = _groupsDb.SaveChangesAsync();
                                             await Task.WhenAll(send_task, save_task);
                                             ret = "OK";
                                         }

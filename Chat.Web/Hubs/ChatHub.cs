@@ -1,4 +1,6 @@
 ﻿using Chat.Web.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Linq;
@@ -26,44 +28,67 @@ namespace Chat.Web.Hubs
         public long JsTime { get; set; }
         public string StringTime { get; set; }
     }
+    [Authorize]
     public class ChatHub : Hub
     {
-        private User GetUser()
+        private GroupsDbContext _groupDb;
+        private UserManager<Chatterer> _usrMgr;
+        public ChatHub(GroupsDbContext groupDb, UserManager<Chatterer> usrMgr)
         {
-            User user = Context.GetHttpContext().RequestServices.GetService(typeof(User)) as User;
-            if (user == null)
+            _groupDb = groupDb;
+            _usrMgr = usrMgr;
+        }
+        public async Task<string> Members()
+        {
+            try
             {
-                Context.Abort();
-                throw new HubException("User was not identified");
+                var user = await _usrMgr.GetUserAsync(Context.User);
+                var members = _groupDb.Users.Where(u => u.InGroupId == user.InGroupId);
+                var onl = members.Where(c => c.ConnectionId != null).Select(c => c.UserName).ToArray();
+                var ofl = members.Where(c => c.ConnectionId == null).Select(c => c.UserName).ToArray();
+                return Newtonsoft.Json.JsonConvert.SerializeObject(new { online = onl, offline = ofl });
             }
-            return user;
+            catch(Exception e)
+            {
+                throw new HubException(e.Message);
+            }
         }
         public async Task SignOut()
         {
-            var user = GetUser();
-            await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("signed_out", user.Name);
-            await Groups.RemoveFromGroupAsync(user.ConnectionId, user.InGroupId.ToString());
+            var user = await _usrMgr.GetUserAsync(Context.User);
+            try
+            {
+                await Clients.OthersInGroup(user.InGroupId).SendAsync("signed_out", user.UserName);
+                await Groups.RemoveFromGroupAsync(user.ConnectionId, user.InGroupId);
+                user.InGroupId = null;
+                user.InGroupPassword = null;
+                await _groupDb.SaveChangesAsync();
+            }
+            catch(Exception e)
+            {
+                throw new HubException(e.Message);
+            }
         }
         public async Task<Time> MessageServer(MessageFromClient msg)
         {
-            var user = GetUser();
+            var user = await _usrMgr.GetUserAsync(Context.User);
             if (string.IsNullOrEmpty(msg.Text) || msg.Text.Length > 10000)
                 throw new HubException("Message cannot be empty or exceed 10000 characters.");
             Time time = new Time();
             var timeNow = DateTime.UtcNow;
-            if (user.Chatterer.LastActive > timeNow.Subtract(TimeSpan.FromSeconds(1.5)).Ticks)
+            if (user.LastActive > timeNow.Subtract(TimeSpan.FromSeconds(1.5)).Ticks)
                 throw new HubException("You're messaging too fast.");
             time.SharpTime = timeNow.Ticks;
-            user.Chatterer.LastActive = time.SharpTime;
+            user.LastActive = time.SharpTime;
             time.JsTime = StaticData.TicksToJsMs(time.SharpTime);
             time.StringTime = time.SharpTime.ToString();
             if (msg.To == null)
             {
-                ChatterersDb.Chatterer group;
-                if (user.InGroupId == user.Chatterer.Id)
-                    group = user.Chatterer;
+                Chatterer group;
+                if (user.InGroupId == user.Id)
+                    group = user;
                 else
-                    group = await user.Chatterers.FindAsync(user.InGroupId);
+                    group = await _usrMgr.FindByIdAsync(user.InGroupId);
                 if (group == null)
                     throw new HubException("Internal error, try again later");
                 else
@@ -73,17 +98,17 @@ namespace Chat.Web.Hubs
                         SharpTime = time.SharpTime,
                         JsTime = time.JsTime,
                         StringTime = time.StringTime,
-                        From = user.Name,
+                        From = user.UserName,
                         Peers = null,
                         Text = msg.Text
                     };
-                    await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("message_client", retMsg);
-                    await user.Database.Messages.AddAsync(new ChatterersDb.Message
+                    await Clients.OthersInGroup(user.InGroupId).SendAsync("message_client", retMsg);
+                    await _groupDb.Messages.AddAsync(new Message
                     {
                         SharpTime = time.SharpTime,
                         JsTime = time.JsTime,
                         StringTime = time.StringTime,
-                        From = user.Name,
+                        From = user.UserName,
                         Text = msg.Text,
                         GroupId = group.Id
                     });
@@ -101,36 +126,36 @@ namespace Chat.Web.Hubs
                     SharpTime = time.SharpTime,
                     JsTime = time.JsTime,
                     StringTime = time.StringTime,
-                    From = user.Name,
+                    From = user.UserName,
                     Peers = msg.To,
                     Text = msg.Text
                 };
-                await Clients.Clients(user.Chatterers.Where(c => msg.To.Contains(c.Name)).Select(c => c.ConnectionId).ToArray()).SendAsync("message_client", retMsg);
+                await Clients.Clients(_groupDb.Users.Where(c => msg.To.Contains(c.UserName)).Select(c => c.ConnectionId).ToArray()).SendAsync("message_client", retMsg);
             }
-            await user.SaveAsync();
+            await _groupDb.SaveChangesAsync();
             return time;
         }
         public async override Task OnConnectedAsync()
         {
-            var user = GetUser();
+            var user = await _usrMgr.GetUserAsync(Context.User);
             user.ConnectionId = Context.ConnectionId;
-            user.Chatterer.LastNotified = 0;
-            user.Chatterer.LastActive = DateTime.UtcNow.Ticks;
-            await user.SaveAsync();
-            await Groups.AddToGroupAsync(Context.ConnectionId, user.InGroupId.ToString());
-            await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("go_on", user.Name);
+            user.LastNotified = 0;
+            user.LastActive = DateTime.UtcNow.Ticks;
+            await _groupDb.SaveChangesAsync();
+            await Groups.AddToGroupAsync(Context.ConnectionId, user.InGroupId);
+            await Clients.OthersInGroup(user.InGroupId).SendAsync("go_on", user.UserName);
         }
         public async override Task OnDisconnectedAsync(Exception exception)
         {
-            var user = GetUser();
-            if (user.InGroupId != 0)
+            var user = await _usrMgr.GetUserAsync(Context.User);
+            if (user.InGroupId != null)
             {
-                await Clients.OthersInGroup(user.InGroupId.ToString()).SendAsync("go_off", user.Name);
-                await Groups.RemoveFromGroupAsync(user.ConnectionId, user.InGroupId.ToString());
+                await Clients.OthersInGroup(user.InGroupId).SendAsync("go_off", user.UserName);
+                await Groups.RemoveFromGroupAsync(user.ConnectionId, user.InGroupId);
             }
             user.ConnectionId = null;
-            user.Chatterer.LastActive = DateTime.UtcNow.Ticks;
-            await user.SaveAsync();
+            user.LastActive = DateTime.UtcNow.Ticks;
+            await _groupDb.SaveChangesAsync();
             await base.OnDisconnectedAsync(exception);
         }
     }

@@ -1,64 +1,55 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Chat.Web.Models
 {
-    public class ChatterersDb : DbContext
+    public class Chatterer : IdentityUser
     {
-        public class RegData
-        {
-            public int Id { get; set; }
-            public int Code { get; set; }
-            public long RequestTime { get; set; }
-            [MaxLength(64)]
-            public string Name { get; set; }
-            [MaxLength(256)]
-            public string Email { get; set; }
-            [MaxLength(32)]
-            public string Password { get; set; }
-        }
-        public class Chatterer
-        {
-            public int Id { get; set; }
-            [MaxLength(64)]
-            public string Name { get; set; }
-            [MaxLength(256)]
-            public string Email { get; set; }
-            [MaxLength(32)]
-            public string Password { get; set; }
-            public long LastActive { get; set; }
-            [MaxLength(64)]
-            public string Group { get; set; }
-            public long GroupLastCleaned { get; set; }
-            [MaxLength(32)]
-            public string GroupPassword { get; set; }
-            public int InGroupId { get; set; }
-            [MaxLength(32)]
-            public string InGroupPassword { get; set; }
-            [MaxLength(50)]
-            public string Token { get; set; }
-            [MaxLength(64)]
-            public string ConnectionId { get; set; }
-            public string WebSubscription { get; set; }
-            public long LastNotified { get; set; }
-        }
-        public class Message
-        {
-            public int Id { get; set; }
-            public long SharpTime { get; set; }
-            public long JsTime { get; set; }
-            [MaxLength(64)]
-            public string StringTime { get; set; }
-            [MaxLength(64)]
-            public string From { get; set; }
-            [MaxLength(10000)]
-            public string Text { get; set; }
-            [Required]
-            public int GroupId { get; set; }
-        }
-        public ChatterersDb(DbContextOptions<ChatterersDb> opts) : base(opts) { }
-        public DbSet<Chatterer> Chatterers { get; set; }
+        public long LastActive { get; set; }
+        [MaxLength(64)]
+        public string Group { get; set; }
+        public long GroupLastCleaned { get; set; }
+        [MaxLength(32)]
+        public string GroupPassword { get; set; }
+        public string InGroupId { get; set; }
+        [MaxLength(32)]
+        public string InGroupPassword { get; set; }
+        [MaxLength(64)]
+        public string ConnectionId { get; set; }
+        public string WebSubscription { get; set; }
+        public long LastNotified { get; set; }
+    }
+    public class RegData
+    {
+        public string Id { get; set; }
+        public int Code { get; set; }
+        public long RequestTime { get; set; }
+        [MaxLength(64)]
+        public string Name { get; set; }
+        [MaxLength(256)]
+        public string Email { get; set; }
+        [MaxLength(32)]
+        public string Password { get; set; }
+    }
+    public class Message
+    {
+        public string Id { get; set; }
+        public long SharpTime { get; set; }
+        public long JsTime { get; set; }
+        [MaxLength(64)]
+        public string StringTime { get; set; }
+        [MaxLength(64)]
+        public string From { get; set; }
+        [MaxLength(10000)]
+        public string Text { get; set; }
+        public string GroupId { get; set; }
+    }
+    public class GroupsDbContext : IdentityDbContext<Chatterer>
+    {
+        public GroupsDbContext(DbContextOptions<GroupsDbContext> opts) : base(opts) { }
         public DbSet<Message> Messages { get; set; }
         public DbSet<RegData> RegRequests { get; set; }
     }
