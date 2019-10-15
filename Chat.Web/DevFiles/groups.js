@@ -1058,13 +1058,16 @@ class groups_class {
         }
     }
     on_query_key(query) {
+        this.list_clear();
         this.set_list_timer(query);
     }
     on_query_paste(e) {
+        this.list_clear();
         this.set_list_timer(e.clipboardData.getData('Text'));
     }
     on_query_cut(el) {
         setTimeout(() => {
+            this.list_clear();
             this.set_list_timer(el.value);
         }, 50);
     }
@@ -1073,9 +1076,9 @@ class groups_class {
             this.query = query;
             clearTimeout(this.timeoutHandle);
             this.timeoutHandle = setTimeout(() => {
-                this.list_clear();
                 this.list_load();
-            }, 800);
+                setTimeout(() => this.groups_window.children[2].children[1].focus(), 100);
+            }, 500);
         }
     }
     group_signin(group) {
@@ -1291,7 +1294,6 @@ class ingroup_class {
         this.msgs_cont.style.opacity = "0";
     }
     ingroup_resize() {
-        this.msgs_cont.style.visibility = "hidden";
         this.msgs_cont.style.opacity = "0";
         this.config_mobile();
         this.usrs_close();
@@ -1301,14 +1303,12 @@ class ingroup_class {
             this.resize_handle = setTimeout(() => {
                 app.groupin.block_scroll = false;
                 app.groupin.msgs_cont.scrollTop = app.groupin.msgs_cont.scrollHeight;
-                this.msgs_cont.style.visibility = "visible";
                 app.groupin.msgs_cont.style.opacity = "1";
             }, 300);
         }
         else {
             clearTimeout(this.resize_handle);
             this.resize_handle = setTimeout(() => {
-                this.msgs_cont.style.visibility = "visible";
                 app.groupin.msgs_cont.style.opacity = "1";
             }, 300);
         }
