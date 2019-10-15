@@ -20,10 +20,7 @@
   <ItemGroup>
     <Content Include="DevFiles\body.css" />
     <Content Include="DevFiles\groups.css" />
-    <Content Include="DevFiles\groups.js">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
+    <Content Include="DevFiles\groups.js" />
     <Content Include="DevFiles\ingroup.css" />
     <Content Include="DevFiles\reg.css" />
   </ItemGroup>
@@ -41,6 +38,7 @@
     <None Include="bundleconfig.json" />
     <None Include="wwwroot\css\all.css" />
     <None Include="wwwroot\css\all.min.css" />
+    <None Include="wwwroot\js\groups.min.js" />
   </ItemGroup>
 
 </Project>

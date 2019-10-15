@@ -317,17 +317,17 @@ class api_class {
         if (start != 0 && !start || isNaN(start) || start < 0)
             return null;
         if (!quantity && quantity != 0)
-            ret = await this.get(`api/groups/list/${start}`);
+            ret = await this.get(`api/groups/list/${start}`, false);
         else {
             if (isNaN(quantity) || quantity < 1 || quantity > 100)
                 return null;
             if (!query && query != 0)
-                ret = await this.get(`api/groups/list/${start}/${quantity}`);
+                ret = await this.get(`api/groups/list/${start}/${quantity}`, false);
             else {
                 if (query.length > 64)
                     return null;
                 else
-                    ret = await this.get(`api/groups/list/${start}/${quantity}/${query}`);
+                    ret = await this.get(`api/groups/list/${start}/${quantity}/${query}`, false);
             }
         }
         return ret;
@@ -472,8 +472,8 @@ class api_class {
             return false;
         }
     }
-    async post(addr, obj) {
-        app.wait();
+    async post(addr, obj, foc = true) {
+        app.wait(foc);
         let ret;
         try {
             let resp = await fetch(addr, {
@@ -498,8 +498,8 @@ class api_class {
             return ret;
         }
     }
-    async get(addr) {
-        app.wait();
+    async get(addr, foc = true) {
+        app.wait(foc);
         let ret;
         try {
             let resp = await fetch(addr, {
@@ -1058,27 +1058,20 @@ class groups_class {
         }
     }
     on_query_key(query) {
-        this.list_clear();
         this.set_list_timer(query);
     }
     on_query_paste(e) {
-        this.list_clear();
         this.set_list_timer(e.clipboardData.getData('Text'));
     }
     on_query_cut(el) {
-        setTimeout(() => {
-            this.list_clear();
-            this.set_list_timer(el.value);
-        }, 50);
+        setTimeout(() => this.set_list_timer(el.value), 50);
     }
     set_list_timer(query) {
+        this.list_clear();
         if (query != this.query) {
             this.query = query;
             clearTimeout(this.timeoutHandle);
-            this.timeoutHandle = setTimeout(() => {
-                this.list_load();
-                setTimeout(() => this.groups_window.children[2].children[1].focus(), 100);
-            }, 500);
+            this.timeoutHandle = setTimeout(() => this.list_load(), 500);
         }
     }
     group_signin(group) {
@@ -1958,11 +1951,11 @@ class app_class {
                 break;
         }
     }
-    wait() {
+    wait(foc = true) {
         if (++this.wait_count == 1)
             this.wait_handle = setTimeout(() => {
                 app.wait_el.style.display = 'block';
-                app.wait_el.focus();
+                if (foc) app.wait_el.focus();
             }, 50);
     }
     resume() {
