@@ -38,7 +38,6 @@
     <None Include="bundleconfig.json" />
     <None Include="wwwroot\css\all.css" />
     <None Include="wwwroot\css\all.min.css" />
-    <None Include="wwwroot\js\groups.min.js" />
   </ItemGroup>
 
 </Project>

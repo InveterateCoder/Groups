@@ -1183,6 +1183,7 @@ class ingroup_class {
         src.setAttribute("type", "audio/mpeg");
         this.audio.appendChild(src);
         this.sound_on = false;
+        this.wind_width = 0;
     }
     get secret() {
         let val = localStorage.getItem("secret");
@@ -1199,6 +1200,7 @@ class ingroup_class {
     init() {
         this.dicon_cover.style.opacity = "0";
         setTimeout(() => app.groupin.dicon_cover.style.display = "none", 500);
+        this.wind_width = window.innerWidth;
         this.config_mobile();
         this.members_get();
         if (!this.last_msg_time) {
@@ -1288,8 +1290,11 @@ class ingroup_class {
     }
     ingroup_resize() {
         this.msgs_cont.style.opacity = "0";
-        this.config_mobile();
-        this.usrs_close();
+        if (window.innerWidth != this.wind_width) {
+            this.wind_width = window.innerWidth;
+            this.config_mobile();
+            this.usrs_close();
+        }
         if (this.isdown) {
             this.block_scroll = true;
             clearTimeout(this.resize_handle);
@@ -1307,13 +1312,13 @@ class ingroup_class {
         }
     }
     config_mobile() {
-        if (this.isMobile && window.innerWidth > 900) {
+        if (this.isMobile && this.wind_width > 900) {
             this.isMobile = false;
             this.usrs_open();
             this.open_btn.style.display = this.close_btn.style.display = "none"
             this.open_btn.style.opacity = this.close_btn.style.opacity = "0";
         }
-        else if (!this.isMobile && window.innerWidth <= 900) {
+        else if (!this.isMobile && this.wind_width <= 900) {
             this.isMobile = true;
             this.usrs_close();
             this.open_btn.style.display = this.close_btn.style.display = "block"

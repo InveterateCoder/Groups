@@ -24,14 +24,22 @@ namespace Chat.Web.Controllers
         [HttpGet("info")]
         public async Task<JsonResult> Info()
         {
-            var user = await _userMgr.GetUserAsync(User);
-            return new JsonResult(new
+            try
             {
-                name = user.UserName,
-                group = user.Group,
-                ingroup = (await _userMgr.FindByIdAsync(user.InGroupId))?.Group,
-                pub_key = "BFnbEjZPGFowzLKbDeFjlJ-o5juCQWiaFUzDH6jb_H3Rid3EO8f59N8PSe5AAMp5KhLMV31u1V79RxBiAmeofH0"
-            });
+                var user = await _userMgr.GetUserAsync(User);
+                return new JsonResult(new
+                {
+                    name = user.UserName,
+                    group = user.Group,
+                    ingroup = (await _userMgr.FindByIdAsync(user.InGroupId))?.Group,
+                    pub_key = "BFnbEjZPGFowzLKbDeFjlJ-o5juCQWiaFUzDH6jb_H3Rid3EO8f59N8PSe5AAMp5KhLMV31u1V79RxBiAmeofH0"
+                });
+            }
+            catch
+            {
+                await _signMgr.SignOutAsync();
+                return null;
+            }
         }
         [HttpPost("signout")]
         public async Task<ContentResult> SignOut()
