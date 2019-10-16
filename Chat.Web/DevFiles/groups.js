@@ -746,10 +746,10 @@ class groups_class {
         this.m_group.style.right = this.m_acc.offsetWidth + 'px';
         this.m_group.style.top = height + 'px';
         this.m_group.style.width = this.group_btn.offsetWidth + 28 + 'px';
-        if (group)
-            this.group_conf();
+        if (group) this.group_conf();
         this.m_all.style.top = this.groups_window.children[2].offsetHeight + 'px';
         this.m_all.style.transform = `translate(0, -${this.m_all.offsetHeight}px)`;
+        this.loaded = false;
     }
     group_conf() {
         if (app.group) {
@@ -842,7 +842,7 @@ class groups_class {
     }
     groups_resize() {
         this.initialize(false);
-        if (this.groups_window.firstElementChild.scrollHeight - this.groups_window.firstElementChild.scrollTop <  window.innerHeight + 300)
+        if (this.loaded && this.groups_window.firstElementChild.scrollHeight - this.groups_window.firstElementChild.scrollTop < window.innerHeight + 300)
             this.list_load();
     }
     signout() {
@@ -1035,11 +1035,15 @@ class groups_class {
     list_load() {
         if (this.quantity > 0) {
             app.api.list_groups(this.start, this.quantity, this.query).then(ret => {
-                if (ret == 0)
+                if (ret == 0) {
                     this.quantity = 0;
+                    this.loaded = true;
+                }
                 else {
-                    if (typeof ret == "string")
+                    if (typeof ret == "string") {
                         app.alert(ret);
+                        this.loaded = true;
+                    }
                     else if (Array.isArray(ret)) {
                         this.start += ret.length;
                         if (ret.length < this.quantity)
@@ -1047,6 +1051,7 @@ class groups_class {
                         this.list_add(ret);
                         if (this.groups_window.firstElementChild.scrollHeight < window.innerHeight + 300)
                             this.list_load();
+                        else this.loaded = true;
                     }
                 }
             });
@@ -2000,6 +2005,7 @@ class app_class {
                 this.hide('reg');
                 break;
             case 'groups':
+                this.groupin.loaded = false;
                 this.groupin.secret = null;
                 this.groups.list_clear();
                 this.groups.list_load();
