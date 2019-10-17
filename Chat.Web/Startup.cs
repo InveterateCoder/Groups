@@ -19,7 +19,7 @@ namespace Chat.Web
         }
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<GroupsDbContext>(opts => opts.UseSqlServer(Configuration.GetConnectionString("Users")));
+            services.AddDbContext<GroupsDbContext>(opts => opts.UseMySql(Configuration.GetConnectionString("Users")));
             services.AddIdentity<Chatterer, IdentityRole>(opts =>
             {
                 opts.User.AllowedUserNameCharacters = string.Empty;
