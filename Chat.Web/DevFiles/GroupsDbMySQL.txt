@@ -1,0 +1,100 @@
+	  CREATE TABLE `AspNetRoles` (
+          `Id` varchar(255) NOT NULL,
+          `Name` varchar(256) NULL,
+          `NormalizedName` varchar(256) NULL,
+          `ConcurrencyStamp` longtext NULL,
+          CONSTRAINT `PK_AspNetRoles` PRIMARY KEY (`Id`)
+      );
+
+      CREATE TABLE `AspNetUsers` (
+          `Id` varchar(255) NOT NULL,
+          `UserName` varchar(256) NULL,
+          `NormalizedUserName` varchar(256) NULL,
+          `Email` varchar(256) NULL,
+          `NormalizedEmail` varchar(256) NULL,
+          `EmailConfirmed` bit NOT NULL,
+          `PasswordHash` longtext NULL,
+          `SecurityStamp` longtext NULL,
+          `ConcurrencyStamp` longtext NULL,
+          `PhoneNumber` longtext NULL,
+          `PhoneNumberConfirmed` bit NOT NULL,
+          `TwoFactorEnabled` bit NOT NULL,
+          `LockoutEnd` datetime NULL,
+          `LockoutEnabled` bit NOT NULL,
+          `AccessFailedCount` int NOT NULL,
+          `LastActive` bigint NOT NULL,
+          `Group` varchar(64) NULL,
+          `GroupLastCleaned` bigint NOT NULL,
+          `GroupPassword` varchar(32) NULL,
+          `InGroupId` longtext NULL,
+          `InGroupPassword` varchar(32) NULL,
+          `ConnectionId` varchar(64) NULL,
+          `WebSubscription` longtext NULL,
+          `LastNotified` bigint NOT NULL,
+          CONSTRAINT `PK_AspNetUsers` PRIMARY KEY (`Id`)
+      );
+
+      CREATE TABLE `Messages` (
+          `Id` varchar(255) NOT NULL,
+          `SharpTime` bigint NOT NULL,
+          `JsTime` bigint NOT NULL,
+          `StringTime` varchar(64) NULL,
+          `From` varchar(64) NULL,
+          `Text` longtext NULL,
+          `GroupId` varchar(255)NULL,
+          CONSTRAINT `PK_Messages` PRIMARY KEY (`Id`)
+      );
+
+      CREATE TABLE `RegRequests` (
+          `Id` varchar(255) NOT NULL,
+          `Code` int NOT NULL,
+          `RequestTime` bigint NOT NULL,
+          `Name` varchar(64) NULL,
+          `Email` varchar(256) NULL,
+          `Password` varchar(32) NULL,
+          CONSTRAINT `PK_RegRequests` PRIMARY KEY (`Id`)
+      );
+
+      CREATE TABLE `AspNetRoleClaims` (
+          `Id` int NOT NULL,
+          `RoleId` varchar(255) NOT NULL,
+          `ClaimType` longtext NULL,
+          `ClaimValue` longtext NULL,
+          CONSTRAINT `PK_AspNetRoleClaims` PRIMARY KEY (`Id`),
+          CONSTRAINT `FK_AspNetRoleClaims_AspNetRoles_RoleId` FOREIGN KEY (`RoleId`) REFERENCES `AspNetRoles` (`Id`) ON DELETE CASCADE
+      );
+
+      CREATE TABLE `AspNetUserClaims` (
+          `Id` int NOT NULL,
+          `UserId` varchar(255) NOT NULL,
+          `ClaimType` longtext NULL,
+          `ClaimValue` longtext NULL,
+          CONSTRAINT `PK_AspNetUserClaims` PRIMARY KEY (`Id`),
+          CONSTRAINT `FK_AspNetUserClaims_AspNetUsers_UserId` FOREIGN KEY (`UserId`) REFERENCES `AspNetUsers` (`Id`) ON DELETE CASCADE
+      );
+
+      CREATE TABLE `AspNetUserLogins` (
+          `LoginProvider` varchar(255) NOT NULL,
+          `ProviderKey` varchar(255) NOT NULL,
+          `ProviderDisplayName` longtext NULL,
+          `UserId` varchar(255) NOT NULL,
+          CONSTRAINT `PK_AspNetUserLogins` PRIMARY KEY (`LoginProvider`, `ProviderKey`),
+          CONSTRAINT `FK_AspNetUserLogins_AspNetUsers_UserId` FOREIGN KEY (`UserId`) REFERENCES `AspNetUsers` (`Id`) ON DELETE CASCADE
+      );
+
+      CREATE TABLE `AspNetUserRoles` (
+          `UserId` varchar(255) NOT NULL,
+          `RoleId` varchar(255) NOT NULL,
+          CONSTRAINT `PK_AspNetUserRoles` PRIMARY KEY (`UserId`, `RoleId`),
+          CONSTRAINT `FK_AspNetUserRoles_AspNetRoles_RoleId` FOREIGN KEY (`RoleId`) REFERENCES `AspNetRoles` (`Id`) ON DELETE CASCADE,
+          CONSTRAINT `FK_AspNetUserRoles_AspNetUsers_UserId` FOREIGN KEY (`UserId`) REFERENCES `AspNetUsers` (`Id`) ON DELETE CASCADE
+      );
+
+      CREATE TABLE `AspNetUserTokens` (
+          `UserId` varchar(255) NOT NULL,
+          `LoginProvider` varchar(255) NOT NULL,
+          `Name` varchar(255) NOT NULL,
+          `Value` longtext NULL,
+          CONSTRAINT `PK_AspNetUserTokens` PRIMARY KEY (`UserId`, `LoginProvider`, `Name`),
+          CONSTRAINT `FK_AspNetUserTokens_AspNetUsers_UserId` FOREIGN KEY (`UserId`) REFERENCES `AspNetUsers` (`Id`) ON DELETE CASCADE
+      );
