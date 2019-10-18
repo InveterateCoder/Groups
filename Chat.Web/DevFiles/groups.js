@@ -1072,8 +1072,8 @@ class groups_class {
         setTimeout(() => this.set_list_timer(el.value), 50);
     }
     set_list_timer(query) {
-        this.list_clear();
         if (query != this.query) {
+            this.list_clear();
             this.query = query;
             clearTimeout(this.timeoutHandle);
             this.timeoutHandle = setTimeout(() => this.list_load(), 500);
