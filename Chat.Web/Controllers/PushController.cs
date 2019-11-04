@@ -98,7 +98,7 @@ namespace Chat.Web.Controllers
                                             WebPush.WebPushClient client = new WebPush.WebPushClient();
                                             WebPush.VapidDetails det = new WebPush.VapidDetails("mailto:splendiferouslife@outlook.com",
                                                 "BFnbEjZPGFowzLKbDeFjlJ-o5juCQWiaFUzDH6jb_H3Rid3EO8f59N8PSe5AAMp5KhLMV31u1V79RxBiAmeofH0",
-                                                "llDpC8IqKbdgsHqaF00xrcqHVefNt50NAMDQBBQrgNo");
+                                                "???");
                                             client.SetVapidDetails(det);
                                             var groupName = (await groupN).Group;
                                             var send_task = client.SendNotificationAsync(web_subscription, $"\"{groupName}\" by {user.UserName}");
