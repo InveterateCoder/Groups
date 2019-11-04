@@ -200,7 +200,7 @@ namespace Chat.Web.Controllers
                 msg.AddTo(to);
                 msg.SetSubject("Groups Registration Confirmation");
                 msg.AddContent(MimeType.Text, mailContent);
-                var client = new SendGridClient("???");
+                var client = new SendGridClient("???"); //replace with the API
                 var response = await client.SendEmailAsync(msg);
                 if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
                     ret = "ok";
