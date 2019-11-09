@@ -1208,7 +1208,7 @@ class ingroup_class {
         this.wind_width = window.innerWidth;
         this.config_mobile();
         this.members_get();
-        if (!this.last_msg_time) {
+        if (!this.last_msg_time && !this.end_reached) {
             this.secret_input.value = "";
             let sec = this.secret;
             if (sec)

@@ -6,17 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="DevFiles\groups.js" />
-  </ItemGroup>
-
-  <ItemGroup>
     <_ContentIncludedByDefault Remove="wwwroot\css\all.css" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="DevFiles\body.css" />
     <Content Include="DevFiles\groups.css" />
-    <Content Include="DevFiles\groups.js" />
     <Content Include="DevFiles\ingroup.css" />
     <Content Include="DevFiles\reg.css" />
   </ItemGroup>
