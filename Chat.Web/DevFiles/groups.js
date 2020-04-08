@@ -1947,7 +1947,7 @@ class app_class {
         }
     }
     get pkey_array() {
-        const padding = ' '.repeat(4 - this.pub_key.length % 4);
+        const padding = ' '.repeat((4 - this.pub_key.length % 4) % 4);
         const base64 = (this.pub_key + padding).replace(/\-/g, '+').replace(/_/g, '/');
         return new Uint8Array(Array.from(atob(base64), c => c.charCodeAt(0)));
     }
